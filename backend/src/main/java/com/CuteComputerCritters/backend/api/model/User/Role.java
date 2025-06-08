@@ -18,4 +18,7 @@ public class Role {
     public Role(EnumRole name) {
         this.name = name;
     }
+
+    public Role() {
+    }
 }
