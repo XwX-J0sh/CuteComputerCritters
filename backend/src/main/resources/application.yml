@@ -1,0 +1,28 @@
+spring:
+  jackson:
+    time-zone: UTC
+  application:
+    name: critter-backend
+  datasource:
+    url: jdbc:mariadb://localhost:3306/critterDB
+    username: root
+    password: root
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MariaDB106Dialect
+    properties:
+      dialect: org.hibernate.dialect.MariaDB106Dialect
+cutecritter:
+  app:
+    jwtSecret: PastoneoclockYoumusthavegonetobedTheMilkyWaystreamssilverthroughthenightIminnohurrywithlightningtelegramsIhavenocausetowakeortroubleyouAndastheysaytheincidentisclosedLovesboathassmashedagainstthedailygrind
+    jwtExpirationMs: 86400000
+    jwtCookieName: cccp
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
