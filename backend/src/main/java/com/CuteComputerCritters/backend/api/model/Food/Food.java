@@ -31,4 +31,7 @@ public class Food {
         this.foodType = foodType;
         this.satiation = satiation;
     }
+
+    public Food() {
+    }
 }

@@ -21,4 +21,7 @@ public class Medicine {
     public Medicine(EnumMedicineType medicineType) {
         this.medicineType = medicineType;
     }
+
+    public Medicine() {
+    }
 }
