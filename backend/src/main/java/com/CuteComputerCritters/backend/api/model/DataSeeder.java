@@ -13,6 +13,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import static com.CuteComputerCritters.backend.api.model.medicine.EnumMedicineType.BAND_AID;
+
 @Component
 @AllArgsConstructor
 public class DataSeeder implements CommandLineRunner {

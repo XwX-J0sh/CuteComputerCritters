@@ -18,10 +18,10 @@ public class Medicine {
     @Column(name = "MEDICINE_TYPE")
     private EnumMedicineType medicineType;
 
-    public Medicine(EnumMedicineType medicineType) {
-        this.medicineType = medicineType;
+    public Medicine() {
     }
 
-    public Medicine() {
+    public Medicine(EnumMedicineType medicineType) {
+        this.medicineType = medicineType;
     }
 }
