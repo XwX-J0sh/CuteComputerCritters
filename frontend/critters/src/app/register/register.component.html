@@ -1,1 +1,98 @@
-<p>register works!</p>
+<div class = "registration-form">
+@if (!isSuccessful) {
+<form
+  name="form"
+  #f = "ngForm"
+  (ngSubmit)="f.form.valid && onSubmit()">
+
+  <!-- USERNAME -->
+<label for ="username">Username</label>
+  <br>
+  <input
+    required
+    name = "username"
+    id ="username"
+    type = "text"
+    minlength ="5"
+    maxlength = "15"
+    #username="ngModel"
+    [(ngModel)]="form.username"
+    [ngClass]="{ 'is-invalid': username.invalid && (username.dirty || username.touched || f.submitted) }"
+  />
+  @if (username.errors && (username.dirty || username.touched || f.submitted)){
+    <div class="invalid-feedback">
+      @if (username.errors['required']) {
+        <div>Username is required</div>
+      }
+      @if (username.errors['minlength']) {
+        <div>Username must be at least 5 characters</div>
+      }
+      @if (username.errors['maxlength']) {
+        <div>Username must be at most 15 characters</div>
+      }
+    </div>
+  }
+  <br/>
+
+  <!-- EMAIL -->
+  <label for ="email">E-Mail</label>
+  <br/>
+  <input
+    required
+    email
+    name = "email"
+    id ="email"
+    type="email"
+    #email = "ngModel"
+    [(ngModel)]="form.email"
+    [ngClass]="{ 'is-invalid': email.invalid && (email.dirty || email.touched || f.submitted) }"
+  />
+  @if (email.errors && (email.touched || email.dirty || f.submitted)){
+    <div class="invalid-feedback">
+      @if (email.errors['required']) {
+        <div>E-Mail is required</div>
+      }
+      @if (email.errors['email']) {
+        <div>E-Mail must be a valid email address</div>
+      }
+    </div>
+  }
+  <br/>
+
+  <!-- PASSWORD -->
+  <label for ="password">Password</label>
+  <br>
+  <input
+    required
+    name = "password"
+    id ="password"
+    type="password"
+    minlength="8"
+    #password = "ngModel"
+    [(ngModel)]="form.password"
+    [ngClass]="{ 'is-invalid': password.invalid && (password.dirty || password.touched || f.submitted) }"
+  />
+  @if (password.errors && (password.dirty || password.touched || f.submitted)) {
+    <div class="invalid-feedback">
+      @if (password.errors['required']) {
+        <div>Password is required</div>
+      }
+      @if (password.errors['minlength']) {
+        <div>Password must be at least 6 characters</div>
+      }
+    </div>
+  }
+  <br/>
+  <br/>
+  <button type="submit" id="submit-button">Sign Up</button>
+
+  @if (f.submitted && isSignUpFailed) {
+    <div class="alert alert-warning">
+      Signup failed!<br />{{ errorMessage }}
+    </div>
+  }
+</form>
+} @else {
+  <div class="alert alert-success">Your registration is successful!</div>
+}
+</div>

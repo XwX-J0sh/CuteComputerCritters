@@ -1,6 +1,5 @@
 import {Injectable} from "@angular/core";
-import {HttpEvent, HttpRequest} from "@angular/common/module.d-CnjH8Dlt";
-import {HttpHandler, HttpInterceptor} from "@angular/common/http";
+import {HttpEvent, HttpRequest, HTTP_INTERCEPTORS, HttpHandler, HttpInterceptor} from "@angular/common/http";
 import {Observable} from "rxjs";
 
 @Injectable()
@@ -13,3 +12,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
         return next.handle(req);
     }
 }
+
+export const httpInterceptorProviders = [
+  { provide: HTTP_INTERCEPTORS, useClass: HttpRequestInterceptor, multi: true },
+];

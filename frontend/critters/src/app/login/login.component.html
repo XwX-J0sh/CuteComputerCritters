@@ -1,1 +1,73 @@
-<p>login works!</p>
+<div class = "login-form">
+  @if (!isLoggedIn) {
+    <form
+      name="form"
+      #f = "ngForm"
+      (ngSubmit)="f.form.valid && onSubmit()"
+      novalidate
+    >
+
+      <!-- USERNAME -->
+      <label for ="username">Username</label>
+      <br>
+      <input
+        required
+        name = "username"
+        id ="username"
+        type = "text"
+        #username="ngModel"
+        [(ngModel)]="form.username"
+        [ngClass]="{ 'is-invalid': username.invalid &&  f.submitted }"
+      />
+      @if (username.errors && (username.dirty || username.touched || f.submitted)){
+        <div class="invalid-feedback">
+          @if (username.errors['required']) {
+            <div>Username is required</div>
+          }
+          @if (username.errors['minlength']) {
+            <div>Username must be at least 5 characters</div>
+          }
+          @if (username.errors['maxlength']) {
+            <div>Username must be at most 15 characters</div>
+          }
+        </div>
+      }
+      <br/>
+
+      <!-- PASSWORD -->
+      <label for ="password">Password</label>
+      <br>
+      <input
+        required
+        name = "password"
+        id ="password"
+        type="password"
+        minlength="8"
+        #password = "ngModel"
+        [(ngModel)]="form.password"
+        [ngClass]="{ 'is-invalid': password.invalid && (password.dirty || password.touched || f.submitted) }"
+      />
+      @if (password.errors && (password.dirty || password.touched || f.submitted)) {
+        <div class="invalid-feedback">
+          @if (password.errors['required']) {
+            <div>Password is required</div>
+          }
+          @if (password.errors['minlength']) {
+            <div>Password must be at least 6 characters</div>
+          }
+        </div>
+      }
+      <br/>
+      <br/>
+      <button type="submit" id="submit-button">Login</button>
+
+      @if (f.submitted && isLoginFailed) {
+        <div class="alert alert-warning">
+          Login failed!<br />{{ errorMessage }}
+        </div>
+      }
+    </form>
+  } @else {
+    <div class="alert alert-success">Logged in!</div>
+  }
+</div>
