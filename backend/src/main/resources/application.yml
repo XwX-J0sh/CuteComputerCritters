@@ -19,8 +19,13 @@ spring:
 cutecritter:
   app:
     jwtSecret: PastoneoclockYoumusthavegonetobedTheMilkyWaystreamssilverthroughthenightIminnohurrywithlightningtelegramsIhavenocausetowakeortroubleyouAndastheysaytheincidentisclosedLovesboathassmashedagainstthedailygrind
-    jwtExpirationMs: 86400000
-    jwtCookieName: cccp
+    jwtCookieName: critter-cookie
+    jwtRefreshCookieName: critter-cookie-refresh
+    #jwtExpirationMs: 86400000
+    #jwtRefreshExpirationMS: 86400000
+    #testing
+    jwtExpirationMs: 60000
+    jwtRefreshExpirationMS: 180000
 logging:
   level:
     org:
