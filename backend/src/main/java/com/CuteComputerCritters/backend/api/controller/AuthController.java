@@ -7,7 +7,6 @@ import com.CuteComputerCritters.backend.api.model.User.User;
 import com.CuteComputerCritters.backend.api.payload.request.LoginRequest;
 import com.CuteComputerCritters.backend.api.payload.request.SignupRequest;
 import com.CuteComputerCritters.backend.api.payload.response.MessageResponse;
-import com.CuteComputerCritters.backend.api.payload.response.UserInfoResponse;
 import com.CuteComputerCritters.backend.api.repository.RoleRepository;
 import com.CuteComputerCritters.backend.api.repository.UserRepository;
 import com.CuteComputerCritters.backend.api.security.jwt.JwtResponse;
@@ -24,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -68,15 +68,12 @@ public class AuthController {
         //generate access cookie
         ResponseCookie jwtAccessCookie = jwtUtils.generateJwtCookie(userDetails);
 
-        // Generate access token string for JSON response
-        String accessToken = jwtUtils.generateTokenFromUsername(userDetails.getUsername());
-
         // Generate refresh token cookie
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
         ResponseCookie refreshTokenCookie = jwtUtils.generateRefreshJwtCookie(refreshToken.getToken());
 
         List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
         // Return access token in body, refresh token as cookie
@@ -145,9 +142,7 @@ public class AuthController {
             refreshTokenService.findByToken(refreshToken).ifPresentOrElse(token -> {
                 refreshTokenService.deleteByUserId(token.getUser().getUserId());
                 System.out.println("Deleted refresh token for userId: " + token.getUser().getUserId());
-            }, () -> {
-                System.out.println("Refresh token not found in DB. Attempting fallback cleanup...");
-            });
+            }, () -> System.out.println("Refresh token not found in DB. Attempting fallback cleanup..."));
         } else {
             // Fallback: clean up any old token manually if user is authenticated
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -177,7 +172,6 @@ public class AuthController {
                     .map(refreshTokenService::verifyExpiration)
                     .map(RefreshToken::getUser)
                     .map(user -> {
-                        String newAccessToken = jwtUtils.generateTokenFromUsername(user.getUsername());
 
                         // Generate new access token cookie
                         ResponseCookie newAccessTokenCookie = jwtUtils.generateJwtCookie(user);

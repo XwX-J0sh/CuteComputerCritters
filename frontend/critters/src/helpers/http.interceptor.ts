@@ -8,7 +8,6 @@ import {
   HttpErrorResponse
 } from "@angular/common/http";
 import {BehaviorSubject, catchError, filter, Observable, switchMap, take, throwError} from "rxjs";
-import {StorageService} from '../app/services/storage.service';
 import {EventData} from '../app/shared/event.class';
 import {EventBusService} from '../app/shared/event-bus.service';
 import {AuthService} from '../app/services/auth.service';
