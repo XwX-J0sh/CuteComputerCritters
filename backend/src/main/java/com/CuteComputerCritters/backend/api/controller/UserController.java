@@ -1,24 +1,16 @@
 package com.CuteComputerCritters.backend.api.controller;
 
-import com.CuteComputerCritters.backend.api.model.User.User;
-import com.CuteComputerCritters.backend.api.security.jwt.JwtUtils;
 import com.CuteComputerCritters.backend.api.security.services.UserDetailsImpl;
-import com.CuteComputerCritters.backend.api.security.services.UserDetailsServiceImpl;
-import com.CuteComputerCritters.backend.api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
