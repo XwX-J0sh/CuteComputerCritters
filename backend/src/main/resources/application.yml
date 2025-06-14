@@ -21,13 +21,15 @@ cutecritter:
     jwtSecret: PastoneoclockYoumusthavegonetobedTheMilkyWaystreamssilverthroughthenightIminnohurrywithlightningtelegramsIhavenocausetowakeortroubleyouAndastheysaytheincidentisclosedLovesboathassmashedagainstthedailygrind
     jwtCookieName: critter-cookie
     jwtRefreshCookieName: critter-cookie-refresh
-    #jwtExpirationMs: 86400000
-    #jwtRefreshExpirationMS: 86400000
+    jwtExpirationMs: 86400000
+    jwtRefreshExpirationMS: 86400000
     #testing
-    jwtExpirationMs: 60000
-    jwtRefreshExpirationMS: 180000
+    #jwtExpirationMs: 60000
+    #jwtRefreshExpirationMS: 180000
 logging:
   level:
     org:
+      hibernate:
+        sql: DEBUG
       springframework:
         security: DEBUG

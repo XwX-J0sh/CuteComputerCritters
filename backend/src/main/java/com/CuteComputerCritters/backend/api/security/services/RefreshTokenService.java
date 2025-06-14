@@ -1,8 +1,10 @@
 package com.CuteComputerCritters.backend.api.security.services;
 
 import com.CuteComputerCritters.backend.api.model.User.RefreshToken;
+import com.CuteComputerCritters.backend.api.model.User.User;
 import com.CuteComputerCritters.backend.api.repository.RefreshTokenRepository;
 import com.CuteComputerCritters.backend.api.repository.UserRepository;
+import com.CuteComputerCritters.backend.api.security.jwt.JwtUtils;
 import com.CuteComputerCritters.backend.api.security.jwt.exception.TokenRefreshException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,9 @@ public class RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     @Autowired
+    private JwtUtils jwtUtils;
+
+    @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
@@ -29,15 +34,24 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(int userId) {
+        // Retrieve the user entity by ID
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        // Find existing refresh token for this user and delete if present
+        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUser(user);
+        existingToken.ifPresent(refreshTokenRepository::delete);
+
+        // Create new refresh token
         RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUser(user);
+        refreshToken.setToken(UUID.randomUUID().toString());  // generate random token string
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs)); // set expiration explicitly
 
-        refreshToken.setUser(userRepository.findById(userId).get());
-        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        refreshToken.setToken(UUID.randomUUID().toString());
-
-        refreshToken = refreshTokenRepository.save(refreshToken);
-        return refreshToken;
+        // Save and return the new token
+        return refreshTokenRepository.save(refreshToken);
     }
+
 
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
@@ -50,6 +64,6 @@ public class RefreshTokenService {
 
     @Transactional
     public int deleteByUserId(int userId) {
-        return refreshTokenRepository.deleteByUser(userRepository.findById(userId).get());
+        return refreshTokenRepository.deleteByUser_UserId(userId);
     }
 }

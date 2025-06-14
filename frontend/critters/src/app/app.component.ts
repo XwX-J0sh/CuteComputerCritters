@@ -4,6 +4,8 @@ import {HttpClientModule} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
 import {StorageService} from './services/storage.service';
 import {AuthService} from './services/auth.service';
+import {EventBusService} from './shared/event-bus.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -17,9 +19,9 @@ export class AppComponent {
   private roles: string[] = [];
   isLoggedIn = false;
   username?: string;
+  eventBusSub?: Subscription;
 
-  constructor(private storageService: StorageService, private authService: AuthService) { }
-
+  constructor(private storageService: StorageService, private authService: AuthService, private eventBusService: EventBusService) { }
   ngOnInit(): void {
     this.isLoggedIn = this.storageService.isLoggedIn();
 
@@ -29,6 +31,10 @@ export class AppComponent {
 
       this.username = user.username;
     }
+
+    this.eventBusSub = this.eventBusService.on('logout', () => {
+      this.logout();
+    });
   }
 
   logout(): void {

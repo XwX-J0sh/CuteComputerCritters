@@ -25,12 +25,13 @@ export class StorageService {
     }
   }
 
+  /*
   public saveUser(user: any): void {
     if(this.isBrowser) {
       window.sessionStorage.removeItem(USER_KEY);
       window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     }
-  }
+  }*/
 
   public getUser(): any {
     if(this.isBrowser) {
