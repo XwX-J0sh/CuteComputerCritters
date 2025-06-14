@@ -21,9 +21,6 @@ public class RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
