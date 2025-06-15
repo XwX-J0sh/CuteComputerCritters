@@ -56,14 +56,4 @@ export class AuthService {
       password
     });
   }
-
-  // Convenience getter to know if user is logged in
-  isLoggedIn(): boolean {
-    return !!this.currentUserSubject.value;
-  }
-
-  // Get current user value (can be null)
-  getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
-  }
 }

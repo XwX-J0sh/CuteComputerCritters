@@ -68,8 +68,8 @@ public class JwtUtils {
                 .path("/api")
                 .maxAge(0)
                 .httpOnly(true)
-                //.secure(true)
-                .sameSite("None")
+                //.secure(true) enable in PROD
+                //.sameSite("None") enable in PROD
                 .build();
     }
 
@@ -78,8 +78,8 @@ public class JwtUtils {
                 .path("/api")
                 .maxAge(0)
                 .httpOnly(true)
-                //.secure(true)
-                .sameSite("None")
+                //.secure(true) enable in PROD
+                //.sameSite("None") enable in PROD
                 .build();
     }
 
@@ -125,8 +125,8 @@ public class JwtUtils {
                 .path(path)
                 .maxAge(maxAgeSeconds)
                 .httpOnly(true)
-                //.secure(true)
-                .sameSite("None")
+                //.secure(true) enable in PROD
+                //.sameSite("None") enable in PROD
                 .build();
     }
 

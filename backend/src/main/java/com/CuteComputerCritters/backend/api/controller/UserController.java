@@ -36,6 +36,7 @@ public class UserController {
 
             return ResponseEntity.ok(userInfo);
         }
+        System.out.println("Authenticated user: " + authentication.getName());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }
