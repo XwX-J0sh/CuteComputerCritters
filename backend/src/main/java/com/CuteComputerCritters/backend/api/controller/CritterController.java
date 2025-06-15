@@ -14,6 +14,6 @@ public class CritterController {
     private final CritterService critterService;
 
     //create critter
-    @PostMapping("/new")
+    //@PostMapping("/new")
 
 }
