@@ -11,7 +11,7 @@ import {User} from '../shared/model/user';
 })
 export class AuthService {
 
-  private API_URL = 'http://localhost:8080/api';
+  private API_URL = 'http://localhost:8080';
 
   // Holds current user info or null if logged out
   private currentUserSubject = new BehaviorSubject<User | null>(null);

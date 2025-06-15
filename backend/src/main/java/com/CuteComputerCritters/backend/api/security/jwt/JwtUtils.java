@@ -43,16 +43,16 @@ public class JwtUtils {
 
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
-        return generateCookie(jwtCookie, jwt, "/api", jwtExpirationMs / 1000L);
+        return generateCookie(jwtCookie, jwt, "/", jwtExpirationMs / 1000L);
     }
 
     public ResponseCookie generateJwtCookie(User user) {
         String jwt = generateTokenFromUsername(user.getUsername());
-        return generateCookie(jwtCookie, jwt, "/api", jwtExpirationMs / 1000L);
+        return generateCookie(jwtCookie, jwt, "/", jwtExpirationMs / 1000L);
     }
 
     public ResponseCookie generateRefreshJwtCookie(String refreshToken) {
-        return generateCookie(jwtRefreshCookie, refreshToken, "/api", jwtRefreshExpirationMs / 1000L);
+        return generateCookie(jwtRefreshCookie, refreshToken, "/", jwtRefreshExpirationMs / 1000L);
     }
 
     public String getJwtFromCookies(HttpServletRequest request) {
@@ -65,7 +65,7 @@ public class JwtUtils {
 
     public ResponseCookie getCleanJwtCookie() {
         return ResponseCookie.from(jwtCookie, null)
-                .path("/api")
+                .path("/")
                 .maxAge(0)
                 .httpOnly(true)
                 //.secure(true) enable in PROD
@@ -75,7 +75,7 @@ public class JwtUtils {
 
     public ResponseCookie getCleanJwtRefreshCookie() {
         return ResponseCookie.from(jwtRefreshCookie, null)
-                .path("/api")
+                .path("/")
                 .maxAge(0)
                 .httpOnly(true)
                 //.secure(true) enable in PROD

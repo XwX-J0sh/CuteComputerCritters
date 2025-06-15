@@ -1,4 +1,3 @@
-import {join} from "@angular/compiler-cli";
 
 export function parseJwt(token: string): any {
     if (!token) return null;

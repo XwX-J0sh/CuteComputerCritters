@@ -69,6 +69,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/api/auth/signup") || path.startsWith("/api/auth/signin");
+        return path.startsWith("/auth/signup") || path.startsWith("/auth/signin");
     }
 }

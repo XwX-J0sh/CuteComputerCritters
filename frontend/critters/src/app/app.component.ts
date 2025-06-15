@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
 import {FormsModule} from '@angular/forms';
 import {AuthService} from './services/auth.service';
-import {map, Observable} from 'rxjs';
+import {Observable} from 'rxjs';
 import {AsyncPipe, NgIf} from '@angular/common';
 
 @Component({
@@ -14,7 +14,6 @@ import {AsyncPipe, NgIf} from '@angular/common';
 export class AppComponent implements OnInit{
   title = 'critters';
 
-  private roles: string[] = [];
   username?: string;
   isLoggedIn$: Observable<boolean>;
 
