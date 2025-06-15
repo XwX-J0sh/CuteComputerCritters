@@ -1,11 +1,12 @@
-<h1>CCCP</h1>
-<router-outlet></router-outlet>
 <div id="app">
   <nav class="navbar navbar-expand navbar-dark bg-dark">
-    <a href="#" class="navbar-brand">bezKoder</a>
+    <a href="#" class="navbar-brand">CuteComputerCritter</a>
     <ul class="navbar-nav mr-auto" routerLinkActive="active">
       <li class="nav-item">
         <a href="/home" class="nav-link" routerLink="home">Home </a>
+      </li>
+      <li class="nav-item">
+        <a href="/profile" class="nav-link" routerLink="profile">Profile </a>
       </li>
       @if (isLoggedIn) {
         <li class="nav-item">
@@ -34,8 +35,17 @@
       </ul>
     }
   </nav>
-
   <div class="container">
     <router-outlet></router-outlet>
   </div>
+  <footer>
+    <ul>
+      <li>Home</li>
+      <li>How to Play</li>
+      <li>Meet the critters</li>
+      <li>DevUpdates</li>
+      <li>About us</li>
+      <li>Logout</li>
+    </ul>
+  </footer>
 </div>
