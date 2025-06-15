@@ -90,11 +90,15 @@ public class Critter {
     @Column(name = "SLEEP_DURATION", columnDefinition = "integer default 60")
     private int sleepDuration;
 
-    //tracks when the Critter was last interacted with/
-    // the User was logged in
+    //tracks when the Critter was last interacted with/the User was logged in
     @CreationTimestamp
     @JsonProperty("lastInteractionTime")
     @Column(name = "LAST_INTERACTION_TIME")
     private Instant lastInteractionTime;
+
+    //tracks whether the Critter is being played with
+    @JsonProperty
+    @Column(name = "IS_ACTIVE")
+    private boolean isActive;
 
 }

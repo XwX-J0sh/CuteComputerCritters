@@ -60,7 +60,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/test/all").permitAll()
                         .requestMatchers("/user").authenticated()
-                        .requestMatchers("/critter").authenticated()
+                        .requestMatchers("/critter/**").authenticated()
                         .anyRequest().authenticated()
                 );
 

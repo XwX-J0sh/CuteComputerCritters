@@ -1,7 +1,5 @@
 package com.CuteComputerCritters.backend.api.controller;
 
-import com.CuteComputerCritters.backend.api.model.User.User;
-import com.CuteComputerCritters.backend.api.payload.request.UserUpdateRequest;
 import com.CuteComputerCritters.backend.api.repository.UserRepository;
 import com.CuteComputerCritters.backend.api.security.services.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +21,8 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<?> getUserInfo(Authentication authentication) {
+
+        //authenticate the request
         if (authentication == null || !authentication.isAuthenticated()){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

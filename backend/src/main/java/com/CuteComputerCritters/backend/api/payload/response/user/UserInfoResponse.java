@@ -1,4 +1,4 @@
-package com.CuteComputerCritters.backend.api.payload.response;
+package com.CuteComputerCritters.backend.api.payload.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.CuteComputerCritters.backend.api.payload.request;
+package com.CuteComputerCritters.backend.api.payload.request.user;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
