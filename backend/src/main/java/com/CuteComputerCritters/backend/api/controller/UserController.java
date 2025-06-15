@@ -26,6 +26,7 @@ public class UserController {
         if (authentication == null || !authentication.isAuthenticated()){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof UserDetailsImpl userDetails) {

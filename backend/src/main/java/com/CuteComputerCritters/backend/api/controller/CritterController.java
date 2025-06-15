@@ -171,6 +171,7 @@ public class CritterController {
 
     // authenticate and get User entity (owner)
     private User authenticateAndGetUser(Authentication authentication) {
+
         if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl userDetails)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }

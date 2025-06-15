@@ -61,6 +61,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/test/all").permitAll()
                         .requestMatchers("/user").authenticated()
                         .requestMatchers("/critter/**").authenticated()
+                        .requestMatchers("/food/**").authenticated()
                         .anyRequest().authenticated()
                 );
 
