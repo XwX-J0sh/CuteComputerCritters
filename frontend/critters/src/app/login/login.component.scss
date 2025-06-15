@@ -8,6 +8,16 @@
   font-family: Helvetica;
 }
 
+input {
+  border: 1px solid black;
+}
+
+button {
+  border: 1px solid black;
+  padding: 8px;
+  border-radius: 5px;
+}
+
 .is-invalid {
   border: 2px solid lightcoral;
 }

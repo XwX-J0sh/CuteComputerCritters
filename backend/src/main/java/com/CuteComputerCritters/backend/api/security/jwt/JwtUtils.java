@@ -65,20 +65,20 @@ public class JwtUtils {
 
     public ResponseCookie getCleanJwtCookie() {
         return ResponseCookie.from(jwtCookie, null)
-                .path("/api")        // Changed from /api/auth
+                .path("/api")
                 .maxAge(0)
                 .httpOnly(true)
-                .secure(true)
+                //.secure(true)
                 .sameSite("None")
                 .build();
     }
 
     public ResponseCookie getCleanJwtRefreshCookie() {
         return ResponseCookie.from(jwtRefreshCookie, null)
-                .path("/api")        // Changed from /api/auth/refreshtoken
+                .path("/api")
                 .maxAge(0)
                 .httpOnly(true)
-                .secure(true)
+                //.secure(true)
                 .sameSite("None")
                 .build();
     }
@@ -125,6 +125,8 @@ public class JwtUtils {
                 .path(path)
                 .maxAge(maxAgeSeconds)
                 .httpOnly(true)
+                //.secure(true)
+                .sameSite("None")
                 .build();
     }
 

@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+//Maps all Requests in here to /api/auth...
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
@@ -55,37 +56,45 @@ public class AuthController {
     @Autowired
     RefreshTokenService refreshTokenService;
 
+    //Maps the POST request to Endppoint /signin
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
+        //authenticate the loginRequest using the username and password that were passed with the Request
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
+        //sets the Security Context to authenticated if authentication worked (-> user is considered logged in so to speak)
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        //get the User details
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        //generate access cookie
+        //generate access cookie (using the User details)
         ResponseCookie jwtAccessCookie = jwtUtils.generateJwtCookie(userDetails);
 
         // Generate refresh token cookie
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
         ResponseCookie refreshTokenCookie = jwtUtils.generateRefreshJwtCookie(refreshToken.getToken());
 
+        //store the roles of the User (ADMIN/USER)
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        // Return access token in body, refresh token as cookie
+        // sets the cookies and returns a response body holding the basic user info (status: 200)
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, jwtAccessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .headers(headers -> {
+                    headers.add(HttpHeaders.SET_COOKIE, jwtAccessCookie.toString());
+                    headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+                })
                 .body(new JwtResponse(
                         userDetails.getId(),
                         userDetails.getUsername(),
                         userDetails.getEmail(),
                         roles));
     }
+
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {

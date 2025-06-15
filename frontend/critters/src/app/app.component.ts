@@ -1,53 +1,48 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import {HttpClientModule} from '@angular/common/http';
+import {Component, OnInit} from '@angular/core';
+import {Router, RouterOutlet} from '@angular/router';
 import {FormsModule} from '@angular/forms';
-import {StorageService} from './services/storage.service';
 import {AuthService} from './services/auth.service';
-import {EventBusService} from './shared/event-bus.service';
-import {Subscription} from 'rxjs';
+import {map, Observable} from 'rxjs';
+import {AsyncPipe, NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HttpClientModule, FormsModule],
+  imports: [RouterOutlet, FormsModule, NgIf, AsyncPipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit{
   title = 'critters';
 
   private roles: string[] = [];
-  isLoggedIn = false;
   username?: string;
-  eventBusSub?: Subscription;
+  isLoggedIn$: Observable<boolean>;
 
-  constructor(private storageService: StorageService, private authService: AuthService, private eventBusService: EventBusService) { }
+  constructor(private authService: AuthService, private router: Router)  {
+    this.isLoggedIn$ = this.authService.isLoggedIn$;
+  }
+
   ngOnInit(): void {
-    this.isLoggedIn = this.storageService.isLoggedIn();
+    this.authService.currentUser$.subscribe(user => {
+      this.username = user?.username;
+    });
 
-    if (this.isLoggedIn) {
-      const user = this.storageService.getUser();
-      this.roles = user.roles;
-
-      this.username = user.username;
-    }
-
-    this.eventBusSub = this.eventBusService.on('logout', () => {
-      this.logout();
+    // Optionally restore login on app load:
+    this.authService.checkAuth().subscribe({
+      next: () => {},
+      error: () => {
+        // no-op if not logged in
+      }
     });
   }
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: res => {
-        console.log(res);
-        this.storageService.clean();
-
+      next: () => {
+        // You can redirect or refresh after logout
         window.location.reload();
       },
-      error: err => {
-        console.log(err);
-      }
+      error: err => console.log(err)
     });
   }
 }

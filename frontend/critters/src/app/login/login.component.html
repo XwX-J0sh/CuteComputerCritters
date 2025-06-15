@@ -1,73 +1,59 @@
-<div class = "login-form">
-  @if (!isLoggedIn) {
+<div class="login-form">
+  <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInTemplate">
     <form
       name="form"
-      #f = "ngForm"
+      #f="ngForm"
       (ngSubmit)="f.form.valid && onSubmit()"
       novalidate
     >
 
       <!-- USERNAME -->
-      <label for ="username">Username</label>
-      <br>
+      <label for="username">Username</label>
+      <br />
       <input
         required
-        name = "username"
-        id ="username"
-        type = "text"
+        name="username"
+        id="username"
+        type="text"
         #username="ngModel"
         [(ngModel)]="form.username"
-        [ngClass]="{ 'is-invalid': username.invalid &&  f.submitted }"
+        [ngClass]="{ 'is-invalid': username.invalid && f.submitted }"
       />
-      @if (username.errors && (username.dirty || username.touched || f.submitted)){
-        <div class="invalid-feedback">
-          @if (username.errors['required']) {
-            <div>Username is required</div>
-          }
-          @if (username.errors['minlength']) {
-            <div>Username must be at least 5 characters</div>
-          }
-          @if (username.errors['maxlength']) {
-            <div>Username must be at most 15 characters</div>
-          }
-        </div>
-      }
-      <br/>
+      <div *ngIf="username.errors && (username.dirty || username.touched || f.submitted)" class="invalid-feedback">
+        <div *ngIf="username.errors['required']">Username is required</div>
+        <div *ngIf="username.errors['minlength']">Username must be at least 5 characters</div>
+        <div *ngIf="username.errors['maxlength']">Username must be at most 15 characters</div>
+      </div>
+      <br />
 
       <!-- PASSWORD -->
-      <label for ="password">Password</label>
-      <br>
+      <label for="password">Password</label>
+      <br />
       <input
         required
-        name = "password"
-        id ="password"
+        name="password"
+        id="password"
         type="password"
         minlength="8"
-        #password = "ngModel"
+        #password="ngModel"
         [(ngModel)]="form.password"
         [ngClass]="{ 'is-invalid': password.invalid && (password.dirty || password.touched || f.submitted) }"
       />
-      @if (password.errors && (password.dirty || password.touched || f.submitted)) {
-        <div class="invalid-feedback">
-          @if (password.errors['required']) {
-            <div>Password is required</div>
-          }
-          @if (password.errors['minlength']) {
-            <div>Password must be at least 6 characters</div>
-          }
-        </div>
-      }
-      <br/>
-      <br/>
+      <div *ngIf="password.errors && (password.dirty || password.touched || f.submitted)" class="invalid-feedback">
+        <div *ngIf="password.errors['required']">Password is required</div>
+        <div *ngIf="password.errors['minlength']">Password must be at least 6 characters</div>
+      </div>
+      <br /><br />
+
       <button type="submit" id="submit-button">Login</button>
 
-      @if (f.submitted && isLoginFailed) {
-        <div class="alert alert-warning">
-          Login failed!<br />{{ errorMessage }}
-        </div>
-      }
+      <div *ngIf="f.submitted && isLoginFailed" class="alert alert-warning">
+        Login failed!<br />{{ errorMessage }}
+      </div>
     </form>
-  } @else {
+  </ng-container>
+
+  <ng-template #loggedInTemplate>
     <div class="alert alert-success">Logged in!</div>
-  }
+  </ng-template>
 </div>

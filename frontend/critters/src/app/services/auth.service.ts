@@ -1,73 +1,69 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Observable, tap} from 'rxjs';
-import {parseJwt} from '../shared/jwt-utils';
+import {BehaviorSubject, map, Observable, tap} from 'rxjs';
+import {User} from '../shared/model/user';
 
 /**
- * Service: Sends registration, login, logout HTTP POST Requests to backend
- * - LOGIN (sends username and password with a POST Request)
- * -REGISTER (sends username, email and password with POST)
- * LOGOUT (logs out using POST Req)
+ * Service:
  */
-
-const AUTH_API = 'http://localhost:8080/api/auth/';
-
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  //in memory storage for the accessToken and currentUser
-  private accessToken: string | null = null;
-  private currentUser: any = null;
+  private API_URL = 'http://localhost:8080/api';
+
+  // Holds current user info or null if logged out
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+
+  // Observable for components to subscribe to auth state changes
+  public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  login(username: string, password: string): Observable<any> {
-    return this.http.post<any>(
-      AUTH_API + 'signin',
-      { username, password },
-      { headers: new HttpHeaders({ 'Content-Type': 'application/json' }), withCredentials: true }
-    ).pipe(
-      tap(response => {
-        this.accessToken = response.accessToken;
-        this.currentUser = parseJwt(response.accessToken);
-      })
+  //readonly isLoggedIn observable which checks whether the user is logged in or not
+  public readonly isLoggedIn$ = this.currentUser$.pipe(
+    map(user => !!user)
+  );
+
+  // Call this on app init or page reload to check if user is logged in
+  checkAuth(): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/user`, { withCredentials: true }).pipe(
+      tap(user => this.currentUserSubject.next(user))
     );
   }
 
-  register(username: string, email: string, password: string): Observable<any> {
-    return this.http.post(
-      AUTH_API + 'signup',
-      { username, email, password },
-      { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }
+  login(username: string, password: string): Observable<User> {
+    return this.http.post<User>(
+      `${this.API_URL}/auth/signin`,
+      { username, password },
+      { withCredentials: true }
+    ).pipe(
+      tap(user => this.currentUserSubject.next(user))
     );
   }
 
   logout(): Observable<any> {
-    this.accessToken = null;
-    this.currentUser = null;
-    return this.http.post(AUTH_API + 'signout', {}, { withCredentials: true });
-  }
-
-  refreshToken(): Observable<any> {
-    return this.http.post<any>(
-      AUTH_API + 'refreshtoken',
-      {},
-      { withCredentials: true }
-    ).pipe(
-      tap(response => {
-        this.accessToken = response.accessToken;
-        this.currentUser = parseJwt(response.accessToken);
-      })
+    return this.http.post(`${this.API_URL}/auth/signout`, {}, { withCredentials: true }).pipe(
+      tap(() => this.currentUserSubject.next(null))
     );
   }
 
-  getAccessToken(): string | null {
-    return this.accessToken;
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/signup`, {
+      username,
+      email,
+      password
+    });
   }
 
-  getCurrentUser(): any {
-    return this.currentUser;
+  // Convenience getter to know if user is logged in
+  isLoggedIn(): boolean {
+    return !!this.currentUserSubject.value;
+  }
+
+  // Get current user value (can be null)
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
   }
 }

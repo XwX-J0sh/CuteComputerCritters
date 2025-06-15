@@ -12,11 +12,4 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    public User getUserById(int id) {
-        return userRepository.getReferenceById(id);
-    }
 }

@@ -8,15 +8,8 @@
       <li class="nav-item">
         <a href="/profile" class="nav-link" routerLink="profile">Profile </a>
       </li>
-      @if (isLoggedIn) {
-        <li class="nav-item">
-          <a href="/user" class="nav-link" routerLink="user">User</a>
-        </li>
-      }
     </ul>
-
-    @if (!isLoggedIn) {
-      <ul class="navbar-nav ml-auto">
+      <ul class="navbar-nav ml-auto" *ngIf="!(isLoggedIn$ | async); else loggedIn">
         <li class="nav-item">
           <a href="/register" class="nav-link" routerLink="register">Sign Up</a>
         </li>
@@ -24,16 +17,18 @@
           <a href="/login" class="nav-link" routerLink="login">Login</a>
         </li>
       </ul>
-    } @else {
+
+    <!--TEMPLATE-->
+    <ng-template #loggedIn>
       <ul class="navbar-nav ml-auto">
         <li class="nav-item">
-          <a href="/profile" class="nav-link" routerLink="profile">{{ username }}</a>
+          <a routerLink="/profile" routerLinkActive="active" class="nav-link">{{ username }}</a>
         </li>
         <li class="nav-item">
-          <a href class="nav-link" (click)="logout()">LogOut</a>
+          <a href="#" (click)="logout()" class="nav-link">Log Out</a>
         </li>
       </ul>
-    }
+    </ng-template>
   </nav>
   <div class="container">
     <router-outlet></router-outlet>

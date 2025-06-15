@@ -17,6 +17,7 @@ import static com.CuteComputerCritters.backend.api.model.medicine.EnumMedicineTy
 
 @Component
 @AllArgsConstructor
+//Data seeder fills tables with initial necessary information such as foods, medicine and role types
 public class DataSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
@@ -25,16 +26,19 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        //Role types
         if(roleRepository.count() == 0) {
             roleRepository.save(new Role(EnumRole.USER));
             roleRepository.save(new Role(EnumRole.ADMIN));
         }
 
+        //medicine
         if(medicineRepository.count() == 0) {
             medicineRepository.save(new Medicine(EnumMedicineType.BAND_AID));
             medicineRepository.save(new Medicine(EnumMedicineType.PILL));
         }
 
+        //foods
         if(foodRepository.count() == 0) {
             foodRepository.save(new Food("Cake", EnumFoodType.SNACK, 3));
             foodRepository.save(new Food("Bread", EnumFoodType.MEAL, 5));
