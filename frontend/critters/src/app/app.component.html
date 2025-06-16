@@ -1,26 +1,32 @@
 <div id="app">
-  <nav class="navbar navbar-expand navbar-dark bg-dark">
-    <a href="#" class="navbar-brand">CuteComputerCritter</a>
-    <ul class="navbar-nav mr-auto" routerLinkActive="active">
-      <li class="nav-item">
-        <a href="/home" class="nav-link" routerLink="home">Home </a>
+  <nav class="sticky top-0 left-0 flex justify-between basis-full bg-sky-50 py-4">
+    <a href="#" class="justify self-center p-2">CuteComputerCritter</a>
+    <ul class="flex flex-row justify-stretched" routerLinkActive="active">
+      <li class="">
+        <a href="/home" class="nav-link" routerLink="home">Home</a>
       </li>
-      <li class="nav-item">
-        <a href="/profile" class="nav-link" routerLink="profile">Profile </a>
+      <li class="">
+        <a href="/how-to-play" class="nav-link" routerLink="how-to-play">How To Play</a>
+      </li>
+      <li class="">
+        <a href="/support" class="nav-link" routerLink="support">Support</a>
+      </li>
+      <li class="">
+        <a href="/about-us" class="nav-link" routerLink="about-us">About Us</a>
       </li>
     </ul>
-      <ul class="navbar-nav ml-auto" *ngIf="!(isLoggedIn$ | async); else loggedIn">
-        <li class="nav-item">
-          <a href="/register" class="nav-link" routerLink="register">Sign Up</a>
-        </li>
+    <ul class="flex flex-row" *ngIf="!(isLoggedIn$ | async); else loggedIn">
+      <li class="">
+        <a href="/register" class="nav-link" routerLink="register">Sign Up</a>
+      </li>
         <li class="nav-item">
           <a href="/login" class="nav-link" routerLink="login">Login</a>
         </li>
-      </ul>
+    </ul>
 
     <!--TEMPLATE-->
     <ng-template #loggedIn>
-      <ul class="navbar-nav ml-auto">
+      <ul class="">
         <li class="nav-item">
           <a routerLink="/profile" routerLinkActive="active" class="nav-link">{{ username }}</a>
         </li>
@@ -33,7 +39,8 @@
   <div class="container">
     <router-outlet></router-outlet>
   </div>
-  <footer>
+
+  <footer class="static bottom-0 left-0 flex basis-full bg-sky-50">
     <ul>
       <li>Home</li>
       <li>How to Play</li>
