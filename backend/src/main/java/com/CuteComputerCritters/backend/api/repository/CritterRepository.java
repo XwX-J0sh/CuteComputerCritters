@@ -9,5 +9,4 @@ import java.util.List;
 @Repository
 public interface CritterRepository extends JpaRepository<Critter, Integer> {
     List<Critter> findByOwner_UserId(int userId);
-    List<Critter> findByIsActiveTrue();
 }

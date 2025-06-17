@@ -15,15 +15,6 @@ public class CritterUpdateRequest {
     @JsonProperty("training")
     private Integer training;
 
-    @JsonProperty("trainingSessions")
-    private Integer trainingSessions;
-
-    @JsonProperty("snackCounter")
-    private Integer snackCounter;
-
-    @JsonProperty("mealCounter")
-    private Integer mealCounter;
-
     @JsonProperty("weight")
     private Integer weight;
 
@@ -34,11 +25,8 @@ public class CritterUpdateRequest {
     private Boolean canDefend;
 
     @JsonProperty("evolution")
-    private Double evolution;
+    private Float evolution;
 
     @JsonProperty("isAsleep")
     private Boolean isAsleep;
-
-    @JsonProperty("careMisses")
-    private Integer careMisses;
 }
