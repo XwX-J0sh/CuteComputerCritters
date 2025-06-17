@@ -26,6 +26,15 @@ public class CritterGetResponse {
     @JsonProperty("training")
     private int training;
 
+    @JsonProperty("trainingSessions")
+    private int trainingSessions;
+
+    @JsonProperty("snackCounter")
+    private int snackCounter;
+
+    @JsonProperty("mealCounter")
+    private int mealCounter;
+
     @JsonProperty("weight")
     private int weight;
 
@@ -36,7 +45,10 @@ public class CritterGetResponse {
     private boolean canDefend;
 
     @JsonProperty("evolution")
-    private float evolution;
+    private double evolution;
+
+    @JsonProperty("careMisses")
+    private int careMisses;
 
     @JsonProperty("lastAwakeTime")
     private Instant lastAwakeTime;
@@ -55,6 +67,9 @@ public class CritterGetResponse {
 
     @JsonProperty("lastInteractionTime")
     private Instant lastInteractionTime;
+
+    @JsonProperty("totalActiveTime")
+    private Long totalActiveTime;
 
     @JsonProperty("isActive")
     private boolean isActive;
