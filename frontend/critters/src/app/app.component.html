@@ -1,28 +1,65 @@
 <div id="app">
-  <nav class="sticky top-0 left-0 flex justify-between basis-full bg-sky-50 py-4">
-    <a href="#" class="justify self-center p-2">CuteComputerCritter</a>
-    <ul class="flex flex-row justify-stretched" routerLinkActive="active">
-      <li class="">
-        <a href="/home" class="nav-link" routerLink="home">Home</a>
-      </li>
-      <li class="">
-        <a href="/how-to-play" class="nav-link" routerLink="how-to-play">How To Play</a>
-      </li>
-      <li class="">
-        <a href="/support" class="nav-link" routerLink="support">Support</a>
-      </li>
-      <li class="">
-        <a href="/about-us" class="nav-link" routerLink="about-us">About Us</a>
-      </li>
-    </ul>
-    <ul class="flex flex-row" *ngIf="!(isLoggedIn$ | async); else loggedIn">
-      <li class="">
-        <a href="/register" class="nav-link" routerLink="register">Sign Up</a>
-      </li>
-        <li class="nav-item">
-          <a href="/login" class="nav-link" routerLink="login">Login</a>
-        </li>
-    </ul>
+  <!---navbar pulled from flowbite sticky navbar-->
+
+  <!--defines what the general navbar looks like-->
+  <nav class="bg-sky-50 fixed w-full z-20 top-0 left-0 border-b border-gray-200">
+    <!--container defining the entire content inside of the nav bar-->
+    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+     <!--Logo/Title and links back to home always-->
+      <a href="#" class="self-center text-2xl font-semibold whitespace-nowrap text-sky-950">
+        CuteComputerCritter
+      </a>
+      <!--section for either button pill (login/signup) or user menu dropdown-->
+      <div class="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+        <div class="">
+          <ul class="flex flex-row" *ngIf="!(isLoggedIn$ | async); else loggedIn">
+            <li class="">
+              <a href="/register" class="" routerLink="register">Sign Up</a>
+            </li>
+            <li class="">
+              <a href="/login" class="" routerLink="login">Login</a>
+            </li>
+          </ul>
+        </div>
+        <!--mobile and small screens-->
+        <button data-collapse-toggle="navbar-sticky"
+                type="button"
+                class="inline-flex items-center p-2 w-10 h-10 justify-center
+                        text-sm text-sky-900 rounded-lg md:hidden
+                        hover:bg-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                aria-controls="navbar-sticky"
+                aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <svg class="w-5 h-5"
+               aria-hidden="true"
+               xmlns="http://www.w3.org/2000/svg"
+               fill="none" viewBox="0 0 17 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+          </svg>
+        </button>
+      </div>
+      <!--weblinks for the middle of the page-->
+      <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
+           id ="navbar-sticky">
+        <ul class="flex flex-col p-4 md:p-0 mt-4
+                    font-medium border border-gray-200 rounded-lg
+                    md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0"
+            routerLinkActive="active">
+          <li class="">
+            <a href="/home" class="" routerLink="home">Home</a>
+          </li>
+          <li class="">
+            <a href="/how-to-play" class="" routerLink="how-to-play">How To Play</a>
+          </li>
+          <li class="">
+            <a href="/support" class="" routerLink="support">Support</a>
+          </li>
+          <li class="">
+            <a href="/about-us" class="" routerLink="about-us">About Us</a>
+          </li>
+        </ul>
+      </div>
+    </div>
 
     <!--TEMPLATE-->
     <ng-template #loggedIn>
@@ -40,14 +77,61 @@
     <router-outlet></router-outlet>
   </div>
 
-  <footer class="static bottom-0 left-0 flex basis-full bg-sky-50">
-    <ul>
-      <li>Home</li>
-      <li>How to Play</li>
-      <li>Meet the critters</li>
-      <li>DevUpdates</li>
-      <li>About us</li>
-      <li>Logout</li>
-    </ul>
+  <!--site footer pulled from flowbite "social media icons"-->
+  <footer class="relative bottom-0 left-0 w-full bg-sky-50 border-t border-gray-200">
+    <!--div applies to entirety of footer content-->
+    <div class="mx-auto w-full max-w-screen-xl p-4 py-6 lg:py-8">
+      <div class="md:flex md:justify-between">
+        <!--logo segment changed from template-->
+        <div class="mb-6 md:mb-0">
+          <a href="#" class="self-center text-2xl font-semibold whitespace-nowrap text-sky-950">
+            CuteComputerCritter
+          </a>
+        </div>
+        <!--sitemap link section-->
+        <div class="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3 text-gray-500 font-medium">
+          <!--first column of sitemap links-->
+          <div>
+            <ul class="">
+              <li class="mb-4">
+                <a href="/home" class="" routerLink="home">Home</a>
+              </li>
+              <li class="mb-4">
+                <a href="/how-to-play" class="" routerLink="how-to-play">How To Play</a>
+              </li>
+              <li class="mb-4">
+                <a href="/support" class="" routerLink="support">Support</a>
+              </li>
+              <li class="mb-4">
+                <a href="/login" class="" routerLink="login">Account Login</a>
+              </li>
+              <li>
+                <a href="/overview-critters" class="" routerLink="overview-critters">Overview critters</a>
+              </li>
+            </ul>
+          </div>
+          <!--second column of sitemap links-->
+          <div>
+            <ul>
+              <li class="mb-4">
+                <a href="/about-us" class="nav-link" routerLink="about-us">About Us</a>
+              </li>
+              <li class="mb-4">
+                Accessibility
+              </li>
+              <li class="mb-4">
+                <a href="/updates" class="" routerLink="updates">Updates</a>
+              </li>
+              <li class="mb-4">
+                Privacy Policy
+              </li>
+              <li>
+                Terms &amp; Conditions
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </footer>
 </div>
