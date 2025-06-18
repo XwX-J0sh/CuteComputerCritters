@@ -188,4 +188,8 @@ public class Critter {
     @Column(name = "CALL_CHANCE", columnDefinition = "int default 50")
     private int callChance;
 
+    @JsonProperty("trainingFactor")
+    @Column(name ="TRAINING_FACTOR", columnDefinition = "double default 1")
+    private double trainingFactor;
+
 }

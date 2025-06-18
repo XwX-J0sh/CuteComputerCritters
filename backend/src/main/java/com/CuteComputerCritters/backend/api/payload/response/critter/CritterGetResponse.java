@@ -1,7 +1,6 @@
 package com.CuteComputerCritters.backend.api.payload.response.critter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.Instant;
@@ -125,4 +124,7 @@ public class CritterGetResponse {
 
     @JsonProperty("callChance")
     private Integer callChance;
+
+    @JsonProperty("trainingFactor")
+    private Double trainingFactor;
 }

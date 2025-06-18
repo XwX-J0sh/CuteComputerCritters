@@ -82,6 +82,7 @@ public class CritterController {
         critter.setDecayRateHappy(1);
         critter.setSicknessChance(50);
         critter.setCallChance(50);
+        critter.setTrainingFactor(1);
         critterRepository.save(critter);
 
         CritterGetResponse response = mapToResponse(critter, owner);
@@ -463,6 +464,7 @@ public class CritterController {
         response.setCallChance(critter.getCallChance());
         response.setDecayRateHappy(critter.getDecayRateHappy());
         response.setDecayRateHunger(critter.getDecayRateHunger());
+        response.setTrainingFactor(critter.getTrainingFactor());
         return response;
     }
 }

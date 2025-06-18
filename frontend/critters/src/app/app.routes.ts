@@ -4,6 +4,7 @@ import {LoginComponent} from './login/login.component';
 import {RegisterComponent} from './register/register.component';
 import {ProfileComponent} from './profile/profile.component';
 import {BoardUserComponent} from './board-user/board-user.component';
+import {CritterStatsComponent} from './critter-stats/critter-stats.component';
 
 export const routes: Routes = [
   {path: '', pathMatch: 'full', redirectTo: 'home'},
@@ -12,4 +13,5 @@ export const routes: Routes = [
   {path: 'register', component: RegisterComponent},
   {path: 'profile', component: ProfileComponent},
   { path: 'user', component: BoardUserComponent },
+  { path: 'critter-stats', component: CritterStatsComponent},
 ];
