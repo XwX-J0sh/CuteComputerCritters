@@ -8,6 +8,7 @@ import com.CuteComputerCritters.backend.api.payload.request.critter.NewCritterRe
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
 import com.CuteComputerCritters.backend.api.repository.CritterRepository;
 import com.CuteComputerCritters.backend.api.repository.FoodRepository;
+import com.CuteComputerCritters.backend.api.repository.MedicineRepository;
 import com.CuteComputerCritters.backend.api.repository.UserRepository;
 import com.CuteComputerCritters.backend.api.security.services.UserDetailsImpl;
 import com.CuteComputerCritters.backend.api.service.CritterService;
@@ -33,6 +34,8 @@ public class CritterController {
     final int MAX_STAT = 10;
     final int MAX_WEIGHT = 30;
     final int MIN_WEIGHT = 1;
+    final int MIN_STAT = 0;
+    private final MedicineRepository medicineRepository;
 
     //create critter
     @PostMapping("/new")
@@ -64,6 +67,22 @@ public class CritterController {
         critter.setActive(false);
         critter.setTotalActiveTime(0L);
         critter.setCareMisses(0);
+        critter.setInjured(false);
+        critter.setHasCalled(false);
+        critter.setDead(false);
+        critter.setInjuredSince(null);
+        critter.setUnhappySince(null);
+        critter.setHungrySince(null);
+        critter.setSickSince(null);
+        critter.setAttackedSince(null);
+        critter.setLightIsOn(false);
+        critter.setLightOnSince(null);
+        critter.setCalledSince(null);
+        critter.setDecayRateHunger(1);
+        critter.setDecayRateHappy(1);
+        critter.setSicknessChance(50);
+        critter.setCallChance(50);
+        critter.setTrainingFactor(1);
         critterRepository.save(critter);
 
         CritterGetResponse response = mapToResponse(critter, owner);
@@ -91,6 +110,8 @@ public class CritterController {
         if (critterUpdateRequest.getEvolution() != null) critter.setEvolution(critterUpdateRequest.getEvolution());
         if (critterUpdateRequest.getIsAsleep() != null) critter.setAsleep(critterUpdateRequest.getIsAsleep());
         if (critterUpdateRequest.getCareMisses() != null) critter.setCareMisses(critterUpdateRequest.getCareMisses());
+        if (critterUpdateRequest.getHasCalled() != null) critter.setHasCalled(critter.isHasCalled());
+        if (critterUpdateRequest.getIsInjured() != null) critter.setInjured(critter.isInjured());
 
         critterRepository.save(critter);
 
@@ -148,7 +169,12 @@ public class CritterController {
         return ResponseEntity.ok("Critter deleted successfully");
     }
 
+
+
     /* GAME MECHANICS */
+
+
+
 
     //activate a critter (start playing)
     @PostMapping("/{critterId}/start")
@@ -311,6 +337,68 @@ public class CritterController {
         return ResponseEntity.ok("Critter trained!");
     }
 
+    //if the critter has Called, the user should respond by calling upon the endpoint
+    @PatchMapping("/{critterId}/respond")
+    public ResponseEntity<?> respondToCall (@PathVariable int critterId, Authentication authentication) {
+        //authenticate and get user (owner)
+        User owner = authenticateAndGetUser(authentication);
+
+        //get critter if owned by User
+        Critter critter = getCritterIfOwnedByUser(critterId, owner.getUserId());
+
+        if(!(critter.isHasCalled())){
+            //if the critter did not call but the User responded:
+            System.out.println("Responded unnecessarily");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter did not call");
+        }
+
+        critter.setHasCalled(false);
+
+        return ResponseEntity.ok("Responded to call");
+    }
+
+    //if the critter is injured or sick, the User should heal it via band-aids or pills
+    @PatchMapping("/{critterId}/heal/{medicineType}")
+    public ResponseEntity<?> heal (@PathVariable int critterId, Authentication authentication, @PathVariable String medicineType) {
+        //authenticate and get user (owner)
+        User owner = authenticateAndGetUser(authentication);
+
+        //get critter if owned by User
+        Critter critter = getCritterIfOwnedByUser(critterId, owner.getUserId());
+
+        //if the critter is healthy and uninjured
+        if(critter.isHealthy() && !(critter.isInjured())){
+            //the user should receive an error for unnecessarily healing the critter
+            System.out.println("Healed unnecessarily");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter is neither sick nor injured");
+        }
+
+        if(medicineType.equals("BAND_AID")){
+            if(critter.isInjured()){
+                critter.setInjured(false);
+                critter.setInjuredSince(null);
+                return ResponseEntity.ok("Healed injury");
+            }
+            else {
+                critter.setHappiness(Math.max(critter.getHappiness() - 1, 0));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not injured");
+            }
+        }
+        if(medicineType.equals("PILLS")){
+            if(!(critter.isHealthy())){
+                critter.setHealthy(true);
+                critter.setSickSince(null);
+                return ResponseEntity.ok("Healed sickness");
+            }
+            else {
+                critter.setHappiness(Math.min(critter.getHappiness() - 2, 0));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not sick");
+            }
+        }
+
+        return ResponseEntity.ok("Responded to injury/sickness");
+    }
+
     //HELPERS:
     // authenticate and get User entity (owner)
     private User authenticateAndGetUser(Authentication authentication) {
@@ -334,7 +422,7 @@ public class CritterController {
         return critter;
     }
 
-    //map the critter and its owner's info too the response
+    //map the critter and its owner's info to the response
     public static CritterGetResponse mapToResponse(Critter critter, User owner) {
         CritterGetResponse response = new CritterGetResponse();
         response.setCritterId(critter.getCritterId());
@@ -361,6 +449,22 @@ public class CritterController {
         response.setOwnerUsername(owner.getUsername());
         response.setOwnerId(owner.getUserId());
         response.setCareMisses(critter.getCareMisses());
+        response.setInjured(critter.isInjured());
+        response.setHasCalled(critter.isHasCalled());
+        response.setDead(critter.isDead());
+        response.setHungrySince(critter.getHungrySince());
+        response.setUnhappySince(critter.getUnhappySince());
+        response.setSickSince(critter.getSickSince());
+        response.setAttackedSince(critter.getAttackedSince());
+        response.setInjuredSince(critter.getInjuredSince());
+        response.setLightIsOn(critter.isLightIsOn());
+        response.setLightOnSince(critter.getLightOnSince());
+        response.setCalledSince(critter.getCalledSince());
+        response.setSicknessChance(critter.getSicknessChance());
+        response.setCallChance(critter.getCallChance());
+        response.setDecayRateHappy(critter.getDecayRateHappy());
+        response.setDecayRateHunger(critter.getDecayRateHunger());
+        response.setTrainingFactor(critter.getTrainingFactor());
         return response;
     }
 }
