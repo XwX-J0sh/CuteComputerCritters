@@ -14,10 +14,14 @@
         <div class="">
           <ul class="flex flex-row" *ngIf="!(isLoggedIn$ | async); else loggedIn">
             <li class="">
-              <a href="/register" class="" routerLink="register">Sign Up</a>
+              <a href="/register"
+                 class="text-white bg-violet-950 hover:bg-violet-800 focus:ring-4 focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+                 routerLink="register">Sign Up</a>
             </li>
             <li class="">
-              <a href="/login" class="" routerLink="login">Login</a>
+              <a href="/login"
+                 class="text-violet-950 bg-violet-200 hover:bg-violet-300 focus:ring-4 focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+                 routerLink="login">Login</a>
             </li>
           </ul>
         </div>
@@ -123,10 +127,10 @@
                 <a href="/updates" class="" routerLink="updates">Updates</a>
               </li>
               <li class="mb-4">
-                Privacy Policy
+                <a href="/privacy-policy" class="" routerLink="privacy-policy">Privacy Policy</a>
               </li>
               <li>
-                Terms &amp; Conditions
+                <a href="/terms-and-conditions" class="" routerLink="terms-and-conditions">Terms & Conditions</a>
               </li>
             </ul>
           </div>
