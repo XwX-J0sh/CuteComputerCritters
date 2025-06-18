@@ -1,6 +1,7 @@
 package com.CuteComputerCritters.backend.api.payload.response.critter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.Instant;
@@ -79,4 +80,49 @@ public class CritterGetResponse {
 
     @JsonProperty("ownerId")
     private int ownerId;
+
+    @JsonProperty("hasCalled")
+    private boolean hasCalled;
+
+    @JsonProperty("isInjured")
+    private boolean isInjured;
+
+    @JsonProperty("isDead")
+    private boolean isDead;
+
+    @JsonProperty("hungrySince")
+    private Instant hungrySince;
+
+    @JsonProperty("unhappySince")
+    private Instant unhappySince;
+
+    @JsonProperty("sickSince")
+    private Instant sickSince;
+
+    @JsonProperty("injuredSince")
+    private Instant injuredSince;
+
+    @JsonProperty("attackedSince")
+    private Instant attackedSince;
+
+    @JsonProperty("lightIsOn")
+    private Boolean lightIsOn;
+
+    @JsonProperty("lightOnSince")
+    private Instant lightOnSince;
+
+    @JsonProperty("calledSince")
+    private Instant calledSince;
+
+    @JsonProperty("decayRateHunger")
+    private int decayRateHunger;
+
+    @JsonProperty("decayRateHappy")
+    private Integer decayRateHappy;
+
+    @JsonProperty("sicknessChance")
+    private Integer sicknessChance;
+
+    @JsonProperty("callChance")
+    private Integer callChance;
 }
