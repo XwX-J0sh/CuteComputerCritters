@@ -1,15 +1,16 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import * as SockJS from 'sockjs-client';
+import SockJS from 'sockjs-client';
 import { Client, Message } from '@stomp/stompjs'
+import {CommonModule} from "@angular/common";
 
 @Component({
   selector: 'app-critter-stats',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './critter-stats.component.html',
   styleUrl: './critter-stats.component.scss'
 })
 export class CritterStatsComponent implements OnInit, OnDestroy {
-  private stompClient: Client;
+  private stompClient: Client = new Client();
   public critterStats: any;
 
   ngOnInit(): void {
@@ -21,7 +22,7 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
       webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
       reconnectDelay: 5000,
       onConnect: () => {
-        this.stompClient.subscribe('/topic/critter-stats', (message: Message) => {
+        this.stompClient.subscribe('/critter-stats', (message: Message) => {
           this.critterStats = JSON.parse(message.body);
           console.log('Received critter stats:', this.critterStats);
         });

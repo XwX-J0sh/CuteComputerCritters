@@ -1,1 +1,13 @@
-<p>critter-stats works!</p>
+<div *ngIf="critterStats">
+  <h2>Critter Stats</h2>
+  <p><strong>Name:</strong> {{ critterStats.name }}</p>
+  <p><strong>Hunger:</strong> {{ critterStats.hunger }}</p>
+  <p><strong>Happiness:</strong> {{ critterStats.happiness }}</p>
+  <p><strong>Health:</strong> {{ critterStats.healthy ? 'Healthy' : 'Sick' }}</p>
+  <p><strong>Care Misses:</strong> {{ critterStats.careMisses }}</p>
+  <p><strong>Evolution:</strong> {{ critterStats.evolution }}</p>
+</div>
+
+<div *ngIf="!critterStats">
+  <p>Waiting for critter stats...</p>
+</div>
