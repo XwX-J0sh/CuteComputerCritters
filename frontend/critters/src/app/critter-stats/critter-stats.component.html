@@ -3,7 +3,7 @@
   <ul *ngIf="critters.length">
     <li *ngFor="let critter of critters">
       <strong>{{ critter.critterName }}</strong> - Happiness: {{ critter.happiness }}
-      <button (click)="activate(critter.id)">Activate</button>
+      <button>Activate</button>
     </li>
   </ul>
 
