@@ -68,8 +68,8 @@ public class JwtUtils {
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
-                //.secure(true) enable in PROD
-                //.sameSite("None") enable in PROD
+                .secure(false) //XwX change to true
+                .sameSite("Lax") //XwX change to "None"
                 .build();
     }
 
@@ -78,8 +78,8 @@ public class JwtUtils {
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
-                //.secure(true) enable in PROD
-                //.sameSite("None") enable in PROD
+                .secure(false) //XwX change to true
+                .sameSite("Lax") //XwX change to "None"
                 .build();
     }
 
@@ -125,8 +125,8 @@ public class JwtUtils {
                 .path(path)
                 .maxAge(maxAgeSeconds)
                 .httpOnly(true)
-                //.secure(true) enable in PROD
-                //.sameSite("None") enable in PROD
+                .secure(false) //XwX change to true
+                .sameSite("Lax") //XwX change to "None"
                 .build();
     }
 

@@ -1,13 +1,11 @@
-<div *ngIf="critterStats">
-  <h2>Critter Stats</h2>
-  <p><strong>Name:</strong> {{ critterStats.name }}</p>
-  <p><strong>Hunger:</strong> {{ critterStats.hunger }}</p>
-  <p><strong>Happiness:</strong> {{ critterStats.happiness }}</p>
-  <p><strong>Health:</strong> {{ critterStats.healthy ? 'Healthy' : 'Sick' }}</p>
-  <p><strong>Care Misses:</strong> {{ critterStats.careMisses }}</p>
-  <p><strong>Evolution:</strong> {{ critterStats.evolution }}</p>
-</div>
+<div class="mt-60">
+  <h2>Your Critters</h2>
+  <ul *ngIf="critters.length">
+    <li *ngFor="let critter of critters">
+      <strong>{{ critter.critterName }}</strong> - Happiness: {{ critter.happiness }}
+      <button (click)="activate(critter.id)">Activate</button>
+    </li>
+  </ul>
 
-<div *ngIf="!critterStats">
-  <p>Waiting for critter stats...</p>
+  <button (click)="createCritter()">Create New Critter</button>
 </div>

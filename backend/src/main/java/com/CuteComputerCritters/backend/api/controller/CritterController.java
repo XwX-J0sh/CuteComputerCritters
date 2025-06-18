@@ -33,8 +33,6 @@ public class CritterController {
     private final FoodRepository foodRepository;
     final int MAX_STAT = 10;
     final int MAX_WEIGHT = 30;
-    final int MIN_WEIGHT = 1;
-    final int MIN_STAT = 0;
     private final MedicineRepository medicineRepository;
 
     //create critter
@@ -398,6 +396,7 @@ public class CritterController {
 
         return ResponseEntity.ok("Responded to injury/sickness");
     }
+
 
     //HELPERS:
     // authenticate and get User entity (owner)

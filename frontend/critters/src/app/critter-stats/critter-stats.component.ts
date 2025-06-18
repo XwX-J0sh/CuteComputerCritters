@@ -1,7 +1,8 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import SockJS from 'sockjs-client';
-import { Client, Message } from '@stomp/stompjs'
+import {CritterGetResponse} from "../shared/model/CritterGetResponse";
 import {CommonModule} from "@angular/common";
+import {CritterService} from "../services/critter.service";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'app-critter-stats',
@@ -10,34 +11,89 @@ import {CommonModule} from "@angular/common";
   styleUrl: './critter-stats.component.scss'
 })
 export class CritterStatsComponent implements OnInit, OnDestroy {
-  private stompClient: Client = new Client();
-  public critterStats: any;
+  critters: CritterGetResponse[] = [];
+  private subscriptions: Subscription[] = [];
+
+  constructor(private critterService: CritterService) {}
 
   ngOnInit(): void {
-    this.connectWebSocket();
-  }
+    this.loadCritters();
 
-  connectWebSocket(): void {
-    this.stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      reconnectDelay: 5000,
-      onConnect: () => {
-        this.stompClient.subscribe('/critter-stats', (message: Message) => {
-          this.critterStats = JSON.parse(message.body);
-          console.log('Received critter stats:', this.critterStats);
-        });
-      },
-      onStompError: (frame) => {
-        console.error('Broker error: ', frame.headers['message']);
-      }
+    // Example: Listen to real-time updates for critter ID 1
+    const sub = this.critterService.subscribeToCritter(1).subscribe(data => {
+      console.log('[WebSocket] Update for critter 1:', data);
+      // You could update `this.critters` here based on `data`
     });
 
-    this.stompClient.activate();
+    this.subscriptions.push(sub);
+  }
+
+  loadCritters(): void {
+    this.critterService.getAllCritters().subscribe({
+      next: (critters) => {
+        this.critters = critters;
+        console.log('Loaded critters:', critters);
+      },
+      error: (err) => {
+        console.error('Failed to load critters:', err);
+      }
+    });
+  }
+
+  //Create new critter
+  createCritter(): void {
+    this.critterService.makeNewCritter('Fluffy').subscribe({
+      next: (response) => {
+        console.log('New critter created:', response);
+        this.loadCritters(); // Refresh the list
+      },
+      error: (err) => console.error('Error creating critter:', err)
+    });
+  }
+
+  //Activate
+  activate(id: number): void {
+    this.critterService.activateCritter(id).subscribe(() => {
+      console.log(`Critter ${id} activated`);
+    });
+  }
+
+  //Pause
+  deactivate(id: number): void {
+    this.critterService.deactivateCritter(id).subscribe(() => {
+      console.log(`Critter ${id} deactivated`);
+    })
+  }
+
+  //train critter
+  train(id: number, trainingValue: number) {
+    this.critterService.trainCritter(id, trainingValue).subscribe(() => {
+      console.log(`Trainingvalue ${trainingValue}`);
+    })
+  }
+
+  //respond to call
+  respondCall(id: number) {
+    this.critterService.respondToCall(id).subscribe(() => {
+      console.log('Responded to call');
+    })
+  }
+
+  //feed critter
+  feed(id: number, foodName: string) {
+    this.critterService.feedCritter(id, foodName).subscribe(() => {
+      console.log(`Fed critter!`);
+    })
+  }
+
+  //heal critter
+  heal(id: number, medicineType: string) {
+    this.critterService.healCritter(id, medicineType).subscribe(() => {
+      console.log(`Healed critter!`);
+    })
   }
 
   ngOnDestroy(): void {
-    if (this.stompClient && this.stompClient.active) {
-      this.stompClient.deactivate();
-    }
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }
