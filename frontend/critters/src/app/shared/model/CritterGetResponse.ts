@@ -9,7 +9,7 @@ export interface CritterGetResponse {
   snackCounter: number;
   mealCounter: number;
   weight: number;
-  healthy: boolean;
+  isHealthy: boolean;
   canDefend: boolean;
   evolution: number;
   lastAwakeTime?: string;

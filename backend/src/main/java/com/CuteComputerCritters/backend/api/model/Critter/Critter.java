@@ -1,10 +1,9 @@
-package com.CuteComputerCritters.backend.api.model;
+package com.CuteComputerCritters.backend.api.model.Critter;
 
 import com.CuteComputerCritters.backend.api.model.User.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -20,6 +19,9 @@ public class Critter {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int critterId;
+
+    @Version
+    private Long version;
 
     @NotBlank
     @JsonProperty("critterName")
@@ -93,9 +95,9 @@ public class Critter {
     @Column(name = "ATTACKED_SINCE")
     private Instant attackedSince;
 
-    @JsonProperty("evolution")
-    @Column(name = "EVOLUTION", columnDefinition = "double default 1.0")
-    private double evolution;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EVOLUTION_STAGE", referencedColumnName = "EVOLUTION_STAGE")
+    private CritterEvolutions evolutionStage;
 
     @ManyToOne
     @JoinColumn(name = "USER_ID")
@@ -132,17 +134,6 @@ public class Critter {
     @Column(name = "IS_ASLEEP")
     private boolean isAsleep;
 
-    /*tracks how long the Critter can stay awake
-    before it needs sleep (in minutes)*/
-    @JsonProperty("sleepCycleDuration")
-    @Column(name = "SLEEP_CYCLE_DURATION", columnDefinition = "integer default 30")
-    private int sleepCycleDuration;
-
-    /*tracks how long the critter sleeps (in minutes)*/
-    @JsonProperty("sleepDuration")
-    @Column(name = "SLEEP_DURATION", columnDefinition = "integer default 5")
-    private int sleepDuration;
-
     //tracks the last time the pet was interacted with
     @JsonProperty("lastInteractionTime")
     @Column(name = "LAST_INTERACTION_TIME")
@@ -170,26 +161,5 @@ public class Critter {
     @JsonProperty("isDead")
     @Column(name = "IS_DEAD", columnDefinition = "boolean default false")
     private boolean isDead;
-
-    //DECAY RATES
-    @JsonProperty("decayRateHunger")
-    @Column(name = "DECAY_RATE_HUNGER", columnDefinition = "int default 1")
-    private int decayRateHunger;
-
-    @JsonProperty("decayRateHappy")
-    @Column(name = "DECAY_RATE_HAPPY", columnDefinition = "int default 1")
-    private int decayRateHappy;
-
-    @JsonProperty("sicknessChance")
-    @Column(name = "SICKNESS_CHANCE", columnDefinition = "int default 50")
-    private int sicknessChance;
-
-    @JsonProperty("callChance")
-    @Column(name = "CALL_CHANCE", columnDefinition = "int default 50")
-    private int callChance;
-
-    @JsonProperty("trainingFactor")
-    @Column(name ="TRAINING_FACTOR", columnDefinition = "double default 1")
-    private double trainingFactor;
 
 }

@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {filter, Observable, Subject} from 'rxjs';
+import {Observable, Subject} from 'rxjs';
 import {CritterGetResponse} from '../shared/model/CritterGetResponse';
 import {AuthService} from './auth.service';
 import {Client, IMessage} from '@stomp/stompjs';
+import {WebSocketService} from './web-socket.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,22 +12,17 @@ import {Client, IMessage} from '@stomp/stompjs';
 export class CritterService {
   private baseUrl = 'http://localhost:8080/critter'; //Connect to spring boot
 
-  private stompClient!: Client;
-  private connected = false;
-
-  private subjects: { [key: string]: Subject<any> } = {};
-
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private websocketService: WebSocketService
   ) {
-    // Only connect WebSocket after successful login
-    //and disconnect when logged out
+    // Manage websocket connection based on auth
     this.authService.isLoggedIn$.subscribe(loggedIn => {
       if (loggedIn) {
-        this.connectWebSocket();
-      } else if (this.connected) {
-        this.disconnect();
+        this.websocketService.connect();
+      } else {
+        this.websocketService.disconnect();
       }
     });
   }
@@ -39,26 +35,16 @@ export class CritterService {
   }
 
   // WebSocket: Subscribe to critter by id
-  subscribeToCritter(critterId: number): Observable<any> {
-    const topic = `/topic/critter/${critterId}`;
-
-    if (!this.subjects[topic]) {
-      const subject = new Subject<any>();
-      this.subjects[topic] = subject;
-
-      if (this.connected) {
-        this.subscribeToTopic(topic);
-      }
-    }
-
-    return this.subjects[topic].asObservable();
+  subscribeToCritter(critterId: number): Observable<CritterGetResponse> {
+    return this.websocketService.subscribeToCritter(critterId);
   }
 
   /* GAME MECHANICS
   * MAKE NEW critter
+  * DELETE critter
   * ACTIVATE critter to start playing
   * DEACTIVATE critter to stop playing
-  * TRAIN critter
+  * TRAIN critter (pass training value to pet/how much the pet has been trained)
   * RESPOND to call
   * FEED the critter
   * HEAL the critter
@@ -67,88 +53,64 @@ export class CritterService {
   //Make new critter
   makeNewCritter(critterName: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/new`, {critterName}, {
-      withCredentials: true
-    })
+      withCredentials: true,
+      responseType: 'text' as 'json'
+    });
+  }
+
+  //delete critter
+  deleteCritter(critterId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${critterId}`,{
+      withCredentials: true,
+      responseType: 'text' as 'json'
+    });
   }
 
   //Activation
   activateCritter(critterId: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/${critterId}/start`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      responseType: 'text' as 'json'
     });
   }
 
   //Deactivation
   deactivateCritter(critterId: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/${critterId}/stop`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      responseType: 'text' as 'json'
     });
   }
 
   //train critter
   trainCritter(critterId: number, trainingValue: number) {
     return this.http.patch(`${this.baseUrl}/${critterId}/train/${trainingValue}`,{}, {
-      withCredentials: true
+      withCredentials: true,
+      responseType: 'text' as 'json'
     });
   }
 
   //respond to call
   respondToCall(critterId: number) {
     return this.http.patch(`${this.baseUrl}/${critterId}/respond`,{},{
-      withCredentials: true
+      withCredentials: true,
+      responseType: 'text' as 'json'
     });
   }
 
   //feed the critter
   feedCritter(critterId: number, foodName: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/${critterId}/feed/${foodName}`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      responseType: 'text' as 'json'
     });
   }
 
   //heal critter
   healCritter(critterId: number, medicineType: string): Observable<any> {
     return this.http.patch(`${this.baseUrl}/${critterId}/heal/${medicineType}`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      responseType: 'text' as 'json'
     });
-  }
-
-  private connectWebSocket(): void {
-    if (this.connected) return;
-
-    this.stompClient = new Client({
-      brokerURL: 'ws://localhost:8080/ws',
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      onConnect: () => {
-        console.log('[CritterService] WebSocket connected');
-        this.connected = true;
-
-        // Subscribe to already-requested topics
-        for (const topic in this.subjects) {
-          this.subscribeToTopic(topic);
-        }
-      },
-      onStompError: (frame) => {
-        console.error('[CritterService] STOMP error:', frame);
-      }
-    });
-
-    this.stompClient.activate();
-  }
-
-  private subscribeToTopic(topic: string): void {
-    this.stompClient.subscribe(topic, (message: IMessage) => {
-      const data = JSON.parse(message.body);
-      this.subjects[topic].next(data);
-    });
-  }
-
-  disconnect(): void {
-    if (this.stompClient?.active) {
-      this.stompClient.deactivate();
-      this.connected = false;
-    }
   }
 }

@@ -1,5 +1,6 @@
 package com.CuteComputerCritters.backend.api.payload.response.critter;
 
+import com.CuteComputerCritters.backend.api.model.Critter.Critter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -127,4 +128,53 @@ public class CritterGetResponse {
 
     @JsonProperty("trainingFactor")
     private Double trainingFactor;
+
+    public static CritterGetResponse fromEntity(Critter critter) {
+        CritterGetResponse response = new CritterGetResponse();
+
+        response.setCritterId(critter.getCritterId());
+        response.setCritterName(critter.getCritterName());
+        response.setHappiness(critter.getHappiness());
+        response.setHunger(critter.getHunger());
+        response.setTraining(critter.getTraining());
+        response.setTrainingSessions(critter.getTrainingSessions());
+        response.setSnackCounter(critter.getSnackCounter());
+        response.setMealCounter(critter.getMealCounter());
+        response.setWeight(critter.getWeight());
+        response.setEvolution(critter.getEvolutionStage().getStage());
+        response.setCareMisses(critter.getCareMisses());
+        response.setHealthy(critter.isHealthy());
+        response.setCanDefend(critter.isCanDefend());
+        response.setAsleep(critter.isAsleep());
+        response.setSleepCycleDuration(critter.getEvolutionStage().getSleepCycleDuration());
+        response.setSleepDuration(critter.getEvolutionStage().getSleepDuration());
+        response.setTotalActiveTime(critter.getTotalActiveTime());
+        response.setActive(critter.isActive());
+        response.setOwnerId(critter.getOwner().getUserId());
+        response.setOwnerUsername(critter.getOwner().getUsername());
+        response.setHasCalled(critter.isHasCalled());
+        response.setLightIsOn(critter.isLightIsOn());
+
+        response.setLastAwakeTime(critter.getLastAwakeTime());
+        response.setLastSleepTime(critter.getLastSleepTime());
+        response.setLastInteractionTime(critter.getLastInteractionTime());
+        response.setCalledSince(critter.getCalledSince());
+        response.setInjured(critter.isInjured());
+        response.setInjuredSince(critter.getInjuredSince());
+        response.setDead(critter.isDead());
+        response.setHungrySince(critter.getHungrySince());
+        response.setUnhappySince(critter.getUnhappySince());
+        response.setSickSince(critter.getSickSince());
+        response.setAttackedSince(critter.getAttackedSince());
+        response.setLightOnSince(critter.getLightOnSince());
+
+        response.setDecayRateHunger(critter.getEvolutionStage().getDecayRateHunger());
+        response.setDecayRateHappy(critter.getEvolutionStage().getDecayRateHappy());
+        response.setSicknessChance(critter.getEvolutionStage().getSicknessChance());
+        response.setCallChance(critter.getEvolutionStage().getCallChance());
+        response.setTrainingFactor(critter.getEvolutionStage().getTrainingFactor());
+
+        return response;
+    }
+
 }
