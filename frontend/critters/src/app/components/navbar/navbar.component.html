@@ -1,0 +1,122 @@
+<!---navbar pulled from flowbite sticky navbar-->
+<!--defines what the general navbar looks like-->
+<nav
+  class="fixed left-0 top-0 z-20 w-full border-b border-gray-200 bg-sky-50 p-2"
+>
+  <!--container defining the entire content inside of the nav bar-->
+  <div
+    class="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between"
+  >
+    <!--Logo/Title and links back to home always-->
+    <a
+      href="#"
+      class="self-center whitespace-nowrap text-2xl font-semibold text-sky-950"
+    >
+      CuteComputerCritter
+    </a>
+    <!--section for either button pill (login/signup) or user menu dropdown-->
+    <div class="flex space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
+      <div class="">
+        <ul
+          class="flex flex-row"
+          *ngIf="!(isLoggedIn$ | async); else loggedIn"
+        >
+          <li class="">
+            <a
+              href="/register"
+              class="btn-primary mb-2 me-2"
+              routerLink="register"
+            >Sign Up</a
+            >
+          </li>
+          <li class="">
+            <a
+              href="/login"
+              class="btn-secondary mb-2 me-2"
+              routerLink="login"
+            >Login</a
+            >
+          </li>
+        </ul>
+      </div>
+      <!--mobile and small screens-->
+      <button
+        data-collapse-toggle="navbar-sticky"
+        type="button"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-sky-900 hover:bg-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-300 md:hidden"
+        aria-controls="navbar-sticky"
+        aria-expanded="false"
+      >
+        <span class="sr-only">Open main menu</span>
+        <svg
+          class="h-5 w-5"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 17 14"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M1 1h15M1 7h15M1 13h15"
+          />
+        </svg>
+      </button>
+    </div>
+    <!--weblinks for the middle of the page-->
+    <div
+      class="items-center hidden flex w-full justify-between md:order-1 md:flex md:w-auto"
+      id="navbar-sticky"
+    >
+      <ul
+        class="mt-4 flex flex-col font-medium md:mt-0 md:flex-row md:space-x-8 md:border-0 rtl:space-x-reverse"
+        routerLinkActive="active"
+      >
+        <li class="">
+          <a href="/home" class="" routerLink="home">Home</a>
+        </li>
+        <li class="">
+          <a href="/how-to-play" class="" routerLink="how-to-play"
+          >How To Play</a
+          >
+        </li>
+        <li class="">
+          <a href="/support" class="" routerLink="support">Support</a>
+        </li>
+        <li class="">
+          <a href="/about-us" class="" routerLink="about-us">About Us</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!--TEMPLATE-->
+  <ng-template #loggedIn>
+    <ul class="">
+      <li class="relative">
+        <!-- Dropdown Toggle Button -->
+        <button (click)="toggleDropdown()" class="relative z-40">
+          <img src="public/avatar.png" class="w-8 h-8 rounded-full" alt="User avatar" />
+        </button>
+        <!--Dropdown profile menu--->
+        <div class="absolute right-0 mt-2 z-30 hidden font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-violet-900 dark:divide-gray-600"
+             *ngIf="dropdownOpen">
+          <ul class="py-2 text-sm text-gray-600 dark:text-gray-400" aria-labelledby="dropdownLargeButton">
+            <li>
+              <a href="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white" routerLink="profile">Profile</a>
+            </li>
+            <li>
+              <a href="/profile" class="block px-4 py-2 hover:bg-gray-100" routerLink="profile">Profile</a>
+              <a href="/profile" class="" routerLink="profile">Settings</a>
+            </li>
+          </ul>
+          <div class="py-1">
+            <button (click)="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Log Out</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </ng-template>
+</nav>

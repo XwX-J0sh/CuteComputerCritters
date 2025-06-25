@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*breakdown of structuring utilities classes
+  layout/display/position (flex, grid, block, absolute/relative, z-val, inset
+  box model (w-val, h-val, padding, m-2, mx-auto)
+  flex/grid alignment (items-center, justify between gap, space-x)
+  typography (text-sm font, text-color, uppercase etc)
+  background/border (bg-col, bg-opac, border, rounded-md, ring-2)
+  effects (shadow, opacity, transition, duration)
+  state/variant modifiers (hover, focus, dark)
+*/
+
+//button styling
+.btn-primary {
+  @apply rounded-lg bg-violet-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-violet-800 focus:ring-4 focus:ring-violet-300;
+}
+
+.btn-secondary {
+  @apply rounded-lg bg-violet-200 px-5 py-2.5 text-sm font-medium text-violet-950 hover:bg-violet-300 focus:ring-4 focus:ring-violet-600;
+}
+
+//form input styling
+.frm-primary {
+  @apply rounded-lg border border-gray-300 bg-blue-200 text-sm text-blue-950 focus:border-blue-500 focus:ring-blue-500;
+}
