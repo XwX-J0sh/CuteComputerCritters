@@ -12,63 +12,31 @@
       <p>Training Sessions: {{ critter.trainingSessions }}</p>
       <p>Snack counter: {{ critter.snackCounter }}</p>
       <p>Meal counter: {{ critter.mealCounter }}</p>
-      <p>Weight: {{ critter.weight }} pound</p>
+      <p>Weight: {{ critter.weight }} pound(s)</p>
       <p>Evolution: {{critter.evolution}}</p>
       <p>Care Misses: {{ critter.careMisses }}</p>
       <hr>
       <strong>State</strong>
-      <p>
-        Healthy:
-        <span *ngIf="critter.isHealthy; else sickText">healthy</span>
-        <ng-template #sickText>sick</ng-template>
-      </p>
-      <p>
-        Can Defend:
-        <span *ngIf="critter.canDefend; else defendText"></span>
-        <ng-template #defendText>false</ng-template>
-      </p>
-      <p>
-        Is Asleep:
-        <span *ngIf="critter.asleep; else asleepText"></span>
-        <ng-template #asleepText>false</ng-template>
-      </p>
+      <p>Status : {{ critter.isHealthy ? 'Healthy' : 'Sick' }}</p>
+      <p>Can Defend : {{ critter.canDefend ? 'Can defend' : 'Cannot defend' }}</p>
+      <p>Is Asleep : {{ critter.asleep ? 'Asleep' : 'Awake' }}</p>
       <p>Sleep Cycle Duration: {{ critter.sleepCycleDuration }} Minutes</p>
       <p>Sleep Duration: {{ critter.sleepDuration }} Minutes</p>
       <p>Total active time: {{critter.totalActiveTime}} seconds</p>
-      <p>
-        Activated:
-        <span *ngIf="critter.active; else activeText"></span>
-        <ng-template #activeText>false</ng-template>
-      </p>
+      <p>Activated : {{ critter.active ? 'Active' : 'Paused' }}</p>
       <p>Owner Id: {{critter.ownerId}}</p>
       <p>Owner Name: {{critter.ownerUsername}}</p>
-      <p>
-        Has called:
-        <span *ngIf="critter.hasCalled; else hasCalledText"></span>
-        <ng-template #hasCalledText>false</ng-template>
-      </p>
-      <p>
-        Lights on:
-        <span *ngIf="critter.lightIsOn; else lightText">true</span>
-        <ng-template #lightText>false</ng-template>
-      </p>
+      <p>Has Called : {{ critter.hasCalled ? 'true' : 'false' }}</p>
+      <p>Lights ons : {{ critter.lightIsOn ? 'ON' : 'OFF' }}</p>
       <hr>
       <strong>Timestamps</strong><br>
       <p>Last awake time: {{critter.lastAwakeTime}}</p>
       <p>Last sleep time: {{ critter.lastSleepTime }}</p>
       <p>Last Interaction time: {{critter.lastInteractionTime}}</p>
       <p>Called since: {{critter.calledSince}}</p>
-      <p>
-        is Injured:
-        <span *ngIf="critter.injured; else injuredText"></span>
-        <ng-template #injuredText>false</ng-template>
-      </p>
+      <p>Injured : {{ critter.injured ? 'Injured' : 'Uninjured' }}</p>
       <p>Injured since: {{critter.injuredSince}}</p>
-      <p>
-        Status:
-        <span *ngIf="critter.dead; else deadText">Dead</span>
-        <ng-template #deadText>Alive</ng-template>
-      </p>
+      <p>Status : {{ critter.isDead ? 'Dead' : 'Alive' }}</p>
       <p>Hungry since: {{critter.hungrySince}}</p>
       <p>Unhappy since: {{critter.unhappySince}}</p>
       <p>Sick since: {{critter.sickSince}}</p>
@@ -82,15 +50,16 @@
       <p>Call chance {{critter.callChance}}%</p>
       <p>Training Factor {{critter.trainingFactor}}</p>
 
-      <!-- Temporary debug
-      <pre>{{ critter | json }}</pre>-->
+      <!--<Temporary debug
+      pre>{{ critter | json }}</pre>-->
       <br>
       <button (click)="activate(critter.critterId)">Activate</button><br>
       <button (click)="deactivate(critter.critterId)">Deactivate</button><br>
       <button (click)="respondCall(critter.critterId)">Respond to Call</button><br>
       <button (click)="train(critter.critterId, 4)">Train by 4</button><br>
       <button (click)="feed(critter.critterId, 'CAKE')">Feed (Cake)</button><br>
-      <button (click)="heal(critter.critterId, 'PILLS')">Heal (Pills)</button><br>
+      <button (click)="feed(critter.critterId, 'Bread')">Feed (Bread)</button><br>
+      <button (click)="heal(critter.critterId, 'PILL')">Heal (Pill)</button><br>
       <button (click)="delete(critter.critterId)">Delete</button><br>
       <br>
       <br>

@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface CritterEvolutionsRepository extends JpaRepository<CritterEvolutions, Long> {
     Optional<CritterEvolutions> findByStage(double stage);
+    Optional<CritterEvolutions> findEvolutionByStage(double stage);
 }

@@ -59,10 +59,10 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
             if (index !== -1) {
               this.critters[index] = { ...this.critters[index], ...data };
               console.log('Data critter:', data);
+              this.cdr.detectChanges();
             }
           });
           this.subscriptions.push(sub);
-          this.cdr.detectChanges();
         });
 
       },

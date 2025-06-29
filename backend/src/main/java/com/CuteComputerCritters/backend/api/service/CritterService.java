@@ -5,6 +5,7 @@ import com.CuteComputerCritters.backend.api.model.Critter.Critter;
 import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolutions;
 import com.CuteComputerCritters.backend.api.model.Food.Food;
 import com.CuteComputerCritters.backend.api.model.User.User;
+import com.CuteComputerCritters.backend.api.model.medicine.EnumMedicineType;
 import com.CuteComputerCritters.backend.api.payload.request.critter.CritterUpdateRequest;
 import com.CuteComputerCritters.backend.api.payload.request.critter.NewCritterRequest;
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
@@ -12,6 +13,8 @@ import com.CuteComputerCritters.backend.api.repository.CritterEvolutionsReposito
 import com.CuteComputerCritters.backend.api.repository.CritterRepository;
 import com.CuteComputerCritters.backend.api.repository.FoodRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,16 +31,19 @@ public class CritterService {
     private final CritterRepository critterRepository;
     private final FoodRepository foodRepository;
     private final CritterMapper critterMapper;
-    final int MAX_STAT = 10;
-    final int MAX_WEIGHT = 30;
+    private static final int MAX_STAT = 10;
+    private static final int MAX_WEIGHT = 30;
+    private static final int MIN_WEIGHT = 1;
     private final CritterEvolutionsRepository critterEvolutionsRepository;
+    private static final Logger logger = LoggerFactory.getLogger(CritterService.class);
+
 
     @Transactional
     public CritterGetResponse createNewCritter(NewCritterRequest request, User owner) {
 
         Critter critter = new Critter();
 
-        // Load default evolution stage (e.g. 1.0)
+        // Load default evolution stage
         CritterEvolutions baseStage = critterEvolutionsRepository
                 .findByStage(1.0)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -71,7 +78,7 @@ public class CritterService {
         critter.setHungrySince(null);
         critter.setSickSince(null);
         critter.setAttackedSince(null);
-        critter.setLightIsOn(false);
+        critter.setLightIsOn(true);
         critter.setLightOnSince(null);
         critter.setCalledSince(null);
 
@@ -94,6 +101,31 @@ public class CritterService {
     }
 
     @Transactional
+    public void updateCritter(int critterId, int ownerId, CritterUpdateRequest critterUpdateRequest) {
+        Critter critter = getOwnedCritter(critterId, ownerId);
+
+        // Apply only provided updates
+        if (critterUpdateRequest.getHunger() != null) critter.setHunger(critterUpdateRequest.getHunger());
+        if (critterUpdateRequest.getHappiness() != null) critter.setHappiness(critterUpdateRequest.getHappiness());
+        if (critterUpdateRequest.getTraining() != null) critter.setTraining(critterUpdateRequest.getTraining());
+        if (critterUpdateRequest.getWeight() != null) critter.setWeight(critterUpdateRequest.getWeight());
+        if (critterUpdateRequest.getIsHealthy() != null) critter.setHealthy(critterUpdateRequest.getIsHealthy());
+        if (critterUpdateRequest.getCanDefend() != null) critter.setCanDefend(critterUpdateRequest.getCanDefend());
+        if (critterUpdateRequest.getIsAsleep() != null) critter.setAsleep(critterUpdateRequest.getIsAsleep());
+        if (critterUpdateRequest.getCareMisses() != null) critter.setCareMisses(critterUpdateRequest.getCareMisses());
+        if (critterUpdateRequest.getHasCalled() != null) critter.setHasCalled(critterUpdateRequest.getHasCalled());
+        if (critterUpdateRequest.getIsInjured() != null) critter.setInjured(critterUpdateRequest.getIsInjured());
+        if (critterUpdateRequest.getEvolution() != null) {
+            CritterEvolutions newStage = critterEvolutionsRepository
+                    .findByStage(critterUpdateRequest.getEvolution())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid evolution stage"));
+            critter.setEvolutionStage(newStage);
+        }
+
+        critterRepository.save(critter);
+    }
+
+    @Transactional
     public void deleteCritter(int ownerId, int critterId) {
         Critter critter = getOwnedCritter(critterId, ownerId);
         critterRepository.delete(critter);
@@ -103,7 +135,7 @@ public class CritterService {
     public void startPlaying(int ownerId, int critterId) {
         Critter critter = getOwnedCritter(critterId, ownerId);
         if(critter.isActive()){
-            System.out.println("Already activated!");
+            logger.info("Already activated!");
         }
         critter.setActive(true);
         critterRepository.save(critter);
@@ -113,7 +145,7 @@ public class CritterService {
     public void stopPlaying(int ownerId, int critterId) {
         Critter critter = getOwnedCritter(critterId, ownerId);
         if(critter.isActive()){
-            System.out.println("Already deactivated!");
+            logger.info("Already deactivated!");
         }
         critter.setActive(false);
         critterRepository.save(critter);
@@ -126,7 +158,8 @@ public class CritterService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not hungry!");
         }
 
-        Food food = foodRepository.findByFoodName(foodName);
+        Food food = Optional.ofNullable(foodRepository.findByFoodName(foodName))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Food not found"));
 
         int satiation = food.getSatiation();
         int newHunger = Math.min(critter.getHunger() + satiation, 10);
@@ -174,6 +207,9 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
+            if (critter.getTrainingSessions() % 2 == 0) {
+                critter.setWeight(Math.max(critter.getWeight() - 2, MIN_WEIGHT));
+            }
         } else if (critter.getEvolutionStage().getStage() == 2.0) {
             //adults learn slower and are less enthusiastic (standard stats for adults/Chiikawa)
             newHappiness = Math.min(critter.getHappiness() + (int)(trainingValue/2), MAX_STAT);
@@ -181,6 +217,9 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
+            if (critter.getTrainingSessions() % 2 == 0) {
+                critter.setWeight(Math.max(critter.getWeight() - 2, MIN_WEIGHT));
+            }
         } else if (critter.getEvolutionStage().getStage() == 2.1) {
             /*Hachiware is just really playful so happiness grows at a rate as fast as with kids
              * training/learning value is similair to standard adults though (Chiikawa)*/
@@ -190,8 +229,11 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
+            if (critter.getTrainingSessions() % 2 == 0) {
+                critter.setWeight(Math.max(critter.getWeight() - 2, MIN_WEIGHT));
+            }
         } else if (critter.getEvolutionStage().getStage() == 2.2) {
-            /*similair case as with Hachiware except the other way around
+            /*similar case as with Hachiware except the other way around
              * Schisa is well behaved so their training stats grow as fast as that of kids
              * happiness is similair to standard though*/
 
@@ -200,6 +242,9 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
+            if (critter.getTrainingSessions() % 2 == 0) {
+                critter.setWeight(Math.max(critter.getWeight() - 3, MIN_WEIGHT));
+            }
         }
         else {
             /* Usagi and Momonga do not enjoy training*/
@@ -208,6 +253,9 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
+            if (critter.getTrainingSessions() % 2 == 0) {
+                critter.setWeight(Math.max(critter.getWeight() - 1, MIN_WEIGHT));
+            }
         }
 
         critter.setTrainingSessions(critter.getTrainingSessions() + 1);
@@ -222,7 +270,7 @@ public class CritterService {
 
         if(!(critter.isHasCalled())){
             //if the critter did not call but the User responded:
-            System.out.println("Responded unnecessarily");
+            logger.info("Responded unnecessarily");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter did not call");
         }
 
@@ -238,11 +286,11 @@ public class CritterService {
         //if the critter is healthy and uninjured
         if(critter.isHealthy() && !(critter.isInjured())){
             //the user should receive an error for unnecessarily healing the critter
-            System.out.println("Healed unnecessarily");
+            logger.info("Healed unnecessarily");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter is neither sick nor injured");
         }
 
-        if(medicineType.equals("BAND_AID")){
+        if(medicineType.equals(EnumMedicineType.BAND_AID.toString())){
             if(critter.isInjured()){
                 critter.setInjured(false);
                 critter.setInjuredSince(null);
@@ -253,7 +301,7 @@ public class CritterService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not injured");
             }
         }
-        if(medicineType.equals("PILLS")){
+        if(medicineType.equals(EnumMedicineType.PILL.toString())){
             if(!(critter.isHealthy())){
                 critter.setHealthy(true);
                 critter.setSickSince(null);
@@ -266,41 +314,9 @@ public class CritterService {
         }
     }
 
-    @Transactional
-    public void updateCritter(int critterId, int ownerId, CritterUpdateRequest critterUpdateRequest) {
-        Critter critter = getOwnedCritter(critterId, ownerId);
-
-        // Apply only provided updates
-        if (critterUpdateRequest.getHunger() != null) critter.setHunger(critterUpdateRequest.getHunger());
-        if (critterUpdateRequest.getHappiness() != null) critter.setHappiness(critterUpdateRequest.getHappiness());
-        if (critterUpdateRequest.getTraining() != null) critter.setTraining(critterUpdateRequest.getTraining());
-        if (critterUpdateRequest.getWeight() != null) critter.setWeight(critterUpdateRequest.getWeight());
-        if (critterUpdateRequest.getIsHealthy() != null) critter.setHealthy(critterUpdateRequest.getIsHealthy());
-        if (critterUpdateRequest.getCanDefend() != null) critter.setCanDefend(critterUpdateRequest.getCanDefend());
-        if (critterUpdateRequest.getEvolution() != null) critter.getEvolutionStage().setStage(critterUpdateRequest.getEvolution());
-        if (critterUpdateRequest.getIsAsleep() != null) critter.setAsleep(critterUpdateRequest.getIsAsleep());
-        if (critterUpdateRequest.getCareMisses() != null) critter.setCareMisses(critterUpdateRequest.getCareMisses());
-        if (critterUpdateRequest.getHasCalled() != null) critter.setHasCalled(critter.isHasCalled());
-        if (critterUpdateRequest.getIsInjured() != null) critter.setInjured(critter.isInjured());
-
-        critterRepository.save(critter);
-    }
-
     //Helpers:
     @Transactional(readOnly = true)
     public Critter getOwnedCritter(int critterId, int ownerId) {
-        Critter critter = critterRepository.findById(critterId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Critter not found"));
-
-        if (critter.getOwner() == null || critter.getOwner().getUserId() != ownerId) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this critter");
-        }
-
-        return critter;
-    }
-
-    @Transactional(readOnly = true)
-    public Critter getCritterIfOwnedByUser(int critterId, int ownerId) {
         Critter critter = critterRepository.findById(critterId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Critter not found"));
 

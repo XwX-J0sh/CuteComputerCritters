@@ -25,7 +25,7 @@ export interface CritterGetResponse {
   careMisses: number;
   injured: boolean;
   hasCalled: boolean;
-  dead: boolean;
+  isDead: boolean;
   hungrySince?: string;
   unhappySince?: string;
   sickSince?: string;

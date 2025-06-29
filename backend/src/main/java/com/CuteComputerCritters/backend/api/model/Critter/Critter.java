@@ -83,7 +83,7 @@ public class Critter {
     @Column(name = "IS_INJURED", columnDefinition = "boolean default false")
     private boolean isInjured;
 
-    @JsonProperty("uinjuredSince")
+    @JsonProperty("injuredSince")
     @Column(name = "INJURED_SINCE")
     private Instant injuredSince;
 

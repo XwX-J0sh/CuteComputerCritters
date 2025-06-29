@@ -2,7 +2,9 @@ package com.CuteComputerCritters.backend.api.scheduler;
 
 import com.CuteComputerCritters.backend.api.helpers.CritterBroadcaster;
 import com.CuteComputerCritters.backend.api.model.Critter.Critter;
+import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolutions;
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
+import com.CuteComputerCritters.backend.api.repository.CritterEvolutionsRepository;
 import com.CuteComputerCritters.backend.api.repository.CritterRepository;
 import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +23,16 @@ public class CritterScheduler {
 
     private CritterRepository critterRepository;
     private final CritterBroadcaster critterBroadcaster;
+    private final CritterEvolutionsRepository critterEvolutionsRepository;
 
-    public CritterScheduler(CritterRepository critterRepository, CritterBroadcaster critterBroadcaster) {
+    public CritterScheduler(CritterRepository critterRepository, CritterBroadcaster critterBroadcaster, CritterEvolutionsRepository critterEvolutionsRepository) {
         this.critterRepository = critterRepository;
         this.critterBroadcaster = critterBroadcaster;
+        this.critterEvolutionsRepository = critterEvolutionsRepository;
     }
 
-    @Scheduled(fixedRate = 10000)
+    //scheduled to update every minute
+    @Scheduled(fixedRate = 60000)
     public void updateEvolutionStagesAndDecayStats() {
 
         List<Critter> activeCritters = critterRepository.findByIsActiveTrueAndIsDeadFalse();
@@ -57,45 +62,55 @@ public class CritterScheduler {
         freshCritter.setTotalActiveTime(freshCritter.getTotalActiveTime() + sessionSeconds);
         freshCritter.setLastInteractionTime(now);
 
-        int evolutionStage = (int) freshCritter.getEvolution();
+        int evolutionStage = (int) freshCritter.getEvolutionStage().getStage();
 
         int hungerDecay = 1;
         int happinessDecay = 1;
         int chanceOfSickness = 50;
         int chanceOfCall = 50;
 
-        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 30000) {
+        //after ten minutes the critter gets sick
+        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 600000) {
             freshCritter.setHealthy(false);
         }
 
-        //Evolution
-        if ((evolutionStage == 1) && freshCritter.getTotalActiveTime() >= 60000) {
-            //if the critter has more than 6 care misses, the critter will evolve into Momonga
-            if (freshCritter.getCareMisses() >= 6) {
-                freshCritter.setEvolution(2.4);
-                hungerDecay = 2;
-                happinessDecay = 3;
-                chanceOfSickness = 60;
-                chanceOfCall = 70;
-            } else if (freshCritter.getWeight() > 12 || freshCritter.getWeight() < 6) {
-                //if the critter has an unhealthy weight (lower than 6 or higher than 12 pounds), the critter will evolve to Usagi
-                freshCritter.setEvolution(2.3);
-            } else if (freshCritter.isCanDefend() && freshCritter.getTrainingSessions() > 5) {
-                //if the critter was trained well and can defend itself, it will evolve into Chisa
-                freshCritter.setEvolution(2.2);
-            } else if (!freshCritter.isCanDefend() && freshCritter.getTrainingSessions() > 5) {
-                //if the critter was trained well and canNOT defend itself, it will evolve into Hachiware
-                freshCritter.setEvolution(2.1);
-            } else {
-                //else it will evolve into Chiikawa (standard)
-                freshCritter.setEvolution(2.0);
+        // Evolution
+        CritterEvolutions currentEvolution = freshCritter.getEvolutionStage();
+
+        //after half an hour the critter enters the next evolutionary stage
+        if (currentEvolution != null) {
+            int currentStage = (int) currentEvolution.getStage();
+
+            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 1800000) {
+                double nextStage;
+                freshCritter.setTraining(0);
+
+                if (freshCritter.getCareMisses() >= 6) {
+                    nextStage = 2.4; // Momonga
+                } else if (freshCritter.getWeight() > 12 || freshCritter.getWeight() < 6) {
+                    nextStage = 2.3; // Usagi
+                } else if (freshCritter.isCanDefend() && freshCritter.getTrainingSessions() > 5) {
+                    nextStage = 2.2; // Chisa
+                } else if (!freshCritter.isCanDefend() && freshCritter.getTrainingSessions() > 5) {
+                    nextStage = 2.1; // Hachiware
+                } else {
+                    nextStage = 2.0; // Chiikawa (standard)
+                }
+
+                // Fetch the new evolution entity
+                CritterEvolutions newEvolution = critterEvolutionsRepository.findEvolutionByStage(nextStage)
+                        .orElseThrow(() -> new IllegalStateException("Evolution stage " + nextStage + " not found"));
+
+                freshCritter.setEvolutionStage(newEvolution);
+                log.info("Critter {} evolved to stage {}", freshCritter.getCritterId(), nextStage);
             }
         }
 
-        //if the critter has called and the User does not answer after 1min, a care miss will be noted
+
+        //if the critter has called and the User does not answer after 2min, a care miss will be noted
         if (freshCritter.isHasCalled() && freshCritter.getCalledSince() != null) {
             Duration callDuration = Duration.between(freshCritter.getCalledSince(), now);
-            if (callDuration.toMinutes() >= 1) {
+            if (callDuration.toMinutes() >= 2) {
                 freshCritter.setCareMisses(freshCritter.getCareMisses() + 1);
                 freshCritter.setCalledSince(null); // Reset
                 freshCritter.setHasCalled(false); // Reset
@@ -132,13 +147,13 @@ public class CritterScheduler {
             freshCritter.setUnhappySince(null); // Reset if happiness improved
         }
 
-        //if the critter hits hunger 0 for 3min a care miss will be noted
+        //if the critter hits hunger 0 for 2min a care miss will be noted
         if (freshCritter.getHunger() == 0 && freshCritter.getHungrySince() == null) {
             freshCritter.setHungrySince(now);
         }
         if (freshCritter.getHunger() == 0 && freshCritter.getHungrySince() != null) {
             Duration hungryDuration = Duration.between(freshCritter.getHungrySince(), now);
-            if (hungryDuration.toMinutes() >= 3) {
+            if (hungryDuration.toMinutes() >= 2) {
                 freshCritter.setCareMisses(freshCritter.getCareMisses() + 1);
                 freshCritter.setHungrySince(null);
                 log.info("Critter {} was hungry and unattended.", freshCritter.getCritterId());
@@ -148,7 +163,7 @@ public class CritterScheduler {
         }
 
         //if the critter hits more than 10 care misses it will die
-        if (freshCritter.getCareMisses() >= 10) {
+        if (freshCritter.getCareMisses() >= 1) {
             freshCritter.setDead(true);
             log.warn("Critter {} died due to care misses!", freshCritter.getCritterId());
         }

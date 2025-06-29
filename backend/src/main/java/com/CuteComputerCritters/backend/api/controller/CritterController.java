@@ -184,7 +184,7 @@ public class CritterController {
     //broadcast so that Websockets can emit
     private CritterGetResponse broadcast(int critterId, User owner) {
         CritterGetResponse response = critterMapper.mapToResponse(
-                critterService.getCritterIfOwnedByUser(critterId, owner.getUserId()), owner);
+                critterService.getOwnedCritter(critterId, owner.getUserId()), owner);
         critterBroadcaster.broadcast(response);
         return response;
     }

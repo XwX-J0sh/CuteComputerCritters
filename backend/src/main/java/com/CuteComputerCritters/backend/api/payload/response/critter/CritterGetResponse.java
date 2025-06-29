@@ -129,6 +129,9 @@ public class CritterGetResponse {
     @JsonProperty("trainingFactor")
     private Double trainingFactor;
 
+    @JsonProperty("evolutionName")
+    private String evolutionName;
+
     public static CritterGetResponse fromEntity(Critter critter) {
         CritterGetResponse response = new CritterGetResponse();
 
@@ -141,17 +144,16 @@ public class CritterGetResponse {
         response.setSnackCounter(critter.getSnackCounter());
         response.setMealCounter(critter.getMealCounter());
         response.setWeight(critter.getWeight());
-        response.setEvolution(critter.getEvolutionStage().getStage());
         response.setCareMisses(critter.getCareMisses());
         response.setHealthy(critter.isHealthy());
         response.setCanDefend(critter.isCanDefend());
         response.setAsleep(critter.isAsleep());
-        response.setSleepCycleDuration(critter.getEvolutionStage().getSleepCycleDuration());
-        response.setSleepDuration(critter.getEvolutionStage().getSleepDuration());
         response.setTotalActiveTime(critter.getTotalActiveTime());
         response.setActive(critter.isActive());
-        response.setOwnerId(critter.getOwner().getUserId());
-        response.setOwnerUsername(critter.getOwner().getUsername());
+        if (critter.getOwner() != null) {
+            response.setOwnerId(critter.getOwner().getUserId());
+            response.setOwnerUsername(critter.getOwner().getUsername());
+        }
         response.setHasCalled(critter.isHasCalled());
         response.setLightIsOn(critter.isLightIsOn());
 
@@ -168,11 +170,17 @@ public class CritterGetResponse {
         response.setAttackedSince(critter.getAttackedSince());
         response.setLightOnSince(critter.getLightOnSince());
 
-        response.setDecayRateHunger(critter.getEvolutionStage().getDecayRateHunger());
-        response.setDecayRateHappy(critter.getEvolutionStage().getDecayRateHappy());
-        response.setSicknessChance(critter.getEvolutionStage().getSicknessChance());
-        response.setCallChance(critter.getEvolutionStage().getCallChance());
-        response.setTrainingFactor(critter.getEvolutionStage().getTrainingFactor());
+        if (critter.getEvolutionStage() != null) {
+            response.setEvolution(critter.getEvolutionStage().getStage());
+            response.setEvolutionName(critter.getEvolutionStage().getEvolutionName());
+            response.setSleepCycleDuration(critter.getEvolutionStage().getSleepCycleDuration());
+            response.setSleepDuration(critter.getEvolutionStage().getSleepDuration());
+            response.setDecayRateHunger(critter.getEvolutionStage().getDecayRateHunger());
+            response.setDecayRateHappy(critter.getEvolutionStage().getDecayRateHappy());
+            response.setSicknessChance(critter.getEvolutionStage().getSicknessChance());
+            response.setCallChance(critter.getEvolutionStage().getCallChance());
+            response.setTrainingFactor(critter.getEvolutionStage().getTrainingFactor());
+        }
 
         return response;
     }
