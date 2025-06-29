@@ -26,6 +26,15 @@ public class CritterGetResponse {
     @JsonProperty("training")
     private int training;
 
+    @JsonProperty("trainingSessions")
+    private int trainingSessions;
+
+    @JsonProperty("snackCounter")
+    private int snackCounter;
+
+    @JsonProperty("mealCounter")
+    private int mealCounter;
+
     @JsonProperty("weight")
     private int weight;
 
@@ -36,7 +45,10 @@ public class CritterGetResponse {
     private boolean canDefend;
 
     @JsonProperty("evolution")
-    private float evolution;
+    private double evolution;
+
+    @JsonProperty("careMisses")
+    private int careMisses;
 
     @JsonProperty("lastAwakeTime")
     private Instant lastAwakeTime;
@@ -56,6 +68,9 @@ public class CritterGetResponse {
     @JsonProperty("lastInteractionTime")
     private Instant lastInteractionTime;
 
+    @JsonProperty("totalActiveTime")
+    private Long totalActiveTime;
+
     @JsonProperty("isActive")
     private boolean isActive;
 
@@ -64,4 +79,52 @@ public class CritterGetResponse {
 
     @JsonProperty("ownerId")
     private int ownerId;
+
+    @JsonProperty("hasCalled")
+    private boolean hasCalled;
+
+    @JsonProperty("isInjured")
+    private boolean isInjured;
+
+    @JsonProperty("isDead")
+    private boolean isDead;
+
+    @JsonProperty("hungrySince")
+    private Instant hungrySince;
+
+    @JsonProperty("unhappySince")
+    private Instant unhappySince;
+
+    @JsonProperty("sickSince")
+    private Instant sickSince;
+
+    @JsonProperty("injuredSince")
+    private Instant injuredSince;
+
+    @JsonProperty("attackedSince")
+    private Instant attackedSince;
+
+    @JsonProperty("lightIsOn")
+    private Boolean lightIsOn;
+
+    @JsonProperty("lightOnSince")
+    private Instant lightOnSince;
+
+    @JsonProperty("calledSince")
+    private Instant calledSince;
+
+    @JsonProperty("decayRateHunger")
+    private int decayRateHunger;
+
+    @JsonProperty("decayRateHappy")
+    private Integer decayRateHappy;
+
+    @JsonProperty("sicknessChance")
+    private Integer sicknessChance;
+
+    @JsonProperty("callChance")
+    private Integer callChance;
+
+    @JsonProperty("trainingFactor")
+    private Double trainingFactor;
 }
