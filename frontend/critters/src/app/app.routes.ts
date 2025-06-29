@@ -13,15 +13,17 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { SupportComponent } from './pages/support/support.component';
 import { TermsAndConditionsComponent } from './pages/terms-and-conditions/terms-and-conditions.component';
 import { UpdatesComponent } from './pages/updates/updates.component';
-import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
+import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
+import {GameLandingComponent} from './pages/game-landing/game-landing.component';
 
 export const routes: Routes = [
   { path: '',
     component: MainLayoutComponent,
     children: [
-      {path: '', component: HomeComponent},
+      { path: '', component: HomeComponent},
       { path: 'about-us', component: AboutUsComponent },
       { path: 'accessibility', component: AccessibilityComponent },
+      { path: 'game-landing', component: GameLandingComponent },
       { path: 'home', component: HomeComponent },
       { path: 'how-to-play', component: HowToPlayComponent },
       { path: 'login', component: LoginComponent },
