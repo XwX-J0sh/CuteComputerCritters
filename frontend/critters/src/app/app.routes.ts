@@ -16,6 +16,7 @@ import { UpdatesComponent } from './pages/updates/updates.component';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { GameLandingComponent} from './pages/game-landing/game-landing.component';
 import { CritterStatsComponent} from './critter-stats/critter-stats.component';
+import {GameComponent} from './game/game.component';
 
 export const routes: Routes = [
   { path: '',
@@ -36,6 +37,7 @@ export const routes: Routes = [
       { path: 'terms-and-conditions', component: TermsAndConditionsComponent },
       { path: 'updates', component: UpdatesComponent },
       { path: 'critter-stats', component: CritterStatsComponent },
+      { path: 'game', component: GameComponent}
     ] },
 
 
