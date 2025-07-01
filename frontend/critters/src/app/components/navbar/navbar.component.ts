@@ -2,14 +2,14 @@ import { Component,OnInit, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Observable } from 'rxjs';
-import { AsyncPipe, NgIf } from '@angular/common';
-import {RouterLink} from '@angular/router';
+import {AsyncPipe, NgClass, NgIf, NgOptimizedImage} from '@angular/common';
+import {RouterLink, RouterLinkActive} from '@angular/router';
 
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [FormsModule, AsyncPipe, NgIf, RouterLink],
+  imports: [FormsModule, AsyncPipe, NgIf, RouterLink, RouterLinkActive, NgClass, NgOptimizedImage],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
@@ -38,6 +38,13 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  //for the navbar menu option on mobile
+  menuOpen = false;
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+    console.log('Toggled menuOpen:', this.menuOpen);
+  }
   //section for profile drop down menu
 
   dropdownOpen = false;

@@ -41,18 +41,14 @@
       </div>
       <!--mobile and small screens-->
       <button
-        data-collapse-toggle="navbar-sticky"
-        type="button"
+        (click)="toggleMenu()"
         class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-sky-900 hover:bg-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-300 md:hidden"
-        aria-controls="navbar-sticky"
-        aria-expanded="false"
       >
         <span class="sr-only">Open main menu</span>
         <svg
           class="h-5 w-5"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
-          fill="none"
           viewBox="0 0 17 14"
         >
           <path
@@ -67,11 +63,15 @@
     </div>
     <!--weblinks for the middle of the page-->
     <div
-      class="items-center hidden flex w-full justify-between md:order-1 md:flex md:w-auto"
+      [ngClass]="{
+      'flex': menuOpen,
+      'hidden': !menuOpen
+      }"
+      class="items-center w-full justify-between flex-col md:order-1 md:flex md:w-auto md:flex-row"
       id="navbar-sticky"
     >
-      <ul
-        class="mt-4 flex flex-col font-medium md:mt-0 md:flex-row md:space-x-8 md:border-0 rtl:space-x-reverse"
+    <ul
+        class="flex flex-col justify-center font-medium md:flex-row md:space-x-8 rtl:space-x-reverse"
         routerLinkActive="active"
       >
         <li class="">
@@ -98,7 +98,8 @@
       <li class="relative">
         <!-- Dropdown Toggle Button -->
         <button (click)="toggleDropdown()" class="relative z-40">
-          <img src="public/avatar.png" class="w-8 h-8 rounded-full" alt="User avatar" />
+          <img ngSrc="../../../../public/avatar.png" class="w-8 h-8 rounded-full" alt="User avatar" height="64"
+               width="64"/>
         </button>
         <!--Dropdown profile menu--->
         <div class="absolute right-0 mt-2 z-30 hidden font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-violet-900 dark:divide-gray-600"
