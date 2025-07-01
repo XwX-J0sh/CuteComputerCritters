@@ -1,1 +1,87 @@
-<p>critter-stats works!</p>
+<div class="my-80">
+  <h2>Your Critters</h2>
+
+  <ul *ngIf="critters.length; else noCritters">
+    <li *ngFor="let critter of critters">
+      <strong>{{ critter.critterName }}</strong>
+      <br>
+      <strong>stats</strong>
+      <p>Happiness: {{ critter.happiness }}</p>
+      <p>Hunger: {{ critter.hunger }}</p>
+      <p>Training: {{ critter.training }}</p>
+      <p>Training Sessions: {{ critter.trainingSessions }}</p>
+      <p>Snack counter: {{ critter.snackCounter }}</p>
+      <p>Meal counter: {{ critter.mealCounter }}</p>
+      <p>Weight: {{ critter.weight }} pound(s)</p>
+      <p>Evolution: {{critter.evolution}}</p>
+      <p>Care Misses: {{ critter.careMisses }}</p>
+      <hr>
+      <strong>State</strong>
+      <p>Status : {{ critter.isHealthy ? 'Healthy' : 'Sick' }}</p>
+      <p>Can Defend : {{ critter.canDefend ? 'Can defend' : 'Cannot defend' }}</p>
+      <p>Is Asleep : {{ critter.asleep ? 'Asleep' : 'Awake' }}</p>
+      <p>Sleep Cycle Duration: {{ critter.sleepCycleDuration }} Minutes</p>
+      <p>Sleep Duration: {{ critter.sleepDuration }} Minutes</p>
+      <p>Total active time: {{critter.totalActiveTime}} seconds</p>
+      <p>Activated : {{ critter.active ? 'Active' : 'Paused' }}</p>
+      <p>Owner Id: {{critter.ownerId}}</p>
+      <p>Owner Name: {{critter.ownerUsername}}</p>
+      <p>Has Called : {{ critter.hasCalled ? 'true' : 'false' }}</p>
+      <p>Lights ons : {{ critter.lightIsOn ? 'ON' : 'OFF' }}</p>
+      <hr>
+      <strong>Timestamps</strong><br>
+      <p>Last awake time: {{critter.lastAwakeTime}}</p>
+      <p>Last sleep time: {{ critter.lastSleepTime }}</p>
+      <p>Last Interaction time: {{critter.lastInteractionTime}}</p>
+      <p>Called since: {{critter.calledSince}}</p>
+      <p>Injured : {{ critter.injured ? 'Injured' : 'Uninjured' }}</p>
+      <p>Injured since: {{critter.injuredSince}}</p>
+      <p>Status : {{ critter.isDead ? 'Dead' : 'Alive' }}</p>
+      <p>Hungry since: {{critter.hungrySince}}</p>
+      <p>Unhappy since: {{critter.unhappySince}}</p>
+      <p>Sick since: {{critter.sickSince}}</p>
+      <p>Attacked since: {{critter.attackedSince}}</p>
+      <p>Lights On since: {{critter.lightOnSince}}</p>
+      <hr>
+      <p><strong>Decay Rates:</strong> </p>
+      <p>Hunger rate {{critter.decayRateHunger}} per increment</p>
+      <p>Happy rate {{critter.decayRateHappy}} per increment</p>
+      <p>Sickness chance {{critter.sicknessChance}}%</p>
+      <p>Call chance {{critter.callChance}}%</p>
+      <p>Training Factor {{critter.trainingFactor}}</p>
+
+      <!--<Temporary debug
+      pre>{{ critter | json }}</pre>-->
+      <br>
+      <button (click)="activate(critter.critterId)">Activate</button><br>
+      <button (click)="deactivate(critter.critterId)">Deactivate</button><br>
+      <button (click)="respondCall(critter.critterId)">Respond to Call</button><br>
+      <button (click)="train(critter.critterId, 4)">Train by 4</button><br>
+      <button (click)="feed(critter.critterId, 'CAKE')">Feed (Cake)</button><br>
+      <button (click)="feed(critter.critterId, 'Bread')">Feed (Bread)</button><br>
+      <button (click)="heal(critter.critterId, 'PILL')">Heal (Pill)</button><br>
+      <button (click)="delete(critter.critterId)">Delete</button><br>
+      <br>
+      <br>
+      <hr>
+    </li>
+  </ul>
+
+  <ng-template #noCritters>
+    <p>No critters found. Create one to get started!</p>
+  </ng-template>
+
+  <!-- Toggle Button -->
+  <button *ngIf="!showCreateForm" (click)="showCreateForm = true">Click to Create Critter</button>
+
+  <!-- Create Critter Form -->
+  <div *ngIf="showCreateForm">
+    <input
+      type="text"
+      [(ngModel)]="newCritterName"
+      placeholder="Enter critter name"
+    />
+    <button (click)="createCritter(newCritterName)">Create New Critter</button>
+    <button (click)="showCreateForm = false">Cancel</button>
+  </div>
+</div>
