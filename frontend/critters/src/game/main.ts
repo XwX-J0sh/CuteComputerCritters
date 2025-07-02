@@ -5,8 +5,9 @@ import { MainMenu } from './scenes/MainMenu';
 import { Game } from './scenes/Game';
 import { GameOver } from './scenes/GameOver';
 import {PetMenu} from './scenes/PetMenu';
+import {EventBusService} from '../app/services/event-bus.service';
 
-export default function StartGame(parentId: string, scenes?: Phaser.Scene[]): Phaser.Game {
+export default function StartGame(parentId: string, eventBus: EventBusService): Phaser.Game {
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     width: 1124,
@@ -20,7 +21,16 @@ export default function StartGame(parentId: string, scenes?: Phaser.Scene[]): Ph
       width: 1124,
       height: 768,
     },
+    //Dom container config
+    dom: {
+      createContainer: true
+    }
   };
 
-  return new Phaser.Game(config);
+  const game = new Phaser.Game(config);
+
+  // Store eventBus reference in game registry for scenes to access
+  game.registry.set('eventBus', eventBus);
+
+  return game;
 }
