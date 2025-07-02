@@ -1,8 +1,12 @@
 import { Scene, GameObjects } from 'phaser';
+import {EventBusService} from '../../app/services/event-bus.service';
+import {Subscription} from 'rxjs';
+import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
 
 export class MainMenu extends Scene {
   logo!: GameObjects.Image;
   bg!: GameObjects.Image;
+  eventBus!: EventBusService;
 
   constructor() {
     super('MainMenu');
@@ -24,6 +28,7 @@ export class MainMenu extends Scene {
 
     // Listen for Enter and Escape keys
     this.input.keyboard?.on('keydown-ENTER', () => {
+      // when creating Phaser game or starting scene, pass eventBusService
       this.scene.start('PetMenu');
     });
   }

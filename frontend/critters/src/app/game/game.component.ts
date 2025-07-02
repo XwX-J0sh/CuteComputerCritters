@@ -2,6 +2,7 @@ import {Component, OnDestroy, OnInit, Inject, PLATFORM_ID} from '@angular/core';
 
 import {isPlatformBrowser} from '@angular/common';
 import {EventBusService} from '../services/event-bus.service';
+import {CritterService} from '../services/critter.service';
 
 @Component({
   selector: 'app-game',
@@ -14,7 +15,10 @@ export class GameComponent implements OnInit, OnDestroy{
   private game: any;
   isBrowser: boolean;
 
-  constructor(@Inject(PLATFORM_ID) platformId: Object, private eventBus: EventBusService) {
+  constructor(@Inject(PLATFORM_ID) platformId: Object,
+              private eventBus: EventBusService,
+              private critterService: CritterService
+  ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
@@ -24,30 +28,46 @@ export class GameComponent implements OnInit, OnDestroy{
     const Phaser = (await import('phaser')).default;
     const { default: createGame } = await import('../../game/main');
 
-    // Dynamically import Phaser and scenes here to avoid SSR errors
-    const { Boot } = await import('../../game/scenes/Boot');
-    const { Preloader } = await import('../../game/scenes/Preloader');
-    const { MainMenu } = await import('../../game/scenes/MainMenu');
-    const { PetMenu } = await import('../../game/scenes/PetMenu');
-    const { Game } = await import('../../game/scenes/Game');
-    const { GameOver } = await import('../../game/scenes/GameOver');
+    this.game = createGame('game-container', this.eventBus);
 
-    // create scene instances and pass eventBus to scenes that need it
-    const bootScene = new Boot();
-    const preloaderScene = new Preloader();
-    const mainMenuScene = new MainMenu();
-    const petMenuScene = new PetMenu(this.eventBus);
-    const gameScene = new Game();
-    const gameOverScene = new GameOver();
+    // Load critters when game initializes
+    this.loadCritters();
 
-    this.game = await createGame('game-container', [
-      bootScene,
-      preloaderScene,
-      mainMenuScene,
-      petMenuScene,
-      gameScene,
-      gameOverScene,
-    ]);
+    this.game.events.once('ready', () => {
+      this.game.scene.start('Boot');
+    });
+  }
+
+  private loadCritters() {
+    this.critterService.getAllCritters().subscribe({
+      next: (critters) => {
+        // Emit the loaded critters to the event bus
+        this.eventBus.emitCritters(critters);
+      },
+      error: (err) => {
+        console.error('Error loading critters:', err);
+        // Optionally emit empty array on error
+        this.eventBus.emitCritters([]);
+      }
+    });
+
+    this.game.events.once('ready', () => {
+      this.game.scene.start('Boot');
+    });
+
+    // Handle critter creation
+    this.eventBus.createCritter.subscribe(name => {
+      this.critterService.makeNewCritter(name).subscribe({
+        next: (response) => {
+          console.log('Critter created:', response);
+          // Reload critters to get the new one
+          this.loadCritters();
+        },
+        error: (err) => {
+          console.error('Error creating critter:', err);
+        }
+      });
+    });
   }
 
   ngOnDestroy() {
