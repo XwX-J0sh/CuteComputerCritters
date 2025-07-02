@@ -3,7 +3,6 @@ import {HttpClient} from '@angular/common/http';
 import {Observable, Subject} from 'rxjs';
 import {CritterGetResponse} from '../shared/model/CritterGetResponse';
 import {AuthService} from './auth.service';
-import {Client, IMessage} from '@stomp/stompjs';
 import {WebSocketService} from './web-socket.service';
 
 @Injectable({
@@ -30,6 +29,13 @@ export class CritterService {
   // HTTP: Fetch all critters
   getAllCritters(): Observable<CritterGetResponse[]> {
     return this.http.get<CritterGetResponse[]>(`${this.baseUrl}/all`, {
+      withCredentials: true
+    });
+  }
+
+  // Fetch critter by id
+  getCritterById(id: number): Observable<CritterGetResponse> {
+    return this.http.get<CritterGetResponse>(`${this.baseUrl}/${id}`,{
       withCredentials: true
     });
   }

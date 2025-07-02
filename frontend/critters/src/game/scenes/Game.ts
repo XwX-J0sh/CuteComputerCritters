@@ -1,11 +1,19 @@
 import { Scene } from 'phaser';
+import {EventBusService} from '../../app/services/event-bus.service';
 
 export class Game extends Scene {
   pet!: Phaser.GameObjects.Sprite;
   bg!: Phaser.GameObjects.Image;
+  eventBus!: EventBusService;
+  selectedCritter: any;
 
   constructor() {
     super('Game');
+  }
+
+  init(data: { selectedCritter: any }) {
+    this.selectedCritter = data.selectedCritter;
+    console.log('Game started with critter:', this.selectedCritter);
   }
 
   preload() {
@@ -37,7 +45,7 @@ export class Game extends Scene {
     this.pet = this.add.sprite(570, 550, 'pet');
     this.pet.play('shisa_idle1');
 
-    this.add.text(512, 384, 'Tamagotchi Game', {
+    this.add.text(512, 384, `${this.selectedCritter.critterId}`, {
       font: '32px Arial',
       color: '#ffffff',
     }).setOrigin(0.5);
@@ -47,7 +55,7 @@ export class Game extends Scene {
     if (keyboard) {
       keyboard.on('keydown-ESC', () => {
         console.log('Escape pressed. Going back to MainMenu.');
-        this.scene.start('MainMenu');
+        this.game.scene.start('MainMenu', { eventBus: this.eventBus });
       });
     } else {
       console.warn('Keyboard input not ready!');
