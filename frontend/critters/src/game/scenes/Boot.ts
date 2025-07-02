@@ -1,10 +1,16 @@
 import { Scene } from 'phaser';
+import {EventBusService} from '../../app/services/event-bus.service';
 
-export class Boot extends Scene
-{
+export class Boot extends Scene {
+  eventBus!: EventBusService;
   constructor ()
   {
     super('Boot');
+  }
+
+  init(data: { eventBus: EventBusService }) {
+    this.eventBus = data.eventBus;
+    console.log('Boot scene eventBus:', this.eventBus);
   }
 
   preload ()
@@ -15,6 +21,6 @@ export class Boot extends Scene
 
   create ()
   {
-    this.scene.start('Preloader');
+    this.scene.start('Preloader', { eventBus: this.eventBus });
   }
 }
