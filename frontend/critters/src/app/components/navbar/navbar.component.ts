@@ -45,20 +45,25 @@ export class NavbarComponent implements OnInit {
     this.menuOpen = !this.menuOpen;
     console.log('Toggled menuOpen:', this.menuOpen);
   }
+
   //section for profile drop down menu
+
+  //closes dropdown for profile when clicking outside the menu
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event): void {
+    const target = event.target as HTMLElement;
+    const clickedInsideDropdown = target.closest('.dropdown-container');
+    const clickedAvatar = target.closest('.dropdown-toggle');
+    console.log("Ya-ha! Ya-Hoo!")
+    if (!clickedInsideDropdown && !clickedAvatar) {
+      this.dropdownOpen = false;
+    }
+  }
 
   dropdownOpen = false;
 
   toggleDropdown() {
     this.dropdownOpen = !this.dropdownOpen;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.relative.z-40') && !target.closest('.absolute.right-0')) {
-      this.dropdownOpen = false;
-    }
   }
 
   logout(): void {
