@@ -6,29 +6,20 @@ import { Game } from './scenes/Game';
 import { GameOver } from './scenes/GameOver';
 import {PetMenu} from './scenes/PetMenu';
 import {EventBusService} from '../app/services/event-bus.service';
-import {CreateCritterForm} from './scenes/CreateCritterForm';
-import {FoodPantry} from './scenes/Food';
-import {MedicineCabinet} from './scenes/Medicine';
 
 export default function StartGame(parentId: string, eventBus: EventBusService): Phaser.Game {
   const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.WEBGL,
-    render: {
-      antialias: true,
-      roundPixels: false,
-      powerPreference: 'high-performance',
-      premultipliedAlpha: false,
-    },
+    type: Phaser.AUTO,
     width: 1124,
-    height: 808,
+    height: 768,
     parent: parentId, // this should match your HTML div id
     backgroundColor: '#333399',
-    scene: [Boot, Preloader, MainMenu, PetMenu, FoodPantry, MedicineCabinet, CreateCritterForm, Game, GameOver],
+    scene: [Boot, Preloader, MainMenu, PetMenu, Game, GameOver],
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
       width: 1124,
-      height: 808,
+      height: 768,
     },
     //Dom container config
     dom: {
