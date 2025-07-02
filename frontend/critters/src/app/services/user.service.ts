@@ -18,4 +18,10 @@ export class UserService {
       withCredentials: true,
     });
   }
+
+  getAllPetsByUser(): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/critter/all`, {
+      withCredentials: true,
+    });
+  }
 }

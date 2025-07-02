@@ -7,8 +7,7 @@ export class Preloader extends Scene {
 
   preload() {
     this.add.image(512, 384, 'background');
-    this.load.image('logo', '../assets/logo.png');
-    this.load.image('star', '../assets/star.png');
+    this.load.bitmapFont('DepartureMono', 'DepartureMono-Regular.png', 'DepartureMono-Regular.xml');
   }
 
   create() {
