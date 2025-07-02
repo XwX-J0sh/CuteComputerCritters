@@ -3,6 +3,7 @@ import {BehaviorSubject, catchError, distinctUntilChanged, EMPTY, Subscription} 
 import {CritterService} from './critter.service';
 import {Critter} from '../../game/scenes/helpers/constants';
 import {CritterGetResponse} from '../shared/model/CritterGetResponse';
+import {BehaviorSubject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -189,5 +190,25 @@ export class EventBusService {
       console.error('Training/Playing with critter failed:', error);
       return false; // Failure
     }
+  }
+  sleep = new EventEmitter<void>();
+  currentSceneReady = new EventEmitter<Phaser.Scene>();
+
+  //LOAD CRITTERS
+  private crittersSubject = new BehaviorSubject<any[]>([]);
+  critters$ = this.crittersSubject.asObservable();
+
+  emitCritters(critters: any[]) {
+    this.crittersSubject.next(critters);
+  }
+
+  //CREATE NEW CRITTER
+  createCritter = new EventEmitter<string>();
+
+  // New emitter for creating critters
+  critterCreated = new EventEmitter<any>();
+
+  emitCritterCreated(newCritter: any) {
+    this.critterCreated.emit(newCritter);
   }
 }
