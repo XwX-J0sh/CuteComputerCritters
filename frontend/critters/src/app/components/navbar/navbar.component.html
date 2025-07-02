@@ -97,24 +97,28 @@
     <ul class="">
       <li class="relative">
         <!-- Dropdown Toggle Button -->
-        <button (click)="toggleDropdown()" class="relative z-40">
-          <img ngSrc="../../../../public/avatar.png" class="w-8 h-8 rounded-full" alt="User avatar" height="64"
-               width="64"/>
+        <button (click)="toggleDropdown()" class="dropdown-toggle relative z-40 flex items-center space-x-2">
+          <img ngSrc="../../../../public/assets/avatar.PNG" class="w-8 h-8 rounded-full" [alt]="username || 'User avatar'"
+               height="512" width="512"/>
+          <span class="text-sm font-medium text-sky-900">{{ username || 'User' }}</span>
+          <svg class="w-4 h-4 text-sky-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
         <!--Dropdown profile menu--->
-        <div class="absolute right-0 mt-2 z-30 hidden font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-violet-900 dark:divide-gray-600"
-             *ngIf="dropdownOpen">
+        <div *ngIf="dropdownOpen"
+          class="dropdown-container absolute left-1/2 transform -translate-x-1/2 right-0 mt-2 z-30 w-44 font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-violet-900 dark:divide-gray-600"
+             >
           <ul class="py-2 text-sm text-gray-600 dark:text-gray-400" aria-labelledby="dropdownLargeButton">
             <li>
-              <a href="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white" routerLink="profile">Profile</a>
+              <a routerLink="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Profile</a>
             </li>
             <li>
-              <a href="/profile" class="block px-4 py-2 hover:bg-gray-100" routerLink="profile">Profile</a>
-              <a href="/profile" class="" routerLink="profile">Settings</a>
+              <a routerLink="/settings" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a>
             </li>
           </ul>
           <div class="py-1">
-            <button (click)="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Log Out</button>
+            <button (click)="logout()" class="w-full block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Log Out</button>
           </div>
         </div>
       </li>
