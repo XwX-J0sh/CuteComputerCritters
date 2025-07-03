@@ -1,7 +1,5 @@
 import { Scene, GameObjects } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
-import {Subscription} from 'rxjs';
-import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
 
 export class MainMenu extends Scene {
   logo!: GameObjects.Image;
