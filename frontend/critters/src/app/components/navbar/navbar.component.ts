@@ -2,14 +2,14 @@ import { Component,OnInit, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Observable } from 'rxjs';
-import {AsyncPipe, NgClass, NgIf, NgOptimizedImage} from '@angular/common';
+import {AsyncPipe, NgClass, NgIf} from '@angular/common';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [FormsModule, AsyncPipe, NgIf, RouterLink, RouterLinkActive, NgClass, NgOptimizedImage],
+  imports: [FormsModule, AsyncPipe, NgIf, RouterLink, RouterLinkActive, NgClass],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
@@ -52,8 +52,8 @@ export class NavbarComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event): void {
     const target = event.target as HTMLElement;
-    const clickedInsideDropdown = target.closest('.dropdown-container');
-    const clickedAvatar = target.closest('.dropdown-toggle');
+    const clickedInsideDropdown = target.closest('.custom-dropdown-container');
+    const clickedAvatar = target.closest('.custom-dropdown-toggle');
     console.log("Ya-ha! Ya-Hoo!")
     if (!clickedInsideDropdown && !clickedAvatar) {
       this.dropdownOpen = false;
@@ -69,7 +69,12 @@ export class NavbarComponent implements OnInit {
   logout(): void {
     this.authService.logout().subscribe({
       next: () => {
+        //clear client-side stored stuff
+        //localStorage.removeItem('authToken');
+        //sessionStorage.clear();
+
         // You can redirect or refresh after logout
+        //this.router.navigate(['/login']);
         window.location.reload();
       },
       error: (err) => console.log(err),
