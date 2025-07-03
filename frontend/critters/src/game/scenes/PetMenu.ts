@@ -1,12 +1,14 @@
 import { Scene, GameObjects } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
 import {Subscription} from 'rxjs';
+import {KeyboardNavigator} from './helpers/KeyboardNavigator';
 
 export class PetMenu extends Scene {
   logo!: GameObjects.Image;
   critters: any[] = [];
   eventBus!: EventBusService;
   critterSubscription!: Subscription;
+  private navigator?: KeyboardNavigator;
 
   constructor() {
     super('PetMenu');
@@ -22,13 +24,6 @@ export class PetMenu extends Scene {
       console.error('EventBus not found in registry!');
       return;
     }
-
-    // Now you can safely use this.eventBus
-    this.critterSubscription = this.eventBus.critters$.subscribe(critters => {
-      this.critters = critters;
-      console.log('Critters received:', critters);
-      this.displayCritters();
-    });
 
     this.logo = this.add.image(575, 130, 'logo')
     this.logo.setScale(1);
@@ -50,6 +45,7 @@ export class PetMenu extends Scene {
   displayCritters() {
     // Clear previous critters
     this.children.removeAll();
+    this.navigator?.destroy();
 
     this.logo = this.add.image(575, 130, 'logo').setScale(1);
     this.add.text(250, 400, 'Choose CRITTER', {
@@ -67,22 +63,22 @@ export class PetMenu extends Scene {
       return;
     }
 
+    const baseY = 450;
+    const spacing = 30;
+
     // Display each critter
     this.critters.forEach((critter, index) => {
-      const critterText = this.add.text(100, 450 + index * 30, critter.critterName, {
+      const critterText = this.add.text(100, baseY + index * spacing, critter.critterName, {
         font: '20px Arial',
-        color: '#00ff00',
+        color: '#ef85e4',
       });
       critterText.setInteractive();
       critterText.on('pointerdown', () => {
-        console.log('Selected critter:', critter.critterName);
-        // You might want to store selected critter in registry
-        this.game.registry.set('selectedCritter', critter);
-        this.scene.start('Game', { selectedCritter: critter });
+        this.selectCritter(index); // Use the centralized method
       });
     });
 
-    this.addCreateButton(450 + this.critters.length * 30 + 50);
+    this.addCreateButton(baseY + this.critters.length * spacing + 50);
   }
 
   private addCreateButton(yPosition: number) {
@@ -93,6 +89,19 @@ export class PetMenu extends Scene {
       padding: { x: 20, y: 15 },
     });
     createButton.setInteractive();
+
+    // Hover states:
+    createButton.on('pointerover', () => {
+      createButton.setColor('#ffffff');
+      createButton.setBackgroundColor('#ff5555');
+      this.navigator?.setIndex(this.critters.length); // Select the create button
+    });
+
+    createButton.on('pointerout', () => {
+      createButton.setColor('#ff0000');
+      createButton.setBackgroundColor('#ff9999');
+    })
+
     createButton.on('pointerdown', () => {
       this.showCreateCritterForm();
     });
@@ -268,6 +277,46 @@ export class PetMenu extends Scene {
 
   shutdown() {
     this.critterSubscription.unsubscribe();
+    this.navigator?.destroy();
+  }
+
+  private setupNavigation() {
+    this.navigator = new KeyboardNavigator(this, {
+      maxIndex: this.critters.length + 1, // +1 for create button
+      onSelect: (index) => {
+        if (index < this.critters.length) {
+          this.selectCritter(index);
+        } else {
+          this.showCreateCritterForm();
+        }
+      },
+      onChange: (index: number) => this.updateSelection(index)
+    });
+  }
+
+  private updateSelection(index: number) {
+    // Update critter text colors
+    const baseIndex = 2; // Logo and title are first two children
+
+    this.children.each((child, i) => {
+      if (child instanceof Phaser.GameObjects.Text && child.text !== 'Choose CRITTER') {
+        const isSelected = i === index + baseIndex;
+        child.setColor(isSelected ? '#ffffff' : '#ef85e4');
+
+        // Only modify text if it's a critter option (not the create button)
+        if (i < this.critters.length + baseIndex) {
+          const text = child.text.replace(/^> /, '').trim();
+          child.setText(isSelected ? `> ${text}` : text);
+        }
+      }
+    });
+  }
+
+  private selectCritter(index: number) {
+    const critter = this.critters[index];
+    console.log('Selected critter:', critter.critterName);
+    this.game.registry.set('selectedCritter', critter);
+    this.scene.start('Game', { selectedCritter: critter });
   }
 
 }
