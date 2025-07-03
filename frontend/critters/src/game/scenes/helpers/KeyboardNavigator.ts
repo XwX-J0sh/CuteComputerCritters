@@ -1,4 +1,3 @@
-// KeyboardNavigator.ts
 import { Scene } from 'phaser';
 
 type NavigationOptions = {
@@ -11,21 +10,22 @@ type NavigationOptions = {
 
 export class KeyboardNavigator {
     private scene: Scene;
-    currentIndex: number;
+    private currentIndex: number;
     private maxIndex: number;
     private onSelect: (index: number) => void;
-    private onChange?: (index: number) => void;
     private wrapAround: boolean;
     private keyListener?: Phaser.Events.EventEmitter;
+    private onChange?: (index: number) => void;
 
     constructor(scene: Scene, options: NavigationOptions) {
         this.scene = scene;
         this.currentIndex = options.initialIndex || 0;
         this.maxIndex = options.maxIndex;
         this.onSelect = options.onSelect;
-        this.onChange = options.onChange;
         this.wrapAround = options.wrapAround ?? true;
         this.setupKeyboardListeners();
+        this.onChange = options.onChange;
+
     }
 
     private setupKeyboardListeners() {
@@ -61,7 +61,12 @@ export class KeyboardNavigator {
         }
 
         this.currentIndex = newIndex;
-        this.onChange?.(newIndex);
+
+        if (this.onChange) {
+            this.onChange(newIndex);
+        }
+
+        this.onSelect(newIndex);
     }
 
     public setIndex(index: number) {
