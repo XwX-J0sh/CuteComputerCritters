@@ -1,11 +1,13 @@
 import { Scene } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
+import {CritterStatsPanel} from './helpers/CritterStatsPanel';
 
 export class Game extends Scene {
   pet!: Phaser.GameObjects.Sprite;
   bg!: Phaser.GameObjects.Image;
   eventBus!: EventBusService;
   selectedCritter: any;
+  statsPanel!: CritterStatsPanel;
 
   constructor() {
     super('Game');
@@ -45,10 +47,8 @@ export class Game extends Scene {
     this.pet = this.add.sprite(570, 550, 'pet');
     this.pet.play('shisa_idle1');
 
-    this.add.text(512, 384, `${this.selectedCritter.critterId}`, {
-      font: '32px Arial',
-      color: '#ffffff',
-    }).setOrigin(0.5);
+    // Create stats panel
+    this.statsPanel = new CritterStatsPanel(this, this.selectedCritter, 850, 200);
 
     // Check keyboard plugin before attaching listener
     const keyboard = this.input.keyboard;
@@ -60,5 +60,6 @@ export class Game extends Scene {
     } else {
       console.warn('Keyboard input not ready!');
     }
+
   }
 }
