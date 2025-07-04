@@ -11,7 +11,7 @@ export class AuthService {
 
   private API_URL = 'http://localhost:8080';
 
-  private FAKE_MODE = environment.fakeAuth;
+  private FAKE_MODE = environment.production;
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

@@ -2,14 +2,14 @@ import {Component, OnInit, HostListener, inject} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Observable } from 'rxjs';
-import {AsyncPipe, JsonPipe, NgClass, NgIf} from '@angular/common';
+import {AsyncPipe, NgClass, NgIf} from '@angular/common';
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [FormsModule, AsyncPipe, NgIf, RouterLink, RouterLinkActive, NgClass, JsonPipe],
+  imports: [FormsModule, AsyncPipe, NgIf, RouterLink, RouterLinkActive, NgClass],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
