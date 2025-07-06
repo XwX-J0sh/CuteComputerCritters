@@ -11,12 +11,15 @@ export class Game extends Scene {
   eventBus!: EventBusService;
   selectedCritter: any;
   statsPanel!: CritterStatsPanel;
+
+  //buttons
   quitButton!: GameButton;
   feedButton!: GameButton;
+  respondButton!: GameButton;
+  healButton!: GameButton;
+
   critterSubscription!: Subscription;
   critter!: any;
-  private lastUpdateTime: number = 0;
-  private updateInterval: number = 100;
   private critterUpdateSubscription?: Subscription;
 
   constructor() {
@@ -71,37 +74,12 @@ export class Game extends Scene {
       this.critter = critter;
     }
 
-    // Subscribe to critter
-    /*
-    this.critterSubscription = this.eventBus.critter$.subscribe(critter => {
-      if (critter) {
-        this.critter = critter;
-        console.log('Critter updated:', critter);
-        this.updateCritterDisplay();
-        this.events.on('update', this.handleUpdate, this);
-      }
-    });*/
-
     //subscribe to critter updates
     this.setupSubscriptions();
 
     if (this.critter?.critterId) {
       await this.activateCurrentCritter();
     }
-
-    /*
-    // Activate critter in database when scene starts
-    if (this.critter?.critterId) {
-      const critterId = Number(this.critter.critterId);
-      const success = await this.eventBus.activateCritter(critterId);
-
-      if (success) {
-        console.log('Critter activated in database');
-        //this.updateCritterDisplay();
-      } else {
-        console.warn('Failed to activate critter in database');
-      }
-    }*/
 
     // Define the idle animation
     // Only create animation if it doesn't exist
@@ -163,12 +141,30 @@ export class Game extends Scene {
     this.feedButton = new GameButton({scene: this,
       x: 233,
       y: 375,
-      label: 'quit button',
+      label: 'feed',
       onClick: () => {
       },
     })
 
+    this.healButton = new GameButton({scene: this,
+      x: 233,
+      y: 375,
+      label: 'heal',
+      onClick: () => {
+      },
+    })
+
+    this.respondButton = new GameButton({scene: this,
+      x: 233,
+      y: 775,
+      label: 'respond',
+      onClick: () => {
+        this.eventBus.respondToCall(this.critter.critterId);
+      },
+    })
+
     this.add.existing(this.quitButton);
+    this.add.existing(this.respondButton);
   }
 
   shutdown() {
