@@ -1,160 +1,136 @@
-import Phaser from 'phaser';
-import { Critter, EVOLUTION_SPRITES, EvolutionStage } from './constants';
+import {Component, OnDestroy, OnInit, Inject, PLATFORM_ID, ElementRef, ViewChild} from '@angular/core';
 
-// Extended type for different final evolution variants
-type FinalEvolutionVariant = 'shisa' | 'chiikawa' | 'hachiware' | 'momonga' | 'usagi';
+import {isPlatformBrowser} from '@angular/common';
+import {EventBusService} from '../services/event-bus.service';
+import {CritterService} from '../services/critter.service';
 
-export class AnimationLoader {
-  private scene: Phaser.Scene;
-  private critterSprite: Phaser.GameObjects.Sprite;
-  private currentAnimation: string = 'idle';
-  private isPlayingSpecialAnimation: boolean = false;
-  private variant: FinalEvolutionVariant = 'chiikawa';
+@Component({
+  selector: 'app-game',
+  imports: [],
+  templateUrl: './game.component.html',
+  styleUrl: './game.component.scss'
+})
+export class GameComponent implements OnInit, OnDestroy{
 
-  constructor(scene: Phaser.Scene, critter: Critter) {
-    this.scene = scene;
-    this.variant = this.determineVariant(critter); // Determine variant based on critter
-    this.critterSprite = this.createCritterSprite(critter);
-    this.setupAnimations(critter);
-    this.playIdleAnimation();
+  private game: any;
+  isBrowser: boolean;
+
+  constructor(@Inject(PLATFORM_ID) platformId: Object,
+              private eventBus: EventBusService,
+              private critterService: CritterService
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  private determineVariant(critter: Critter): FinalEvolutionVariant {
-    // Implement your logic to determine the variant
-    // Example: Check critter.type or other properties
-    if (critter.evolution === 2.1) return 'hachiware';
-    if (critter.evolution === 2.2) return 'shisa';
-    if (critter.evolution === 2.3) return 'usagi';
-    if (critter.evolution === 2.4) return 'momonga';
-    return 'chiikawa'; // fallback
+  async ngOnInit() {
+    if (!this.isBrowser) return;
+
+    const Phaser = (await import('phaser')).default;
+    const { default: createGame } = await import('../../game/main');
+
+    this.game = createGame('game-container', this.eventBus);
+
+    // Load critters when game initializes
+    this.loadCritters();
+
+    this.game.events.once('ready', () => {
+      this.game.scene.start('Boot');
+    });
   }
 
-  private createCritterSprite(critter: Critter): Phaser.GameObjects.Sprite {
-    const stage = critter.evolutionStage || this.determineEvolutionStage(critter.evolution);
-
-    // Get the appropriate sprite key based on stage and variant
-    const spriteKey = this.getSpriteKey(stage);
-
-    const sprite = this.scene.add.sprite(550, 500, spriteKey);
-    sprite.setScale(2);
-    return sprite;
-  }
-
-  private getSpriteKey(stage: EvolutionStage): string {
-    if (stage === EvolutionStage.BABY) {
-      return EVOLUTION_SPRITES[stage].idle;
-    } else {
-      return `${this.variant}_idle1`;
-    }
-  }
-
-  private determineEvolutionStage(evolution: number): EvolutionStage {
-    return evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
-  }
-
-  private setupAnimations(critter: Critter) {
-    const stage = critter.evolutionStage || this.determineEvolutionStage(critter.evolution);
-
-    if (stage === EvolutionStage.BABY) {
-      this.setupBabyAnimations();
-    } else {
-      this.setupFinalEvolutionAnimations();
-    }
-  }
-
-  private setupBabyAnimations() {
-    const sprites = EVOLUTION_SPRITES[EvolutionStage.BABY];
-
-    // Baby-specific animations
-    if (!this.scene.anims.exists(`${sprites.idle}_anim`)) {
-      this.scene.anims.create({
-        key: `${sprites.idle}_anim`,
-        frames: this.scene.anims.generateFrameNumbers(sprites.idle, { start: 0, end: 1 }),
-        frameRate: 2,
-        repeat: -1
-      });
-    }
-
-    // ... other baby animations
-  }
-
-  private setupFinalEvolutionAnimations() {
-    // Variant-specific animations
-    const idleKey = `${this.variant}_idle`;
-    const eatKey = `${this.variant}_eat`;
-
-    // Setup idle animation for variant
-    if (!this.scene.anims.exists(`${idleKey}_anim`)) {
-      this.scene.anims.create({
-        key: `${idleKey}_anim`,
-        frames: this.scene.anims.generateFrameNumbers(idleKey, { start: 0, end: 1 }),
-        frameRate: 2,
-        repeat: -1
-      });
-    }
-
-    // Setup eat animation for variant
-    if (!this.scene.anims.exists(`${eatKey}_anim`)) {
-      this.scene.anims.create({
-        key: `${eatKey}_anim`,
-        frames: this.scene.anims.generateFrameNumbers(eatKey, { start: 0, end: 3 }),
-        frameRate: 8,
-        repeat: 0
-      });
-    }
-
-    // Setup sick animation for variant
-    if (!this.scene.anims.exists(`${idleKey}_sick`)) {
-      this.scene.anims.create({
-        key: `${idleKey}_sick`,
-        frames: this.scene.anims.generateFrameNumbers(idleKey, { frames: [2, 3] }),
-        frameRate: 3,
-        repeat: -1
-      });
-    }
-  }
-
-  public playIdleAnimation(): void {
-    if (this.isPlayingSpecialAnimation) return;
-
-    const stage = this.determineEvolutionStage(this.critterSprite.data.get('evolution'));
-    let animKey: string;
-
-    if (stage === EvolutionStage.BABY) {
-      const sprites = EVOLUTION_SPRITES[stage];
-      animKey = this.critterSprite.data.get('isHealthy') === false ?
-        `${sprites.idle}_sick` : `${sprites.idle}_anim`;
-    } else {
-      // Final evolution uses variant-specific animations
-      animKey = this.critterSprite.data.get('isHealthy') === false ?
-        `${this.variant}_idle_sick` : `${this.variant}_idle_anim`;
-    }
-
-    this.currentAnimation = 'idle';
-    this.critterSprite.play(animKey);
-  }
-
-  public playEatAnimation(): Promise<void> {
-    return new Promise((resolve) => {
-      this.isPlayingSpecialAnimation = true;
-      const stage = this.determineEvolutionStage(this.critterSprite.data.get('evolution'));
-      let animKey: string;
-
-      if (stage === EvolutionStage.BABY) {
-        animKey = `${EVOLUTION_SPRITES[stage].eat}_anim`;
-      } else {
-        animKey = `${this.variant}_eat_anim`;
+  private loadCritters() {
+    this.critterService.getAllCritters().subscribe({
+      next: (critters) => {
+        // Emit the loaded critters to the event bus
+        this.eventBus.emitCritters(critters);
+      },
+      error: (err) => {
+        console.error('Error loading critters:', err);
+        // Optionally emit empty array on error
+        this.eventBus.emitCritters([]);
       }
+    });
 
-      this.critterSprite.play(animKey);
+    this.game.events.once('ready', () => {
+      this.game.scene.start('Boot');
+    });
 
-      this.critterSprite.once('animationcomplete', () => {
-        this.isPlayingSpecialAnimation = false;
-        this.playIdleAnimation();
-        resolve();
+    // Handle critter creation
+    this.eventBus.createCritter.subscribe(name => {
+      this.critterService.makeNewCritter(name).subscribe({
+        next: (response) => {
+          console.log('Critter created:', response);
+          // Reload critters to get the new one
+          this.loadCritters();
+        },
+        error: (err) => {
+          console.error('Error creating critter:', err);
+        }
       });
     });
   }
 
-  // ... rest of the methods remain similar but should use variant-specific keys where needed
+  ngOnDestroy() {
+    if (this.game) {
+      this.game.destroy(true);
+      this.game = null;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { Injectable, EventEmitter } from '@angular/core';
+import {BehaviorSubject} from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class EventBusService {
+  feed = new EventEmitter<void>();
+  play = new EventEmitter<void>();
+  sleep = new EventEmitter<void>();
+  currentSceneReady = new EventEmitter<Phaser.Scene>();
+
+  //LOAD CRITTERS
+  private crittersSubject = new BehaviorSubject<any[]>([]);
+  critters$ = this.crittersSubject.asObservable();
+
+  emitCritters(critters: any[]) {
+    this.crittersSubject.next(critters);
+  }
+
+  //CREATE NEW CRITTER
+  createCritter = new EventEmitter<string>();
+
+  // New emitter for creating critters
+  critterCreated = new EventEmitter<any>();
+
+  emitCritterCreated(newCritter: any) {
+    this.critterCreated.emit(newCritter);
+  }
+
 }

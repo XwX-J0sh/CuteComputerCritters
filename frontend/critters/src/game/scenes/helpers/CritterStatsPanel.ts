@@ -1,76 +1,127 @@
 import { Scene, GameObjects } from 'phaser';
 
+interface StatElement {
+  text: GameObjects.Text;
+  value: number | boolean;
+  type: 'health' | 'hunger' | 'happiness' | 'evolution';
+}
+
 export class CritterStatsPanel {
-    private scene: Scene;
-    private panel: GameObjects.Graphics;
-    private textElements: GameObjects.Text[];
-    private critter: any;
-    private health: string;
+  private scene: Scene;
+  private panel: GameObjects.Graphics;
+  private title: GameObjects.Text;
+  private statElements: StatElement[];
+  private critter: any;
+  private x: number;
+  private y: number;
 
-    constructor(scene: Scene, critter: any, x: number, y: number) {
-        this.scene = scene;
-        this.critter = critter;
-        this.textElements = [];
-        this.health = "healthy";
+  constructor(scene: Scene, critter: any, x: number, y: number) {
+    this.scene = scene;
+    this.critter = critter;
+    this.x = x;
+    this.y = y;
+    this.statElements = [];
 
-        // Create panel background
-        this.panel = this.scene.add.graphics();
-        this.drawPanel(x, y, 200, 300);
+    // Create panel
+    this.panel = this.scene.add.graphics();
+    this.drawPanel();
 
-        // Add stats text
-        this.createStatsText(x + 20, y + 20);
-    }
+    // Create title (only once)
+    this.title = this.scene.add.text(
+      this.x + 20,
+      this.y + 20,
+      critter.critterName,
+      { fontSize: '24px', color: '#450ba2', fontFamily: 'Arial' }
+    );
 
-    private drawPanel(x: number, y: number, width: number, height: number) {
-        this.panel.fillStyle(0xfa72a8, 0.7);
-        this.panel.fillRoundedRect(x, y, width, height, 10);
-        this.panel.lineStyle(2, 0xffffff, 1);
-        this.panel.strokeRoundedRect(x, y, width, height, 10);
-    }
+    // Create stat elements
+    this.createStatElements();
+  }
 
-    private createStatsText(x: number, y: number) {
+  private drawPanel() {
+    this.panel.clear();
+    this.panel.fillStyle(0xfa72a8, 0.7);
+    this.panel.fillRoundedRect(this.x, this.y, 200, 300, 10);
+    this.panel.lineStyle(2, 0xffffff, 1);
+    this.panel.strokeRoundedRect(this.x, this.y, 200, 300, 10);
+  }
 
-        // Title
-        this.addText(x, y, `${this.critter.critterName}`, { fontSize: '24px', color: '#450ba2' });
+  private createStatElements() {
+    // Position offsets for each stat
+    const offsets = {
+      evolution: 60,
+      health: 90,
+      hunger: 120,
+      happiness: 150,
+      energy: 180
+    };
 
-        // Stats
-        this.addText(x, y + 80, `Level: ${this.critter.evolution}`);
-        if (!this.critter.isHealthy){
-            this.health = 'sick';
-        }
-        this.addText(x, y + 120, `Health: ${this.health}`);
-        this.addText(x, y + 140, `Hunger: ${this.critter.hunger}`);
-        this.addText(x, y + 160, `Happiness: ${this.critter.happiness}`);
-    }
+    // Create each stat element
+    this.statElements = [
+      this.createStatElement('evolution', `Level: ${this.critter.evolution}`, offsets.evolution),
+      this.createStatElement('health', `Health: ${this.critter.isHealthy ? 'Healthy' : 'Sick'}`, offsets.health, this.critter.isHealthy),
+      this.createStatElement('hunger', `Hunger: ${Math.floor(this.critter.hunger)}`, offsets.hunger, this.critter.hunger),
+      this.createStatElement('happiness', `Happiness: ${Math.floor(this.critter.happiness)}`, offsets.happiness, this.critter.happiness),
+    ];
+  }
 
-    private addText(x: number, y: number, text: string, style: Phaser.Types.GameObjects.Text.TextStyle = {}) {
-        const defaultStyle = {
-            fontSize: '18px',
-            color: '#ffffff',
-            fontFamily: 'Arial'
-        };
+  private createStatElement(type: StatElement['type'], text: string, yOffset: number, value?: any): StatElement {
+    const color = this.getStatColor(value);
+    const textObj = this.scene.add.text(
+      this.x + 20,
+      this.y + yOffset,
+      text,
+      { fontSize: '18px', color, fontFamily: 'Arial' }
+    );
 
-        const textObj = this.scene.add.text(
-            x,
-            y,
-            text,
-            { ...defaultStyle, ...style }
-        );
+    return {
+      text: textObj,
+      value: value !== undefined ? value : this.critter[type],
+      type
+    };
+  }
 
-        this.textElements.push(textObj);
-        return textObj;
-    }
+  private getStatColor(value: any): string {
+    if (typeof value === 'boolean') return value ? '#00ff00' : '#ff0000';
+    if (value > 70) return '#00ff00';
+    if (value > 30) return '#ffff00';
+    return '#ff0000';
+  }
 
-    update(critter: any) {
-        this.critter = critter;
-        // Update all text elements with new stats
-        this.textElements.forEach(text => text.destroy());
-        this.textElements = [];
-        this.createStatsText(this.panel.x + 20, this.panel.y + 20);
-    }
+  public updateStats(critter: any) {
+    this.critter = critter;
 
-    destroy() {
-        this.panel.destroy();
-        this.textElements.forEach(text => text.destroy());
-    }
+    // Only update changed stats
+    this.statElements.forEach(element => {
+      const currentValue = element.type === 'health'
+        ? this.critter.isHealthy
+        : this.critter[element.type];
+
+      if (currentValue !== element.value) {
+        element.value = currentValue;
+        const displayValue = element.type === 'health'
+          ? this.critter.isHealthy ? 'Healthy' : 'Sick'
+          : Math.floor(currentValue);
+
+        element.text.setText(`${this.getStatLabel(element.type)}: ${displayValue}`);
+        element.text.setColor(this.getStatColor(currentValue));
+      }
+    });
+  }
+
+  private getStatLabel(type: string): string {
+    return {
+      evolution: 'Level',
+      health: 'Health',
+      hunger: 'Hunger',
+      happiness: 'Happiness',
+      energy: 'Energy'
+    }[type] || '';
+  }
+
+  destroy() {
+    this.panel.destroy();
+    this.title.destroy();
+    this.statElements.forEach(element => element.text.destroy());
+  }
 }
