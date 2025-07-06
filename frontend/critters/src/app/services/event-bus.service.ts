@@ -1,7 +1,8 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, catchError, distinctUntilChanged, EMPTY, Subscription} from 'rxjs';
 import {CritterService} from './critter.service';
 import {Critter} from '../../game/scenes/helpers/constants';
+import {CritterGetResponse} from '../shared/model/CritterGetResponse';
 
 interface ActivationStatus {
   critterId: number;
@@ -14,7 +15,8 @@ interface ActivationStatus {
 })
 export class EventBusService {
 
-  constructor(private critterService: CritterService) {
+  constructor(public critterService: CritterService) {
+    this.setupRealTimeUpdates();
   }
 
   feed = new EventEmitter<void>();
@@ -22,6 +24,10 @@ export class EventBusService {
   sleep = new EventEmitter<void>();
   critterActivated = new EventEmitter<number>();
   currentSceneReady = new EventEmitter<Phaser.Scene>();
+  private activeCritterSubscription?: Subscription;
+  private critterUpdateSubject = new BehaviorSubject<CritterGetResponse | null>(null);
+  critterUpdate$ = this.critterUpdateSubject.asObservable();
+
 
   //LOAD CRITTERS (multiple)
   private crittersSubject = new BehaviorSubject<Critter[]>([]);
@@ -42,7 +48,7 @@ export class EventBusService {
   }
 
   // Emit single critter by ID
-  emitCritterById(id: string) {
+  emitCritterById(id: number) {
     const currentCritters = this.crittersSubject.value;
     const critter = currentCritters.find(c => c.critterId === id);
     if (critter) {
@@ -50,6 +56,44 @@ export class EventBusService {
     } else {
       console.warn(`Critter with ID ${id} not found`);
     }
+  }
+
+  //emit UPDATES
+  private setupRealTimeUpdates() {
+    this.critter$.pipe(
+      distinctUntilChanged((prev, curr) => prev?.critterId === curr?.critterId)
+    ).subscribe(critter => {
+      // Clean up previous subscription
+      if (this.activeCritterSubscription) {
+        this.activeCritterSubscription.unsubscribe();
+      }
+
+      if (critter?.critterId) {
+        this.activeCritterSubscription = this.critterService.subscribeToCritter(critter.critterId).pipe(
+          catchError(error => {
+            console.error('WebSocket error:', error);
+            return EMPTY;
+          })
+        ).subscribe(updatedCritter => {
+          console.log('Real-time update received:', updatedCritter);
+
+          // Update single critter
+          this.critterSubject.next(updatedCritter);
+
+          // Update critters array if needed
+          const currentCritters = this.crittersSubject.value;
+          const index = currentCritters.findIndex(c => c.critterId === updatedCritter.critterId);
+          if (index >= -1) {
+            const updatedCritters = [...currentCritters];
+            updatedCritters[index] = updatedCritter;
+            this.crittersSubject.next(updatedCritters);
+          }
+
+          // Emit through update stream
+          this.critterUpdateSubject.next(updatedCritter);
+        });
+      }
+    });
   }
 
   // Emit newly created critter
@@ -86,4 +130,6 @@ export class EventBusService {
       return false; // Failure
     }
   }
+
+  //update critter
 }
