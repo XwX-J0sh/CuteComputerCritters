@@ -1,8 +1,5 @@
 import {Scene} from 'phaser';
 
-export class MedicineCabinet extends Scene{
+export class MedicineCabinetScene extends Scene{
 
-  constructor() {
-    super('MedicineCabinet');
-  }
 }
