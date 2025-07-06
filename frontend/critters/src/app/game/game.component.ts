@@ -31,6 +31,7 @@ export class GameComponent implements OnInit, OnDestroy{
       await this.ngZone.runOutsideAngular(async () => {
         const Phaser = await import('phaser');
         const { default: createGame } = await import('../../game/main');
+
         this.game = createGame('game-container', this.eventBus);
         this.gameInitialized = true;
 
@@ -61,8 +62,23 @@ export class GameComponent implements OnInit, OnDestroy{
         this.eventBus.emitCritters([]);
       }
     });
+
     this.game.events.once('ready', () => {
       this.game.scene.start('Boot');
+    });
+
+    // Handle critter creation
+    this.eventBus.createCritter.subscribe(name => {
+      this.critterService.makeNewCritter(name).subscribe({
+        next: (response) => {
+          console.log('Critter created:', response);
+          // Reload critters to get the new one
+          this.loadCritters();
+        },
+        error: (err) => {
+          console.error('Error creating critter:', err);
+        }
+      });
     });
   }
 
