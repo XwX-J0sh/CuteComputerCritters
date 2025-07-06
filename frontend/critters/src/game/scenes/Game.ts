@@ -139,10 +139,12 @@ export class Game extends Scene {
     });
 
     this.feedButton = new GameButton({scene: this,
-      x: 233,
-      y: 375,
+      x: 444,
+      y: 775,
       label: 'feed',
       onClick: () => {
+          this.scene.stop('Game');
+          this.scene.start('FoodPantry', this.selectedCritter);
       },
     })
 
@@ -165,6 +167,7 @@ export class Game extends Scene {
 
     this.add.existing(this.quitButton);
     this.add.existing(this.respondButton);
+    this.add.existing(this.feedButton);
   }
 
   shutdown() {
