@@ -1,8 +1,7 @@
 import { Scene, GameObjects } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
-import {distinctUntilChanged, Subscription} from 'rxjs';
+import {Subscription} from 'rxjs';
 import {KeyboardNavigator} from './helpers/KeyboardNavigator';
-import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
 
 export class PetMenu extends Scene {
   logo!: GameObjects.Image;
@@ -15,7 +14,6 @@ export class PetMenu extends Scene {
   private titleText!: GameObjects.Text;
   private instructionsText!: GameObjects.Text;
   private noCrittersText?: GameObjects.Text;
-  private aliveCritters: Array<{critter: CritterGetResponse, originalIndex: number}> = [];
 
 
   constructor() {
@@ -44,29 +42,12 @@ export class PetMenu extends Scene {
         lineSpacing: 10
       }).setOrigin(0.5);
 
-    // Load critters
-    this.loadCritters();
-
-    // Subscribe to updates
-    this.setupSubscriptions();
-
-  }
-
-  private setupSubscriptions() {
-    this.critterSubscription = this.eventBus.critters$.pipe(
-      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
-    ).subscribe(critters => {
-      console.log('Received critters:', critters);
-      this.critters = critters || [];
+    this.critterSubscription = this.eventBus.critters$.subscribe(critters => {
+      this.critters = critters;
+      console.log('Critters received:', critters);
       this.displayCritters();
     });
-  }
 
-  private loadCritters() {
-    this.eventBus.critterService.getAllCritters().subscribe({
-      next: (critters) => this.eventBus.emitCritters(critters),
-      error: (err) => console.error('Initial load failed:', err)
-    });
   }
 
   displayCritters() {
@@ -77,11 +58,7 @@ export class PetMenu extends Scene {
     this.createButton?.destroy();
     this.navigator?.destroy();
 
-    this.aliveCritters = this.critters
-      .map((critter, originalIndex) => ({ critter, originalIndex }))
-      .filter(({ critter }) => !critter.isDead);
-
-    if (this.aliveCritters.length === 0) {
+    if (this.critters.length === 0) {
       this.noCrittersText = this.add.text(100, 450, 'No critters available', {
         font: '20px Arial',
         color: '#ff0000',
@@ -93,8 +70,8 @@ export class PetMenu extends Scene {
     const baseY = 350;
     const spacing = 30;
 
-    this.aliveCritters.forEach(({ critter }, displayIndex) => {
-      const critterText = this.add.text(120, baseY + displayIndex * spacing,
+    this.critters.forEach((critter, index) => {
+      const critterText = this.add.text(120, baseY + index * spacing,
         `  ${critter.critterName}`,
         {
           font: '20px Arial',
@@ -104,14 +81,15 @@ export class PetMenu extends Scene {
         }
       );
 
+      // Simplified interaction setup
       critterText.setInteractive({ useHandCursor: true })
-        .on('pointerover', () => this.updateSelection(displayIndex))
-        .on('pointerdown', () => this.selectCritter(displayIndex));
+        .on('pointerover', () => this.updateSelection(index))
+        .on('pointerdown', () => this.selectCritter(index));
 
       this.critterTexts.push(critterText);
     });
 
-    this.addCreateButton(baseY + this.aliveCritters.length * spacing + 50);
+    this.addCreateButton(baseY + this.critters.length * spacing + 50);
     this.setupNavigation();
     this.updateSelection(0);
   }
@@ -122,12 +100,12 @@ export class PetMenu extends Scene {
       color: '#ff0000',
       backgroundColor: '#ff9999',
       padding: { x: 20, y: 15 },
-      fixedWidth: 200
+      fixedWidth: 200 // Match width with critter options
     });
 
     this.createButton.setInteractive({
-      useHandCursor: true,
-      cursor: 'pointer'
+      useHandCursor: true, // This enables the pointer cursor
+      cursor: 'pointer'   // Alternative way to specify cursor
     });
 
     // Mouse hover states
@@ -137,10 +115,10 @@ export class PetMenu extends Scene {
     });
 
     this.createButton.on('pointerout', () => {
-
+      // Only revert if not selected by keyboard
       if (!this.navigator || this.navigator.currentIndex !== this.critters.length) {
-        this.createButton!.setColor('#ff5555');
-        this.createButton!.setBackgroundColor('#ffffff');
+        this.createButton!.setColor('#ff0000');
+        this.createButton!.setBackgroundColor('#ff9999');
       }
     });
 
@@ -156,12 +134,12 @@ export class PetMenu extends Scene {
 
   private setupNavigation() {
     this.navigator = new KeyboardNavigator(this, {
-      maxIndex: this.aliveCritters.length +1, // +1 for create button
+      maxIndex: this.critters.length + 1,
       onSelect: (index) => {
-        if (index < this.aliveCritters.length) {
+        if (index < this.critters.length) {
           this.selectCritter(index);
         } else {
-          this.scene.start('CreateCritterForm');
+            this.scene.start('CreateCritterForm');
         }
       },
       onChange: (index: number) => this.updateSelection(index)
@@ -172,24 +150,28 @@ export class PetMenu extends Scene {
     // Update critter texts
     this.critterTexts.forEach((text, i) => {
       const isSelected = i === index;
-      const critterName = this.aliveCritters[i].critter.critterName;
       text.setColor(isSelected ? '#ffffff' : '#ef85e4');
-      text.setText(isSelected ? `> ${critterName}` : `  ${critterName}`);
+      text.setText(isSelected ? `> ${this.critters[i].critterName}` : `  ${this.critters[i].critterName}`);
     });
 
     // Update create button appearance
-    if (this.createButton) {
-      const isCreateButtonSelected = index === this.aliveCritters.length;
-      this.createButton.setColor(isCreateButtonSelected ? '#ffffff' : '#ff5555');
-      this.createButton.setBackgroundColor(isCreateButtonSelected ? '#ff5555' : '#ff9999');
-    }
+    this.updateButtonAppearance(index === this.critters.length);
 
     this.navigator?.setIndex(index);
   }
 
-  private selectCritter(displayIndex: number) {
-    const selectedCritter = this.aliveCritters[displayIndex].critter;
-    this.game.registry.set('selectedCritter', selectedCritter);
-    this.scene.start('Game', { selectedCritter });
+  private updateButtonAppearance(isSelected: boolean) {
+    if (!this.createButton) return;
+
+    // Visual changes
+    this.createButton.setColor(isSelected ? '#ffffff' : '#ff0000');
+    this.createButton.setBackgroundColor(isSelected ? '#ff5555' : '#ff9999');
   }
+
+  private selectCritter(index: number) {
+    const critter = this.critters[index];
+    this.game.registry.set('selectedCritter', critter);
+    this.scene.start('Game', { selectedCritter: critter });
+  }
+
 }

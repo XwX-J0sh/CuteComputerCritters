@@ -1,24 +1,27 @@
 import { Injectable, EventEmitter } from '@angular/core';
-import {BehaviorSubject, catchError, distinctUntilChanged, EMPTY, Subscription} from 'rxjs';
+import {BehaviorSubject} from 'rxjs';
 import {CritterService} from './critter.service';
-import {Critter} from '../../game-phaser/scenes/helpers/constants';
-import {CritterGetResponse} from '../shared/model/CritterGetResponse';
+import {Critter} from '../../game/scenes/helpers/constants';
+
+interface ActivationStatus {
+  critterId: number;
+  isActive: boolean;
+  timestamp?: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class EventBusService {
 
-  constructor(public critterService: CritterService) {
-    this.setupRealTimeUpdates();
+  constructor(private critterService: CritterService) {
   }
 
   feed = new EventEmitter<void>();
   play = new EventEmitter<void>();
-  private activeCritterSubscription?: Subscription;
-  private critterUpdateSubject = new BehaviorSubject<CritterGetResponse | null>(null);
-  critterUpdate$ = this.critterUpdateSubject.asObservable();
-
+  sleep = new EventEmitter<void>();
+  critterActivated = new EventEmitter<number>();
+  currentSceneReady = new EventEmitter<Phaser.Scene>();
 
   //LOAD CRITTERS (multiple)
   private crittersSubject = new BehaviorSubject<Critter[]>([]);
@@ -29,7 +32,7 @@ export class EventBusService {
   critter$ = this.critterSubject.asObservable();
 
   //CREATE NEW CRITTER
-  //createCritter = new EventEmitter<string>();
+  createCritter = new EventEmitter<string>();
   // New emitter for creating critters
   critterCreated = new EventEmitter<any>();
 
@@ -39,7 +42,7 @@ export class EventBusService {
   }
 
   // Emit single critter by ID
-  emitCritterById(id: number) {
+  emitCritterById(id: string) {
     const currentCritters = this.crittersSubject.value;
     const critter = currentCritters.find(c => c.critterId === id);
     if (critter) {
@@ -47,69 +50,6 @@ export class EventBusService {
     } else {
       console.warn(`Critter with ID ${id} not found`);
     }
-  }
-
-  async createCritter(name: string): Promise<boolean> {
-    try {
-      const newCritter = await this.critterService.makeNewCritter(name).toPromise();
-      if (newCritter) {
-        // Force a complete refresh
-        this.critterService.getAllCritters().subscribe({
-          next: (critters) => {
-            this.emitCritters(critters);
-            // Also update the active critter if needed
-            const updatedCritter = critters.find(c => c.critterId === newCritter.critterId);
-            if (updatedCritter) {
-              this.critterSubject.next(updatedCritter);
-            }
-          },
-          error: (err) => console.error('Refresh failed:', err)
-        });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Creation failed:', error);
-      return false;
-    }
-  }
-
-  //emit UPDATES
-  private setupRealTimeUpdates() {
-    this.critter$.pipe(
-      distinctUntilChanged((prev, curr) => prev?.critterId === curr?.critterId)
-    ).subscribe(critter => {
-      // Clean up previous subscription
-      if (this.activeCritterSubscription) {
-        this.activeCritterSubscription.unsubscribe();
-      }
-
-      if (critter?.critterId) {
-        this.activeCritterSubscription = this.critterService.subscribeToCritter(critter.critterId).pipe(
-          catchError(error => {
-            console.error('WebSocket error:', error);
-            return EMPTY;
-          })
-        ).subscribe(updatedCritter => {
-          console.log('Real-time update received:', updatedCritter);
-
-          // Update single critter
-          this.critterSubject.next(updatedCritter);
-
-          // Update critters array if needed
-          const currentCritters = this.crittersSubject.value;
-          const index = currentCritters.findIndex(c => c.critterId === updatedCritter.critterId);
-          if (index >= -1) {
-            const updatedCritters = [...currentCritters];
-            updatedCritters[index] = updatedCritter;
-            this.crittersSubject.next(updatedCritters);
-          }
-
-          // Emit through update stream
-          this.critterUpdateSubject.next(updatedCritter);
-        });
-      }
-    });
   }
 
   // Emit newly created critter
@@ -143,50 +83,6 @@ export class EventBusService {
       return true; // Success
     } catch (error) {
       console.error('Database deactivation failed:', error);
-      return false; // Failure
-    }
-  }
-
-  //respond to Call
-  async respondToCall(critterId: number): Promise<boolean> {
-    try {
-      await this.critterService.respondToCall(critterId).toPromise();
-      return true; // Success
-    } catch (error) {
-      console.error('Response to call failed:', error);
-      return false; // Failure
-    }
-  }
-
-  //heal critter
-  async healCritter(critterId: number, medicineType: string): Promise<boolean> {
-    try {
-      await this.critterService.healCritter(critterId, medicineType).toPromise();
-      return true; // Success
-    } catch (error) {
-      console.error('Healing critter failed:', error);
-      return false; // Failure
-    }
-  }
-
-  //feed critter
-  async feedCritter(critterId: number, foodName: string): Promise<boolean> {
-    try {
-      await this.critterService.feedCritter(critterId, foodName).toPromise();
-      return true; // Success
-    } catch (error) {
-      console.error('Feeding critter failed:', error);
-      return false; // Failure
-    }
-  }
-
-  //train/play with critter
-  async playWithCritter(critterId: number, score: number): Promise<boolean> {
-    try {
-      await this.critterService.trainCritter(critterId, score).toPromise();
-      return true; // Success
-    } catch (error) {
-      console.error('Training/Playing with critter failed:', error);
       return false; // Failure
     }
   }
