@@ -25,3 +25,9 @@
 .frm-primary {
   @apply rounded-lg border border-gray-300 bg-blue-200 text-sm text-blue-950 focus:border-blue-500 focus:ring-blue-500;
 }
+
+#phaser-container,
+#phaser-container canvas {
+  pointer-events: auto;
+}
+
