@@ -3,7 +3,7 @@ import {EventBusService} from '../../app/services/event-bus.service';
 import {CritterStatsPanel} from './helpers/CritterStatsPanel';
 import {GameButton} from './helpers/GameButton';
 import {EVOLUTION_SPRITES, EvolutionStage} from './helpers/constants';
-import {Subscription} from 'rxjs';
+import {lastValueFrom, Subscription} from 'rxjs';
 
 export class Game extends Scene {
   pet!: Phaser.GameObjects.Sprite;
@@ -17,6 +17,7 @@ export class Game extends Scene {
   critter!: any;
   private lastUpdateTime: number = 0;
   private updateInterval: number = 100;
+  private critterUpdateSubscription?: Subscription;
 
   constructor() {
     super('Game');
@@ -62,10 +63,16 @@ export class Game extends Scene {
 
     // Initialize critter from init data or request it
     if (!this.critter && this.selectedCritter?.critterId) {
-      this.eventBus.emitCritterById(this.selectedCritter.critterId);
+      // Load initial critter data
+      const critter = await lastValueFrom(
+        this.eventBus.critterService.getCritterById(this.selectedCritter.critterId)
+      );
+      this.eventBus.emitCritterById(critter.critterId);
+      this.critter = critter;
     }
 
-    // Subscribe to critter updates
+    // Subscribe to critter
+    /*
     this.critterSubscription = this.eventBus.critter$.subscribe(critter => {
       if (critter) {
         this.critter = critter;
@@ -73,8 +80,16 @@ export class Game extends Scene {
         this.updateCritterDisplay();
         this.events.on('update', this.handleUpdate, this);
       }
-    });
+    });*/
 
+    //subscribe to critter updates
+    this.setupSubscriptions();
+
+    if (this.critter?.critterId) {
+      await this.activateCurrentCritter();
+    }
+
+    /*
     // Activate critter in database when scene starts
     if (this.critter?.critterId) {
       const critterId = Number(this.critter.critterId);
@@ -86,7 +101,7 @@ export class Game extends Scene {
       } else {
         console.warn('Failed to activate critter in database');
       }
-    }
+    }*/
 
     // Define the idle animation
     // Only create animation if it doesn't exist
@@ -179,6 +194,12 @@ export class Game extends Scene {
 
     // Clear references
     this.selectedCritter = null;
+
+    if (this.critterUpdateSubscription) {
+      this.critterUpdateSubscription.unsubscribe();
+    }
+
+    this.critterUpdateSubscription?.unsubscribe();
   }
 
   private updateCritterDisplay() {
@@ -195,13 +216,35 @@ export class Game extends Scene {
     }
   }
 
-  private handleUpdate(time: number) {
-    // Throttle updates for performance
-    if (time - this.lastUpdateTime > this.updateInterval) {
-      this.lastUpdateTime = time;
-      if (this.critter) {
+  private setupSubscriptions() {
+    // Base critter data
+    this.critterSubscription = this.eventBus.critter$.subscribe(critter => {
+      if (critter) {
+        this.critter = critter;
         this.updateCritterDisplay();
       }
+    });
+
+    // Real-time updates
+    this.critterUpdateSubscription = this.eventBus.critterUpdate$.subscribe(updatedCritter => {
+      if (updatedCritter && this.critter?.critterId === updatedCritter.critterId) {
+        this.critter = updatedCritter;
+        this.updateCritterDisplay();
+      }
+    });
+  }
+
+  private async activateCurrentCritter(): Promise<void> {
+    const critterId = Number(this.critter.critterId);
+    try {
+      const success = await this.eventBus.activateCritter(critterId);
+      if (success) {
+        console.log('Critter activated successfully');
+        // Force refresh after activation
+        this.eventBus.emitCritterById(critterId);
+      }
+    } catch (error) {
+      console.error('Activation error:', error);
     }
   }
 
