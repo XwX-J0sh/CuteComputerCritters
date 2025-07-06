@@ -210,22 +210,14 @@ export class CreateCritterForm extends Scene {
     }
   }
 
-  private async submit() {
+  private submit() {
     if (this.inputText.trim()) {
-      const success = await this.eventBus.createCritter(this.inputText.trim());
-      if (success) {
-        this.scene.start('PetMenu');
-      } else {
-        // Show error message to user
-        this.add.text(250, 250, 'Failed to create critter', {
-          font: '20px Arial',
-          color: '#ff0000'
-        }).setOrigin(0.5);
-        }
-      }
+      this.eventBus.createCritter.emit(this.inputText.trim());
+      this.scene.start('PetMenu');
     }
+  }
 
-    private handleCharacterSelection(char: string) {
+  private handleCharacterSelection(char: string) {
     if (char === 'BACK') {
       this.scene.start('PetMenu');
     } else if (char === 'SAVE') {
