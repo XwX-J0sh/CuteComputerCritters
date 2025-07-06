@@ -131,5 +131,36 @@ export class EventBusService {
     }
   }
 
-  //update critter
+  //respond to Call
+  async respondToCall(critterId: number): Promise<boolean> {
+    try {
+      await this.critterService.respondToCall(critterId).toPromise();
+      return true; // Success
+    } catch (error) {
+      console.error('Response to call failed:', error);
+      return false; // Failure
+    }
+  }
+
+  //heal critter
+  async healCritter(critterId: number, medicineType: string): Promise<boolean> {
+    try {
+      await this.critterService.healCritter(critterId, medicineType).toPromise();
+      return true; // Success
+    } catch (error) {
+      console.error('Healing critter failed:', error);
+      return false; // Failure
+    }
+  }
+
+  //feed critter
+  async feedCritter(critterId: number, foodName: string): Promise<boolean> {
+    try {
+      await this.critterService.feedCritter(critterId, foodName).toPromise();
+      return true; // Success
+    } catch (error) {
+      console.error('Feeding critter failed:', error);
+      return false; // Failure
+    }
+  }
 }
