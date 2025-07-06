@@ -15,7 +15,6 @@ export class Preloader extends Scene {
 
   preload() {
     this.add.image(512, 384, 'background');
-    this.load.bitmapFont('DepartureMono', 'DepartureMono-Regular.png', 'DepartureMono-Regular.xml');
   }
 
   create() {

@@ -38,6 +38,12 @@
     @apply relative bottom-0 left-0 w-full bg-white dark:bg-purple-950 text-purple-900 dark:text-purple-100 border-gray-300 dark:border-gray-600 text-center text-sm p-4 border-t z-10
   }
 
+#phaser-container,
+#phaser-container canvas {
+  pointer-events: auto;
+}
+
+
   .text-body {
     @apply text-base text-purple-900 dark:text-purple-100 leading-relaxed
   }
