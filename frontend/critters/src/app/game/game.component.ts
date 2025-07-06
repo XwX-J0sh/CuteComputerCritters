@@ -30,7 +30,7 @@ export class GameComponent implements OnInit, OnDestroy{
     try {
       await this.ngZone.runOutsideAngular(async () => {
         const Phaser = await import('phaser');
-        const { default: createGame } = await import('../../game-phaser/main');
+        const { default: createGame } = await import('../../game/main');
 
         this.game = createGame('game-container', this.eventBus);
         this.gameInitialized = true;
@@ -67,7 +67,6 @@ export class GameComponent implements OnInit, OnDestroy{
       this.game.scene.start('Boot');
     });
 
-    /*
     // Handle critter creation
     this.eventBus.createCritter.subscribe(name => {
       this.critterService.makeNewCritter(name).subscribe({
@@ -80,7 +79,7 @@ export class GameComponent implements OnInit, OnDestroy{
           console.error('Error creating critter:', err);
         }
       });
-    });*/
+    });
   }
 
   ngOnDestroy() {
