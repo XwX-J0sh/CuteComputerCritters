@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit, Inject, PLATFORM_ID} from '@angular/core';
+import {Component, OnDestroy, OnInit, Inject, PLATFORM_ID, NgZone} from '@angular/core';
 
 import {isPlatformBrowser} from '@angular/common';
 import {EventBusService} from '../services/event-bus.service';
@@ -7,15 +7,17 @@ import {CritterService} from '../services/critter.service';
 @Component({
   selector: 'app-game',
   imports: [],
-  templateUrl: './game.component.html',
-  styleUrl: './game.component.scss'
+  template: `<div id="game-container"></div>`,
+  standalone: true
 })
 export class GameComponent implements OnInit, OnDestroy{
 
   private game: any;
   isBrowser: boolean;
+  private gameInitialized = false;
 
   constructor(@Inject(PLATFORM_ID) platformId: Object,
+              private ngZone: NgZone,
               private eventBus: EventBusService,
               private critterService: CritterService
   ) {
@@ -25,17 +27,27 @@ export class GameComponent implements OnInit, OnDestroy{
   async ngOnInit() {
     if (!this.isBrowser) return;
 
-    const Phaser = (await import('phaser')).default;
-    const { default: createGame } = await import('../../game/main');
+    try {
+      await this.ngZone.runOutsideAngular(async () => {
+        const Phaser = await import('phaser');
+        const { default: createGame } = await import('../../game/main');
 
-    this.game = createGame('game-container', this.eventBus);
+        this.game = createGame('game-container', this.eventBus);
+        this.gameInitialized = true;
 
-    // Load critters when game initializes
-    this.loadCritters();
+        // Wait for game to be fully ready
+        await new Promise<void>(resolve => {
+          this.game!.events.once('ready', resolve);
+        });
 
-    this.game.events.once('ready', () => {
-      this.game.scene.start('Boot');
-    });
+        // Load critters when game initializes
+        this.loadCritters();
+
+        this.game.scene.start('Boot');
+      });
+    } catch (error) {
+      console.error('Game initialization failed:', error);
+    }
   }
 
   private loadCritters() {
@@ -71,8 +83,9 @@ export class GameComponent implements OnInit, OnDestroy{
   }
 
   ngOnDestroy() {
-    if (this.game) {
+    if (this.gameInitialized && this.game) {
       this.game.destroy(true);
+      this.game = null;
     }
   }
 }
