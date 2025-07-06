@@ -24,12 +24,13 @@ export const EVOLUTION_SPRITES: EvolutionSprites = {
 }
 
 export interface Critter {
-  critterId: number;
+  critterId: string;
   critterName: string;
   evolution: number;
   isHealthy: boolean;
   hunger: number;
   happiness: number;
+  energy: number;
   evolutionStage?: EvolutionStage;
   // Add any other critter properties
 }
