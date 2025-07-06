@@ -10,7 +10,7 @@ type NavigationOptions = {
 
 export class KeyboardNavigator {
     private scene: Scene;
-    private currentIndex: number;
+    currentIndex: number;
     private maxIndex: number;
     private onSelect: (index: number) => void;
     private wrapAround: boolean;
