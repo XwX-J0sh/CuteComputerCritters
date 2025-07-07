@@ -3,7 +3,7 @@ import { EventBusService } from '../../app/services/event-bus.service';
 import { CritterStatsPanel } from './helpers/CritterStatsPanel';
 import { GameButton } from './helpers/GameButton';
 import { EVOLUTION_SPRITES, EvolutionStage } from './helpers/constants';
-import { lastValueFrom, Subscription } from 'rxjs';
+import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
 
 export abstract class BaseGame extends Scene {
   protected pet!: Phaser.GameObjects.Sprite;
@@ -17,10 +17,13 @@ export abstract class BaseGame extends Scene {
   protected feedButton!: GameButton;
   protected respondButton!: GameButton;
   protected healButton!: GameButton;
+  protected playButton!: GameButton;
 
   protected critterSubscription!: Subscription;
   protected critter!: any;
   private critterUpdateSubscription?: Subscription;
+  private hasCalledSubscription!: Subscription;
+  private callSound!: Phaser.Sound.BaseSound;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -34,19 +37,21 @@ export abstract class BaseGame extends Scene {
 
   preload() {
     // Load common assets
-    this.load.spritesheet('baby_idle', '../assets/baby_idle1.PNG', {
+    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
       frameWidth: 256,
       frameHeight: 256,
       margin: 0,
       spacing: 0,
     });
 
-    this.load.spritesheet('pet', '../assets/shisa_idle1.png', {
+    this.load.spritesheet('pet', '../assets/shisa/shisa_idle1.PNG', {
       frameWidth: 148,
       frameHeight: 128,
       margin: 0,
       spacing: 0,
     });
+
+    this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
   }
 
   async create() {
@@ -57,6 +62,7 @@ export abstract class BaseGame extends Scene {
     if (this.shouldCreateCritter()) {
       this.createCritter();
     }
+
   }
 
   protected createCommonElements() {
@@ -77,7 +83,10 @@ export abstract class BaseGame extends Scene {
     // Common Buttons
     this.createButtons();
     this.setupKeyboard();
+
+    this.callSound = this.sound.add('critterCall');
   }
+
 
   protected async initializeCritter() {
     if (!this.critter && this.selectedCritter?.critterId) {
@@ -108,6 +117,36 @@ export abstract class BaseGame extends Scene {
         this.updateCritterDisplay();
       }
     });
+
+    //sound subscriptions
+    this.setupHasCalledSubscription();
+  }
+
+  private setupHasCalledSubscription() {
+    this.hasCalledSubscription = this.eventBus.critterUpdate$
+      .pipe(
+        filter(updatedCritter =>
+          updatedCritter! &&
+          this.critter?.critterId === updatedCritter.critterId &&
+          updatedCritter.hasCalled
+        ),
+        distinctUntilChanged((prev, curr) => prev!.hasCalled === curr!.hasCalled)
+      )
+      .subscribe(updatedCritter => {
+        if (updatedCritter!.hasCalled) {
+          this.playCallSound();
+        }
+      });
+  }
+
+  private playCallSound() {
+    try {
+      if (!this.callSound.isPlaying) {
+        this.callSound.play();
+      }
+    } catch (error) {
+      console.error('Error playing call sound:', error);
+    }
   }
 
   private updateCritterDisplay() {
@@ -150,22 +189,42 @@ export abstract class BaseGame extends Scene {
     this.respondButton = new GameButton({
       scene: this,
       x: 233,
-      y: 775,
+      y: 776,
       label: 'respond',
       onClick: () => this.handleRespond()
     });
 
     this.feedButton = new GameButton({
       scene: this,
-      x: 444,
-      y: 775,
+      x: 446,
+      y: 776,
       label: 'feed',
       onClick: () => this.handleFeed()
     });
 
+    this.healButton = new GameButton({
+      scene: this,
+      x: 661,
+      y: 776,
+      label: 'HEAL',
+      onClick: () => this.handleHeal()
+    });
+
+    this.playButton = new GameButton({
+      scene: this,
+      x: 876,
+      y: 776,
+      label: 'PLAY',
+      onClick: () => this.handlePlay()
+    });
+
     this.add.existing(this.quitButton);
     this.add.existing(this.respondButton);
+    this.add.existing(this.healButton);
     this.add.existing(this.feedButton);
+    this.add.existing(this.playButton);
+
+    console.log(this.healButton);
   }
 
   protected setupKeyboard() {
@@ -200,6 +259,8 @@ export abstract class BaseGame extends Scene {
   protected abstract handleQuit(): Promise<void>;
   protected abstract handleRespond(): void;
   protected abstract handleFeed(): void;
+  protected abstract handleHeal(): void;
+  protected abstract handlePlay(): void;
 
   shutdown() {
     //Destroy game objects
@@ -212,9 +273,20 @@ export abstract class BaseGame extends Scene {
     if (this.quitButton) {
       this.quitButton.destroy();
     }
+    if (this.feedButton) {
+      this.feedButton.destroy();
+    }
+    if (this.healButton) {
+      this.healButton.destroy();
+    }
+    if (this.callSound) {
+      this.callSound.stop();
+      this.callSound.destroy();
+    }
 
     // Remove keyboard listener
     const keyboard = this.input.keyboard;
+    if (keyboard) {
     if (keyboard) {
       keyboard.off('keydown-ESC');
     }
@@ -227,6 +299,8 @@ export abstract class BaseGame extends Scene {
     }
 
     this.critterUpdateSubscription?.unsubscribe();
+    this.hasCalledSubscription?.unsubscribe();
+  }
   }
 
   private setCritterSprite(stage: EvolutionStage) {
@@ -260,4 +334,5 @@ export abstract class BaseGame extends Scene {
     };
     this.pet.setScale(scales[stage]);
   }
+
 }
