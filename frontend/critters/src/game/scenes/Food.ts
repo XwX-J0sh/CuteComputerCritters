@@ -80,7 +80,8 @@ export class FoodPantry extends BaseGame {
       .on('pointerout', () => this.feedButton.setAlpha(1))
       .on('pointerdown', () => {
         console.log('Feed button pressed');
-        this.handleFeed();
+        this.scene.stop('FoodPantry');
+        this.scene.start('Game');
       });
 
     // Respond button
@@ -136,6 +137,14 @@ export class FoodPantry extends BaseGame {
 
   protected handleFeed = async () => {
     const selectedFood = this.foodItems[this.selectedFoodIndex];
+
+    //if user has chosen no food, return to Game
+    if (!selectedFood){
+      this.scene.stop('FoodPantry');
+      this.scene.start('Game');
+      return;
+    }
+
     console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
 
     try {
