@@ -335,4 +335,8 @@ export class MedicineCabinet extends BaseGame {
       this.scene.start('Game', {selectedCritter: this.passedCritter});
     }
   }
+
+  protected handlePlay(): void {
+    this.eventBus.playWithCritter(this.critter.critterId, 10);
+  }
 }
