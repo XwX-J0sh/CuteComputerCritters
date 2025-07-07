@@ -11,7 +11,7 @@ type NavigationOptions = {
 
 export class KeyboardNavigator {
     private scene: Scene;
-    currentIndex: number;
+    public currentIndex: number;
     private maxIndex: number;
     private onSelect: (index: number) => void;
     private onChange?: (index: number) => void;
