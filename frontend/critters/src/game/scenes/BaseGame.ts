@@ -34,14 +34,14 @@ export abstract class BaseGame extends Scene {
 
   preload() {
     // Load common assets
-    this.load.spritesheet('baby_idle', '../assets/baby_idle1.PNG', {
+    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
       frameWidth: 256,
       frameHeight: 256,
       margin: 0,
       spacing: 0,
     });
 
-    this.load.spritesheet('pet', '../assets/shisa_idle1.png', {
+    this.load.spritesheet('pet', '../assets/shisa/shisa_idle1.PNG', {
       frameWidth: 148,
       frameHeight: 128,
       margin: 0,

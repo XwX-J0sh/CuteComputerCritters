@@ -1,5 +1,6 @@
 import { BaseGame } from './BaseGame';
 import {Critter} from './helpers/constants';
+import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
 
 interface FoodItem {
   name: string;
@@ -34,7 +35,7 @@ export class FoodPantry extends BaseGame {
   }
 
   override preload() {
-    this.load.spritesheet('Bread', '../assets/bread.PNG', {
+    this.load.spritesheet('Bread', '../assets/items/bread.PNG', {
       frameWidth: 32,
       frameHeight: 32
     });
@@ -134,9 +135,48 @@ export class FoodPantry extends BaseGame {
   };
 
   protected handleFeed = async () => {
-    this.selectFood(this.foodItems[this.selectedFoodIndex]);
-    return Promise.resolve();
+    const selectedFood = this.foodItems[this.selectedFoodIndex];
+    console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
+
+    try {
+      // 1. First feed the critter (this updates backend)
+      const success = await this.eventBus.feedCritter(
+        this.passedCritter!.critterId,
+        selectedFood.name
+      );
+
+      if (!success) {
+        console.error('Feeding failed');
+        return;
+      }
+
+      // 2. Get updated critter data (optional but recommended)
+      const updatedCritter = await this.getUpdatedCritter();
+
+      // 3. Return to GameScene with updated data
+      this.scene.start('Game', {
+        selectedCritter: updatedCritter || this.passedCritter
+      });
+    } catch (error) {
+      console.error('Feeding error:', error);
+      // Fallback - return with original critter data
+      this.scene.start('Game', { selectedCritter: this.passedCritter });
+    }
   };
+
+  private async getUpdatedCritter(): Promise<CritterGetResponse | undefined | null> {
+    try {
+      // Assuming your eventBus or critterService has a way to fetch current data
+      const updatedCritter = await this.eventBus.critterService.getCritterById(
+        this.passedCritter!.critterId
+      ).toPromise();
+
+      return updatedCritter;
+    } catch (error) {
+      console.warn('Failed to fetch updated critter:', error);
+      return null;
+    }
+  }
 
   override shutdown() {
     super.shutdown();
@@ -203,34 +243,49 @@ export class FoodPantry extends BaseGame {
   }
 
   private createFoodSelectionUI() {
-    const startX = this.cameras.main.width / 2 - 250;
-    const startY = this.cameras.main.height / 2;
-    const spacing = 180;
+    const centerX = this.cameras.main.width / 2;
+    const centerY = this.cameras.main.height / 2;
+    const itemSpacingX = 200; // Horizontal spacing between items
+    const itemSpacingY = 150; // Vertical spacing between rows
+    const itemScale = 1.5;
 
+    // Clear any existing containers
+    this.foodContainers.forEach(container => container.destroy());
+    this.foodContainers = [];
+
+    // Create a 2x2 grid layout
     this.foodItems.forEach((food, index) => {
       const container = this.add.container(0, 0);
-      const xPos = startX + (index * spacing);
+
+      // Calculate position based on grid layout
+      const row = index < 2 ? 0 : 1; // First two items in top row, next two in bottom row
+      const col = index % 2; // Alternating columns
+
+      const xPos = centerX + (col === 0 ? -itemSpacingX/2 : itemSpacingX/2);
+      const yPos = centerY + (row === 0 ? -itemSpacingY : itemSpacingY);
 
       // Food sprite
-      const foodSprite = this.add.sprite(xPos, startY - 50, food.spriteKey)
-        .setScale(1.5)
+      const foodSprite = this.add.sprite(xPos, yPos - 30, food.spriteKey)
+        .setScale(itemScale)
         .setInteractive({ useHandCursor: true });
 
       // Food label
-      const foodLabel = this.add.text(xPos, startY + 50, food.name, {
+      const foodLabel = this.add.text(xPos, yPos + 50, food.name, {
         font: '24px Arial',
         color: '#ffffff',
         align: 'center'
       }).setOrigin(0.5);
 
-      // Add to container (for grouping, but positioned absolutely)
+      // Add to container
       container.add([foodSprite, foodLabel]);
+
+      // Set interactive area (larger than the sprite for better UX)
       container.setInteractive(
         new Phaser.Geom.Rectangle(
-          xPos - foodSprite.width/2,
-          startY - 50 - foodSprite.height/2,
-          foodSprite.width,
-          foodSprite.height + 70
+          xPos - foodSprite.displayWidth/2 - 10,
+          yPos - 30 - foodSprite.displayHeight/2 - 10,
+          foodSprite.displayWidth + 20,
+          foodSprite.displayHeight + 90 // Includes label space
         ),
         Phaser.Geom.Rectangle.Contains
       );
@@ -247,11 +302,20 @@ export class FoodPantry extends BaseGame {
 
       this.foodContainers.push(container);
 
-      // Initial highlight
+      // Initial highlight for first item
       if (index === 0) {
         this.highlightFood(container, true);
       }
     });
+
+    // Add instructional text
+    this.add.text(centerX, centerY + 200,
+      'Use arrow keys or click to select food\nPress ENTER or click Feed to confirm',
+      {
+        font: '18px Arial',
+        color: '#ffffff',
+        align: 'center'
+      }).setOrigin(0.5);
   }
 
   protected override shouldCreateCritter(): boolean {
