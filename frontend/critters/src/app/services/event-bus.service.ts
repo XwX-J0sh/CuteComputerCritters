@@ -56,12 +56,23 @@ export class EventBusService {
     try {
       const newCritter = await this.critterService.makeNewCritter(name).toPromise();
       if (newCritter) {
-        this.emitCritterCreated(newCritter);
+        // Force a complete refresh
+        this.critterService.getAllCritters().subscribe({
+          next: (critters) => {
+            this.emitCritters(critters);
+            // Also update the active critter if needed
+            const updatedCritter = critters.find(c => c.critterId === newCritter.critterId);
+            if (updatedCritter) {
+              this.critterSubject.next(updatedCritter);
+            }
+          },
+          error: (err) => console.error('Refresh failed:', err)
+        });
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Critter creation failed:', error);
+      console.error('Creation failed:', error);
       return false;
     }
   }
