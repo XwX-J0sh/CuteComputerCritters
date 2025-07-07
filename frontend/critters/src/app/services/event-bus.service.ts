@@ -4,12 +4,6 @@ import {CritterService} from './critter.service';
 import {Critter} from '../../game/scenes/helpers/constants';
 import {CritterGetResponse} from '../shared/model/CritterGetResponse';
 
-interface ActivationStatus {
-  critterId: number;
-  isActive: boolean;
-  timestamp?: number;
-}
-
 @Injectable({
   providedIn: 'root'
 })
