@@ -38,7 +38,7 @@ export class EventBusService {
   critter$ = this.critterSubject.asObservable();
 
   //CREATE NEW CRITTER
-  createCritter = new EventEmitter<string>();
+  //createCritter = new EventEmitter<string>();
   // New emitter for creating critters
   critterCreated = new EventEmitter<any>();
 
@@ -55,6 +55,20 @@ export class EventBusService {
       this.critterSubject.next(critter);
     } else {
       console.warn(`Critter with ID ${id} not found`);
+    }
+  }
+
+  async createCritter(name: string): Promise<boolean> {
+    try {
+      const newCritter = await this.critterService.makeNewCritter(name).toPromise();
+      if (newCritter) {
+        this.emitCritterCreated(newCritter);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Critter creation failed:', error);
+      return false;
     }
   }
 
