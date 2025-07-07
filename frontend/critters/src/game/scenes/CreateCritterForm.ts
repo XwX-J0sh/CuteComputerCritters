@@ -105,8 +105,6 @@ export class CreateCritterForm extends Scene {
     });
 
     // Cursor
-    const isCommand = ['BACK', 'SAVE', 'DEL'].includes(this.alphabet[this.cursorY][this.cursorX]);
-
     this.cursor = this.add.rectangle(
       gridStartX + (this.cursorX * cellSize) + (this.cursorX >= 6 ? padding : 0) +
       (this.cursorX >= 11 ? 0 : 0) + cellSize/2,
