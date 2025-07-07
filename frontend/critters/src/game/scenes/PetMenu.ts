@@ -138,7 +138,7 @@ export class PetMenu extends Scene {
 
   private setupNavigation() {
     this.navigator = new KeyboardNavigator(this, {
-      maxIndex: this.aliveCritters.length + 1, // +1 for create button
+      maxIndex: this.aliveCritters.length +1, // +1 for create button
       onSelect: (index) => {
         if (index < this.aliveCritters.length) {
           this.selectCritter(index);
@@ -158,6 +158,13 @@ export class PetMenu extends Scene {
       text.setColor(isSelected ? '#ffffff' : '#ef85e4');
       text.setText(isSelected ? `> ${critterName}` : `  ${critterName}`);
     });
+
+    // Update create button appearance
+    if (this.createButton) {
+      const isCreateButtonSelected = index === this.aliveCritters.length;
+      this.createButton.setColor(isCreateButtonSelected ? '#ffffff' : '#ff5555');
+      this.createButton.setBackgroundColor(isCreateButtonSelected ? '#ff5555' : '#ff9999');
+    }
 
     this.navigator?.setIndex(index);
   }
