@@ -67,6 +67,7 @@ export class GameComponent implements OnInit, OnDestroy{
       this.game.scene.start('Boot');
     });
 
+    /*
     // Handle critter creation
     this.eventBus.createCritter.subscribe(name => {
       this.critterService.makeNewCritter(name).subscribe({
@@ -79,7 +80,7 @@ export class GameComponent implements OnInit, OnDestroy{
           console.error('Error creating critter:', err);
         }
       });
-    });
+    });*/
   }
 
   ngOnDestroy() {
