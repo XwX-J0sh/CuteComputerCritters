@@ -3,7 +3,7 @@ import { Scene, GameObjects } from 'phaser';
 interface StatElement {
   text: GameObjects.Text;
   value: number | boolean;
-  type: 'health' | 'hunger' | 'happiness' | 'evolution';
+  type: 'health' | 'hunger' | 'happiness' | 'evolution' | 'weight' | 'training';
 }
 
 export class CritterStatsPanel {
@@ -53,20 +53,23 @@ export class CritterStatsPanel {
       health: 90,
       hunger: 120,
       happiness: 150,
-      energy: 180
+      weight: 180,
+      training: 210,
     };
 
     // Create each stat element
     this.statElements = [
       this.createStatElement('evolution', `Level: ${this.critter.evolution}`, offsets.evolution),
+      this.createStatElement('weight', `Weight: ${this.critter.weight}`, offsets.weight, this.critter.weight),
       this.createStatElement('health', `Health: ${this.critter.isHealthy ? 'Healthy' : 'Sick'}`, offsets.health, this.critter.isHealthy),
       this.createStatElement('hunger', `Hunger: ${Math.floor(this.critter.hunger)}`, offsets.hunger, this.critter.hunger),
       this.createStatElement('happiness', `Happiness: ${Math.floor(this.critter.happiness)}`, offsets.happiness, this.critter.happiness),
+      this.createStatElement('training', `Training: ${Math.floor(this.critter.training)}`, offsets.training, this.critter.training),
     ];
   }
 
   private createStatElement(type: StatElement['type'], text: string, yOffset: number, value?: any): StatElement {
-    const color = this.getStatColor(value);
+    const color = this.getStatColor(type, value);
     const textObj = this.scene.add.text(
       this.x + 20,
       this.y + yOffset,
@@ -81,11 +84,22 @@ export class CritterStatsPanel {
     };
   }
 
-  private getStatColor(value: any): string {
-    if (typeof value === 'boolean') return value ? '#00ff00' : '#ff0000';
-    if (value > 70) return '#00ff00';
-    if (value > 30) return '#ffff00';
-    return '#ff0000';
+  private getStatColor(type: string, value: any): string {
+    // Only apply color to specific stats
+    if (type === 'health') {
+      return value ? '#00ff00' : '#ff0000'; // Green for healthy, red for sick
+    }
+
+    if (type === 'hunger' || type === 'happiness') {
+      if (typeof value === 'number') {
+        if (value > 5) return '#00ff00'; // Green for good
+        if (value > 3) return '#ffff00'; // Yellow for medium
+        return '#ff0000'; // Red for bad
+      }
+    }
+
+    // Default color for other stats
+    return '#000';
   }
 
   public updateStats(critter: any) {
@@ -104,7 +118,7 @@ export class CritterStatsPanel {
           : Math.floor(currentValue);
 
         element.text.setText(`${this.getStatLabel(element.type)}: ${displayValue}`);
-        element.text.setColor(this.getStatColor(currentValue));
+        element.text.setColor(this.getStatColor(element.type, currentValue));
       }
     });
   }
@@ -115,7 +129,8 @@ export class CritterStatsPanel {
       health: 'Health',
       hunger: 'Hunger',
       happiness: 'Happiness',
-      energy: 'Energy'
+      training: 'Training',
+      weight: 'Weight'
     }[type] || '';
   }
 

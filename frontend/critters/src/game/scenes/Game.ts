@@ -30,4 +30,8 @@ export class Game extends BaseGame {
   protected handleHeal(): void {
     this.scene.start('MedicineCabinet');
   }
+
+  protected handlePlay(): void {
+    this.eventBus.playWithCritter(this.critter.critterId, 10);
+  }
 }

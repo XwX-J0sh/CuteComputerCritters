@@ -15,9 +15,6 @@ export class EventBusService {
 
   feed = new EventEmitter<void>();
   play = new EventEmitter<void>();
-  sleep = new EventEmitter<void>();
-  critterActivated = new EventEmitter<number>();
-  currentSceneReady = new EventEmitter<Phaser.Scene>();
   private activeCritterSubscription?: Subscription;
   private critterUpdateSubject = new BehaviorSubject<CritterGetResponse | null>(null);
   critterUpdate$ = this.critterUpdateSubject.asObservable();
@@ -179,6 +176,17 @@ export class EventBusService {
       return true; // Success
     } catch (error) {
       console.error('Feeding critter failed:', error);
+      return false; // Failure
+    }
+  }
+
+  //train/play with critter
+  async playWithCritter(critterId: number, score: number): Promise<boolean> {
+    try {
+      await this.critterService.trainCritter(critterId, score).toPromise();
+      return true; // Success
+    } catch (error) {
+      console.error('Training/Playing with critter failed:', error);
       return false; // Failure
     }
   }
