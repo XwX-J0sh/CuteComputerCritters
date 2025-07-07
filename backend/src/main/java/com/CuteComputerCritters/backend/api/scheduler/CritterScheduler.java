@@ -78,6 +78,13 @@ public class CritterScheduler {
             freshCritter.setHealthy(false);
         }
 
+        //call after one minute DEBUG
+        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 60000) {
+            critter.setHasCalled(true);
+            critter.setCalledSince(now);
+            log.info("Critter {} has called! (DEBUG)", critter.getCritterId());
+        }
+
         // Evolution
         CritterEvolution currentEvolution = freshCritter.getEvolutionStage();
 
