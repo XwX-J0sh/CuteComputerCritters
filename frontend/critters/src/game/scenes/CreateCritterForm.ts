@@ -206,6 +206,7 @@ export class CreateCritterForm extends Scene {
     }
   }
 
+
   private async submit() {
     if (this.inputText.trim()) {
       const success = await this.eventBus.createCritter(this.inputText.trim());

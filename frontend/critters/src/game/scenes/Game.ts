@@ -26,4 +26,8 @@ export class Game extends BaseGame {
       selectedCritter: this.critter
     });
   };
+
+  protected handleHeal(): void {
+    this.scene.start('MedicineCabinet');
+  }
 }
