@@ -1,5 +1,30 @@
-<div class="mx-auto max-w-sm bg-blue-50">
-  <header>
-    <h1>Game landing component</h1>
-  </header>
+<div class="mx-auto max-w-full">
+  <section class="flex flex-col items-center text-center">
+    <header class="text-center">
+      <h1 class="p-8 text-7xl text-purple-950 dark:text-purple-50">
+        Choose your critter
+      </h1>
+      <p class="p-4 text-4xl text-purple-900 dark:text-purple-100">
+        Here is a list of critters. Click on whichever you want.
+      </p>
+    </header>
+    <a routerLink="/game" class="btn-primary">Image</a>
+  </section>
+  <ul class="w-full text-purple-900 dark:text-purple-100 flex flex-col justify-evenly font-medium md:flex-row md:space-x-8 rtl:space-x-reverse">
+    <li class="content-center">
+      <div class="bg-[url('/assets/chiikawa/chiikawa_select.PNG')] hover:bg-[url(/assets/chiikawa/chiikawa_selected.PNG')] bg-cover w-64 h-64"></div>
+      Chiikawa
+    </li>
+    <li>Transformers</li>
+    <li>More!</li>
+  </ul>
+</div>
+
+<div class="group-hover:hidden">
+  <img ngSrc="/assets/chiikawa/chiikawa_select.PNG" class="max-w-[256px] w-full h-auto aspect-square image-render-pixel"
+       alt="Chiikawa's face. Select for chiikawa pets." height="256" width="256">
+</div>
+<div class="hidden group-hover:flex">
+  <img ngSrc="/assets/chiikawa/chiikawa_selected.PNG" class="max-w-[256px] w-full h-auto aspect-square image-render-pixel"
+       alt="Chiikawa's face but now shows them laughing. Selecting for chiikawa pets." height="256" width="256">
 </div>
