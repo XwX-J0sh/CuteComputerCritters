@@ -8,23 +8,41 @@
         Here is a list of critters. Click on whichever you want.
       </p>
     </header>
-    <a routerLink="/game" class="btn-primary">Image</a>
   </section>
   <ul class="w-full text-purple-900 dark:text-purple-100 flex flex-col justify-evenly font-medium md:flex-row md:space-x-8 rtl:space-x-reverse">
-    <li class="content-center">
-      <div class="bg-[url('/assets/chiikawa/chiikawa_select.PNG')] hover:bg-[url(/assets/chiikawa/chiikawa_selected.PNG')] bg-cover w-64 h-64"></div>
-      Chiikawa
+    <li class="">
+      <a routerLink="/game">
+        <div class="group relative w-[256px] h-[128px]">
+          <img ngSrc="/assets/chiikawa/chiikawa_select.PNG"
+               class="w-full h-full object-contain image-render-pixel"
+               alt="Chiikawa's face. Select for chiikawa pets." height="128" width="256">
+          <img ngSrc="/assets/chiikawa/chiikawa_selected.PNG"
+               class="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-200 image-render-pixel"
+               alt="Chiikawa's face but now shows them laughing. Selecting for chiikawa pets." height="128" width="256">
+        </div>
+        <p class="mt-2 text-sm text-center">Chiikawa</p>
+      </a>
     </li>
-    <li>Transformers</li>
-    <li>More!</li>
+    <li class="">
+      <div class="group relative w-[256px] h-[128px]">
+        <img ngSrc="/assets/decepticon.PNG"
+             class="w-full h-full object-contain group-hover:opacity-0 transition-opacity duration-200 image-render-pixel"
+             alt="Decepticon symbol" height="128" width="256">
+        <img ngSrc="/assets/autobots.PNG"
+             class="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-200 image-render-pixel"
+             alt="Autobot symbol" height="128" width="256">
+      </div>
+      <p class="mt-2 text-sm text-center">Transformers (Coming soon)</p>
+    </li>
+    <li class="">
+      <div class="group relative w-[256px] h-[128px]">
+        <img ngSrc="/assets/construction_dog.PNG"
+             class="w-full h-full object-contain image-render-pixel"
+             alt="A dog with hammer and sickle (visual easter egg as a joke between the two devs).
+             Over its head is written: 'Under maintenance'." height="128" width="256">
+      </div>
+      <p class="mt-2 text-sm text-center">More coming..</p>
+    </li>
   </ul>
 </div>
 
-<div class="group-hover:hidden">
-  <img ngSrc="/assets/chiikawa/chiikawa_select.PNG" class="max-w-[256px] w-full h-auto aspect-square image-render-pixel"
-       alt="Chiikawa's face. Select for chiikawa pets." height="256" width="256">
-</div>
-<div class="hidden group-hover:flex">
-  <img ngSrc="/assets/chiikawa/chiikawa_selected.PNG" class="max-w-[256px] w-full h-auto aspect-square image-render-pixel"
-       alt="Chiikawa's face but now shows them laughing. Selecting for chiikawa pets." height="256" width="256">
-</div>
