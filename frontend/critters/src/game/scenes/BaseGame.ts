@@ -2,8 +2,8 @@ import { Scene } from 'phaser';
 import { EventBusService } from '../../app/services/event-bus.service';
 import { CritterStatsPanel } from './helpers/CritterStatsPanel';
 import { GameButton } from './helpers/GameButton';
-import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
-import {AnimationLoader} from './helpers/AnimationLoader';
+import { EVOLUTION_SPRITES, EvolutionStage } from './helpers/constants';
+import { lastValueFrom, Subscription } from 'rxjs';
 
 export abstract class BaseGame extends Scene {
   protected pet!: Phaser.GameObjects.Sprite;
@@ -11,22 +11,16 @@ export abstract class BaseGame extends Scene {
   protected eventBus!: EventBusService;
   protected selectedCritter: any;
   protected statsPanel!: CritterStatsPanel;
-  protected animationManager!: AnimationLoader;
 
   // Buttons
   protected quitButton!: GameButton;
   protected feedButton!: GameButton;
   protected respondButton!: GameButton;
   protected healButton!: GameButton;
-  protected playButton!: GameButton;
 
   protected critterSubscription!: Subscription;
   protected critter!: any;
   private critterUpdateSubscription?: Subscription;
-  private hasCalledSubscription!: Subscription;
-  private statIsLowSubscription!: Subscription;
-  private callSound!: Phaser.Sound.BaseSound;
-  private isDeadSubscription!: Subscription;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -40,21 +34,19 @@ export abstract class BaseGame extends Scene {
 
   preload() {
     // Load common assets
-    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
+    this.load.spritesheet('baby_idle', '../assets/baby_idle1.PNG', {
       frameWidth: 256,
       frameHeight: 256,
       margin: 0,
       spacing: 0,
     });
 
-    this.load.spritesheet('pet', '../assets/shisa/shisa_idle1.PNG', {
+    this.load.spritesheet('pet', '../assets/shisa_idle1.png', {
       frameWidth: 148,
       frameHeight: 128,
       margin: 0,
       spacing: 0,
     });
-
-    this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
   }
 
   async create() {
@@ -65,7 +57,6 @@ export abstract class BaseGame extends Scene {
     if (this.shouldCreateCritter()) {
       this.createCritter();
     }
-
   }
 
   protected createCommonElements() {
@@ -86,10 +77,7 @@ export abstract class BaseGame extends Scene {
     // Common Buttons
     this.createButtons();
     this.setupKeyboard();
-
-    this.callSound = this.sound.add('critterCall');
   }
-
 
   protected async initializeCritter() {
     if (!this.critter && this.selectedCritter?.critterId) {
@@ -120,89 +108,21 @@ export abstract class BaseGame extends Scene {
         this.updateCritterDisplay();
       }
     });
-
-    //sound subscriptions
-    this.setupHasCalledSubscription();
-    this.setupStatsIsLowSubscription();
-
-    //game over subscription
-    this.setupIsDeadSubscription();
   }
 
-  private setupHasCalledSubscription() {
-    this.hasCalledSubscription = this.eventBus.critterUpdate$
-      .pipe(
-        filter(updatedCritter =>
-          updatedCritter! &&
-          this.critter?.critterId === updatedCritter.critterId
-        ),
-        distinctUntilChanged((prev, curr) =>
-          prev?.hasCalled === curr?.hasCalled &&
-          prev?.calledSince === curr?.calledSince
-        )
-      )
-      .subscribe(updatedCritter => {
-        // Play sound immediately when call starts
-        if (updatedCritter!.hasCalled && !updatedCritter!.calledSince) {
-          this.playCallSound();
-        }
-        // Also play if call was just initiated
-        else if (updatedCritter!.hasCalled && updatedCritter!.calledSince) {
-          const callTime = new Date(updatedCritter!.calledSince).getTime();
-          if (Date.now() - callTime < 5000) { // Only if called within last 5s
-            this.playCallSound();
-          }
-        }
-      });
-  }
+  private updateCritterDisplay() {
+    if (!this.critter) return;
 
-  private setupStatsIsLowSubscription() {
-    this.statIsLowSubscription = this.eventBus.critterUpdate$
-      .pipe(
-        filter(updatedCritter => updatedCritter! &&
-          this.critter?.critterId === updatedCritter?.critterId &&
-          (!updatedCritter?.isHealthy || (updatedCritter.hunger || updatedCritter.happiness) <= 1)
-        ),
-        distinctUntilChanged((previous, current) =>
-          previous?.isHealthy === current?.isHealthy &&
-          previous?.hunger === current?.hunger &&
-          previous?.happiness === current?.happiness
-        )
-      )
-      .subscribe(updatedCritter => {
-        // Handle the stat is low notification here
-        this.playCallSound();
-      });
-  }
+    // Update stats panel
+    if (this.statsPanel) {
+      this.statsPanel.updateStats(this.critter);
+    }
 
-  private setupIsDeadSubscription() {
-    this.isDeadSubscription = this.eventBus.critterUpdate$
-      .pipe(
-        filter(updatedCritter => updatedCritter! &&
-          this.critter?.critterId === updatedCritter?.critterId &&
-          updatedCritter?.isDead
-        ),
-        distinctUntilChanged((previous, current) =>
-          previous?.isDead === current?.isDead
-        )
-      )
-      .subscribe(updatedCritter => {
-        //if the critter has died send to game over screen
-        this.scene.stop('BaseGame');
-        this.scene.start('GameOver');
-      });
-  }
-
-  private playCallSound() {
-    try {
-      if (!this.callSound.isPlaying) {
-        this.callSound.play();
-      }
-    } catch (error) {
-      console.error('Error playing call sound:', error);
+    // Update sprite if evolution stage changed
+    if (this.critter.evolutionStage) {
+      this.setCritterSprite(this.critter.evolutionStage);
     }
   }
-
 
   private async activateCurrentCritter(): Promise<void> {
     const critterId = Number(this.critter.critterId);
@@ -230,41 +150,22 @@ export abstract class BaseGame extends Scene {
     this.respondButton = new GameButton({
       scene: this,
       x: 233,
-      y: 776,
+      y: 775,
       label: 'respond',
       onClick: () => this.handleRespond()
     });
 
     this.feedButton = new GameButton({
       scene: this,
-      x: 446,
-      y: 776,
+      x: 444,
+      y: 775,
       label: 'feed',
       onClick: () => this.handleFeed()
     });
 
-    this.healButton = new GameButton({
-      scene: this,
-      x: 661,
-      y: 776,
-      label: 'HEAL',
-      onClick: () => this.handleHeal()
-    });
-
-    this.playButton = new GameButton({
-      scene: this,
-      x: 876,
-      y: 776,
-      label: 'PLAY',
-      onClick: () => this.handlePlay()
-    });
-
-    // Add buttons to scene without sound
     this.add.existing(this.quitButton);
     this.add.existing(this.respondButton);
-    this.add.existing(this.healButton);
     this.add.existing(this.feedButton);
-    this.add.existing(this.playButton);
   }
 
   protected setupKeyboard() {
@@ -279,35 +180,26 @@ export abstract class BaseGame extends Scene {
   }
 
   protected createCritter() {
-    if (!this.critter) return;
-
-    // Clear previous animation if exists
-    if (this.animationManager) {
-      this.animationManager.getSprite().destroy();
+    if (!this.anims.exists('shisa_idle1')) {
+      this.anims.create({
+        key: 'shisa_idle1',
+        frames: this.anims.generateFrameNumbers('pet', { start: 0, end: 1 }),
+        frameRate: 2,
+        repeat: -1,
+      });
     }
 
-    this.animationManager = new AnimationLoader(this, this.critter);
-    this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
-  }
+    const pet = this.add.sprite(550, 500, 'pet');
+    pet.play('shisa_idle1');
+    pet.setScale(2);
 
-  private updateCritterDisplay() {
-    if (!this.critter) return;
-
-    // Update animation manager first
-    this.animationManager.updateCritterData(this.critter);
-
-    // Then update stats panel
-    if (this.statsPanel) {
-      this.statsPanel.updateStats(this.critter);
-    }
+    this.statsPanel = new CritterStatsPanel(this, this.selectedCritter, 850, 200);
   }
 
   // Abstract methods child classes must implement
   protected abstract handleQuit(): Promise<void>;
   protected abstract handleRespond(): void;
   protected abstract handleFeed(): void;
-  protected abstract handleHeal(): void;
-  protected abstract handlePlay(): void;
 
   shutdown() {
     //Destroy game objects
@@ -320,20 +212,9 @@ export abstract class BaseGame extends Scene {
     if (this.quitButton) {
       this.quitButton.destroy();
     }
-    if (this.feedButton) {
-      this.feedButton.destroy();
-    }
-    if (this.healButton) {
-      this.healButton.destroy();
-    }
-    if (this.callSound) {
-      this.callSound.stop();
-      this.callSound.destroy();
-    }
 
     // Remove keyboard listener
     const keyboard = this.input.keyboard;
-    if (keyboard) {
     if (keyboard) {
       keyboard.off('keydown-ESC');
     }
@@ -346,10 +227,37 @@ export abstract class BaseGame extends Scene {
     }
 
     this.critterUpdateSubscription?.unsubscribe();
-    this.hasCalledSubscription?.unsubscribe();
-    this.statIsLowSubscription?.unsubscribe();
-    this.isDeadSubscription?.unsubscribe();
-  }
   }
 
+  private setCritterSprite(stage: EvolutionStage) {
+    // Destroy previous sprite if exists
+    if (this.pet) {
+      this.pet.destroy();
+    }
+
+    const sprites = EVOLUTION_SPRITES[stage];
+
+    // Create new sprite
+    this.pet = this.add.sprite(550, 500, sprites.idle);
+
+    // Create animations for this stage
+    this.anims.create({
+      key: `${stage}_idle`,
+      frames: this.anims.generateFrameNumbers(sprites.idle, {
+        start: 0, end: 2 // adjust based on your frames
+      }),
+      frameRate: 6,
+      repeat: -1
+    });
+
+    // Play the idle animation
+    this.pet.play(`${stage}_idle`);
+
+    // Set scale if needed (different sizes per evolution)
+    const scales = {
+      [EvolutionStage.BABY]: 1.8,
+      [EvolutionStage.FINAL]: 1.2
+    };
+    this.pet.setScale(scales[stage]);
+  }
 }
