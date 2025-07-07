@@ -21,7 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class CritterScheduler {
 
-    private CritterRepository critterRepository;
+    private final CritterRepository critterRepository;
     private final CritterBroadcaster critterBroadcaster;
     private final CritterEvolutionsRepository critterEvolutionsRepository;
 
@@ -72,6 +72,13 @@ public class CritterScheduler {
         //after ten minutes the critter gets sick
         if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 600000) {
             freshCritter.setHealthy(false);
+        }
+
+        //call after one minute DEBUG
+        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 60000) {
+            critter.setHasCalled(true);
+            critter.setCalledSince(now);
+            log.info("Critter {} has called! (DEBUG)", critter.getCritterId());
         }
 
         // Evolution

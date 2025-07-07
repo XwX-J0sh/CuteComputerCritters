@@ -46,7 +46,7 @@ public class DataSeeder implements CommandLineRunner {
             foodRepository.save(new Food("Cake", EnumFoodType.SNACK, 3));
             foodRepository.save(new Food("Bread", EnumFoodType.MEAL, 5));
             foodRepository.save(new Food("Candy", EnumFoodType.SNACK, 1));
-            foodRepository.save(new Food("Salad", EnumFoodType.MEAL, 4));
+            foodRepository.save(new Food("Pizza", EnumFoodType.MEAL, 4));
             foodRepository.save(new Food("Rice", EnumFoodType.MEAL, 5));
         }
 
