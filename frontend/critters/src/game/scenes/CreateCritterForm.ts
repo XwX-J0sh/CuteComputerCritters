@@ -209,18 +209,49 @@ export class CreateCritterForm extends Scene {
 
   private async submit() {
     if (this.inputText.trim()) {
-      const success = await this.eventBus.createCritter(this.inputText.trim());
-      if (success) {
-        this.scene.start('PetMenu');
-      } else {
-        // Show error message to user
-        this.add.text(250, 250, 'Failed to create critter', {
+      try {
+        const loadingText = this.add.text(250, 250, 'Creating...', {
           font: '20px Arial',
-          color: '#ff0000'
+          color: '#ffffff'
         }).setOrigin(0.5);
+
+        const success = await this.eventBus.createCritter(this.inputText.trim());
+        loadingText.destroy();
+
+        if (success) {
+          // Proper cleanup before transition
+          this.cleanupScene();
+          this.scene.start('PetMenu');
+        } else {
+          this.showError('Failed to create critter');
         }
+      } catch (error) {
+        this.showError('Error creating critter');
       }
     }
+  }
+
+  private showError(message: string) {
+    this.add.text(250, 250, message, {
+      font: '20px Arial',
+      color: '#ff0000'
+    }).setOrigin(0.5);
+  }
+
+  private cleanupScene() {
+    // Clear all interactive elements
+    this.charTexts.forEach(row => row.forEach(text => {
+      text.removeAllListeners();
+      text.destroy();
+    }));
+    this.charTexts = [];
+
+    // Clear other elements
+    this.nameDisplay?.destroy();
+    this.cursor?.destroy();
+    this.input.keyboard?.removeAllListeners();
+    this.inputText = '';
+  }
 
     private handleCharacterSelection(char: string) {
     if (char === 'BACK') {
@@ -236,5 +267,6 @@ export class CreateCritterForm extends Scene {
 
   shutdown() {
     this.input.keyboard?.removeAllListeners();
+    this.inputText = '';
   }
 }
