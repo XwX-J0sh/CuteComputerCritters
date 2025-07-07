@@ -40,6 +40,18 @@ export class FoodPantry extends BaseGame {
       frameWidth: 32,
       frameHeight: 32
     });
+    this.load.spritesheet('Cake', '../assets/items/cake.PNG', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
+    this.load.spritesheet('Candy', '../assets/items/candy.PNG', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
+    this.load.spritesheet('Pizza', '../assets/items/pizza.PNG', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
   }
 
   override async create() {
@@ -57,7 +69,7 @@ export class FoodPantry extends BaseGame {
       { name: 'Cake', spriteKey: 'Cake' },
       { name: 'Bread', spriteKey: 'Bread' },
       { name: 'Candy', spriteKey: 'Candy' },
-      { name: 'Salad', spriteKey: 'Salad' },
+      { name: 'Pizza', spriteKey: 'Pizza' },
     ];
 
     this.createFoodSelectionUI();
@@ -198,7 +210,7 @@ export class FoodPantry extends BaseGame {
   private highlightFood(container: Phaser.GameObjects.Container, isSelected: boolean) {
     const [sprite, text] = container.list as [Phaser.GameObjects.Sprite, Phaser.GameObjects.Text];
 
-    sprite.setTint(isSelected ? 0x44ff44 : 0xffffff);
+    sprite.setTint(isSelected ? 0xFF8787 : 0xffffff);
     text.setStyle({
       color: isSelected ? '#ff9900' : '#ffffff',
       fontStyle: isSelected ? 'bold' : 'normal'
@@ -317,15 +329,6 @@ export class FoodPantry extends BaseGame {
         this.highlightFood(container, true);
       }
     });
-
-    // Add instructional text
-    this.add.text(centerX, centerY + 200,
-      'Use arrow keys or click to select food\nPress ENTER or click Feed to confirm',
-      {
-        font: '18px Arial',
-        color: '#ffffff',
-        align: 'center'
-      }).setOrigin(0.5);
   }
 
   protected override shouldCreateCritter(): boolean {
@@ -335,5 +338,9 @@ export class FoodPantry extends BaseGame {
   protected handleHeal(): void {
     this.scene.stop('FoodPantry');
     this.scene.start('MedicineCabinet');
+  }
+
+  protected handlePlay(): void {
+    this.eventBus.playWithCritter(this.critter.critterId, 10);
   }
 }
