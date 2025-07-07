@@ -1,3 +1,5 @@
+
+
 import { BaseGame } from './BaseGame';
 import {Critter} from './helpers/constants';
 import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
@@ -11,7 +13,7 @@ interface MedicineCabinetData {
   selectedCritter: Critter;
 }
 
-export class MedicineCabient extends BaseGame {
+export class MedicineCabinet extends BaseGame {
   private medicineItems: MedicineItem[] = [];
   private selectedMedicinendex = 0;
   private foodContainers: Phaser.GameObjects.Container[] = [];
@@ -24,7 +26,7 @@ export class MedicineCabient extends BaseGame {
     space: Phaser.Input.Keyboard.Key;
   };
   private passedCritter?: Critter;
-
+/*
   constructor() {
     super({ key: 'FoodPantry' });
   }
@@ -117,7 +119,7 @@ export class MedicineCabient extends BaseGame {
     }
     this.scene.start('Game', { selectedCritter: this.passedCritter });
   }
-
+*/
   protected handleQuit = async () => {
     this.scene.start('Game', { selectedCritter: this.passedCritter });
     return Promise.resolve();
@@ -135,34 +137,10 @@ export class MedicineCabient extends BaseGame {
   };
 
   protected handleFeed = async () => {
-    const selectedFood = this.foodItems[this.selectedFoodIndex];
-    console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
-
-    try {
-      // 1. First feed the critter (this updates backend)
-      const success = await this.eventBus.feedCritter(
-        this.passedCritter!.critterId,
-        selectedFood.name
-      );
-
-      if (!success) {
-        console.error('Feeding failed');
-        return;
-      }
-
-      // 2. Get updated critter data (optional but recommended)
-      const updatedCritter = await this.getUpdatedCritter();
-
-      // 3. Return to GameScene with updated data
-      this.scene.start('Game', {
-        selectedCritter: updatedCritter || this.passedCritter
-      });
-    } catch (error) {
-      console.error('Feeding error:', error);
-      // Fallback - return with original critter data
-      this.scene.start('Game', { selectedCritter: this.passedCritter });
-    }
+    this.scene.stop('MedicineCabinet');
+    this.scene.start('FoodPantry');
   };
+
 
   private async getUpdatedCritter(): Promise<CritterGetResponse | undefined | null> {
     try {
@@ -184,6 +162,7 @@ export class MedicineCabient extends BaseGame {
       Object.values(this.keyboardNav).forEach(key => key.removeAllListeners());
     }
   }
+  /*
 
   private highlightFood(container: Phaser.GameObjects.Container, isSelected: boolean) {
     const [sprite, text] = container.list as [Phaser.GameObjects.Sprite, Phaser.GameObjects.Text];
@@ -320,5 +299,5 @@ export class MedicineCabient extends BaseGame {
 
   protected override shouldCreateCritter(): boolean {
     return false;
-  }
+  }*/
 }
