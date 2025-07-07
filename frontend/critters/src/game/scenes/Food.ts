@@ -1,6 +1,7 @@
 import { BaseGame } from './BaseGame';
 import {Critter} from './helpers/constants';
 import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
+import Phaser from 'phaser';
 
 interface FoodItem {
   name: string;
@@ -159,12 +160,12 @@ export class FoodPantry extends BaseGame {
         return;
       }
 
-      // 2. Get updated critter data (optional but recommended)
+      // 2. Get updated critter data
       const updatedCritter = await this.getUpdatedCritter();
 
       // 3. Return to GameScene with updated data
       this.scene.start('Game', {
-        selectedCritter: updatedCritter || this.passedCritter
+        selectedCritter: updatedCritter
       });
     } catch (error) {
       console.error('Feeding error:', error);
@@ -329,5 +330,10 @@ export class FoodPantry extends BaseGame {
 
   protected override shouldCreateCritter(): boolean {
     return false;
+  }
+
+  protected handleHeal(): void {
+    this.scene.stop('FoodPantry');
+    this.scene.start('MedicineCabinet');
   }
 }
