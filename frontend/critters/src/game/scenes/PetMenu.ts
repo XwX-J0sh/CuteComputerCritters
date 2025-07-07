@@ -1,7 +1,8 @@
 import { Scene, GameObjects } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
-import {Subscription} from 'rxjs';
+import {distinctUntilChanged, Subscription} from 'rxjs';
 import {KeyboardNavigator} from './helpers/KeyboardNavigator';
+import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
 
 export class PetMenu extends Scene {
   logo!: GameObjects.Image;
@@ -14,7 +15,8 @@ export class PetMenu extends Scene {
   private titleText!: GameObjects.Text;
   private instructionsText!: GameObjects.Text;
   private noCrittersText?: GameObjects.Text;
-  private aliveCritters: Array<{critter: any, originalIndex: number}> = [];
+  private aliveCritters: Array<{critter: CritterGetResponse, originalIndex: number}> = [];
+  private isFirstLoad = true;
 
 
   constructor() {
@@ -43,12 +45,35 @@ export class PetMenu extends Scene {
         lineSpacing: 10
       }).setOrigin(0.5);
 
-    this.critterSubscription = this.eventBus.critters$.subscribe(critters => {
-      this.critters = critters;
-      console.log('Critters received:', critters);
-      this.displayCritters();
-    });
+    // Load critters
+    this.loadCritters();
 
+    // Subscribe to updates
+    this.setupSubscriptions();
+
+  }
+
+  private setupSubscriptions() {
+    this.critterSubscription = this.eventBus.critters$.pipe(
+      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
+    ).subscribe(critters => {
+      console.log('Received critters:', critters);
+      this.critters = critters || [];
+      this.displayCritters();
+
+      // Auto-select new critter if it's the first load
+      if (this.isFirstLoad && this.critters.length > 0) {
+        this.isFirstLoad = false;
+        this.selectCritter(0);
+      }
+    });
+  }
+
+  private loadCritters() {
+    this.eventBus.critterService.getAllCritters().subscribe({
+      next: (critters) => this.eventBus.emitCritters(critters),
+      error: (err) => console.error('Initial load failed:', err)
+    });
   }
 
   displayCritters() {
