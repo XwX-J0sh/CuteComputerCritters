@@ -34,14 +34,14 @@ export abstract class BaseGame extends Scene {
 
   preload() {
     // Load common assets
-    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
+    this.load.spritesheet('baby_idle', '../assets/baby_idle1.PNG', {
       frameWidth: 256,
       frameHeight: 256,
       margin: 0,
       spacing: 0,
     });
 
-    this.load.spritesheet('pet', '../assets/shisa/shisa_idle1.PNG', {
+    this.load.spritesheet('pet', '../assets/shisa_idle1.png', {
       frameWidth: 148,
       frameHeight: 128,
       margin: 0,
@@ -150,33 +150,22 @@ export abstract class BaseGame extends Scene {
     this.respondButton = new GameButton({
       scene: this,
       x: 233,
-      y: 776,
+      y: 775,
       label: 'respond',
       onClick: () => this.handleRespond()
     });
 
     this.feedButton = new GameButton({
       scene: this,
-      x: 446,
-      y: 776,
+      x: 444,
+      y: 775,
       label: 'feed',
       onClick: () => this.handleFeed()
     });
 
-    this.healButton = new GameButton({
-      scene: this,
-      x: 661,
-      y: 776,
-      label: 'HEAL',
-      onClick: () => this.handleHeal()
-    });
-
     this.add.existing(this.quitButton);
     this.add.existing(this.respondButton);
-    this.add.existing(this.healButton);
     this.add.existing(this.feedButton);
-
-    console.log(this.healButton);
   }
 
   protected setupKeyboard() {
@@ -211,7 +200,6 @@ export abstract class BaseGame extends Scene {
   protected abstract handleQuit(): Promise<void>;
   protected abstract handleRespond(): void;
   protected abstract handleFeed(): void;
-  protected abstract handleHeal(): void;
 
   shutdown() {
     //Destroy game objects
@@ -224,16 +212,9 @@ export abstract class BaseGame extends Scene {
     if (this.quitButton) {
       this.quitButton.destroy();
     }
-    if (this.feedButton) {
-      this.feedButton.destroy();
-    }
-    if (this.healButton) {
-      this.healButton.destroy();
-    }
 
     // Remove keyboard listener
     const keyboard = this.input.keyboard;
-    if (keyboard) {
     if (keyboard) {
       keyboard.off('keydown-ESC');
     }
@@ -246,7 +227,6 @@ export abstract class BaseGame extends Scene {
     }
 
     this.critterUpdateSubscription?.unsubscribe();
-  }
   }
 
   private setCritterSprite(stage: EvolutionStage) {
