@@ -14,6 +14,7 @@ export class PetMenu extends Scene {
   private titleText!: GameObjects.Text;
   private instructionsText!: GameObjects.Text;
   private noCrittersText?: GameObjects.Text;
+  private aliveCritters: Array<{critter: any, originalIndex: number}> = [];
 
 
   constructor() {
@@ -58,7 +59,11 @@ export class PetMenu extends Scene {
     this.createButton?.destroy();
     this.navigator?.destroy();
 
-    if (this.critters.length === 0) {
+    this.aliveCritters = this.critters
+      .map((critter, originalIndex) => ({ critter, originalIndex }))
+      .filter(({ critter }) => !critter.isDead);
+
+    if (this.aliveCritters.length === 0) {
       this.noCrittersText = this.add.text(100, 450, 'No critters available', {
         font: '20px Arial',
         color: '#ff0000',
@@ -70,8 +75,8 @@ export class PetMenu extends Scene {
     const baseY = 350;
     const spacing = 30;
 
-    this.critters.forEach((critter, index) => {
-      const critterText = this.add.text(120, baseY + index * spacing,
+    this.aliveCritters.forEach(({ critter }, displayIndex) => {
+      const critterText = this.add.text(120, baseY + displayIndex * spacing,
         `  ${critter.critterName}`,
         {
           font: '20px Arial',
@@ -81,15 +86,14 @@ export class PetMenu extends Scene {
         }
       );
 
-      // Simplified interaction setup
       critterText.setInteractive({ useHandCursor: true })
-        .on('pointerover', () => this.updateSelection(index))
-        .on('pointerdown', () => this.selectCritter(index));
+        .on('pointerover', () => this.updateSelection(displayIndex))
+        .on('pointerdown', () => this.selectCritter(displayIndex));
 
       this.critterTexts.push(critterText);
     });
 
-    this.addCreateButton(baseY + this.critters.length * spacing + 50);
+    this.addCreateButton(baseY + this.aliveCritters.length * spacing + 50);
     this.setupNavigation();
     this.updateSelection(0);
   }
@@ -117,8 +121,8 @@ export class PetMenu extends Scene {
     this.createButton.on('pointerout', () => {
       // Only revert if not selected by keyboard
       if (!this.navigator || this.navigator.currentIndex !== this.critters.length) {
-        this.createButton!.setColor('#ff0000');
-        this.createButton!.setBackgroundColor('#ff9999');
+        this.createButton!.setColor('#ff5555');
+        this.createButton!.setBackgroundColor('#ffffff');
       }
     });
 
@@ -134,12 +138,12 @@ export class PetMenu extends Scene {
 
   private setupNavigation() {
     this.navigator = new KeyboardNavigator(this, {
-      maxIndex: this.critters.length + 1,
+      maxIndex: this.aliveCritters.length +1, // +1 for create button
       onSelect: (index) => {
-        if (index < this.critters.length) {
+        if (index < this.aliveCritters.length) {
           this.selectCritter(index);
         } else {
-            this.scene.start('CreateCritterForm');
+          this.scene.start('CreateCritterForm');
         }
       },
       onChange: (index: number) => this.updateSelection(index)
@@ -150,28 +154,24 @@ export class PetMenu extends Scene {
     // Update critter texts
     this.critterTexts.forEach((text, i) => {
       const isSelected = i === index;
+      const critterName = this.aliveCritters[i].critter.critterName;
       text.setColor(isSelected ? '#ffffff' : '#ef85e4');
-      text.setText(isSelected ? `> ${this.critters[i].critterName}` : `  ${this.critters[i].critterName}`);
+      text.setText(isSelected ? `> ${critterName}` : `  ${critterName}`);
     });
 
     // Update create button appearance
-    this.updateButtonAppearance(index === this.critters.length);
+    if (this.createButton) {
+      const isCreateButtonSelected = index === this.aliveCritters.length;
+      this.createButton.setColor(isCreateButtonSelected ? '#ffffff' : '#ff5555');
+      this.createButton.setBackgroundColor(isCreateButtonSelected ? '#ff5555' : '#ff9999');
+    }
 
     this.navigator?.setIndex(index);
   }
 
-  private updateButtonAppearance(isSelected: boolean) {
-    if (!this.createButton) return;
-
-    // Visual changes
-    this.createButton.setColor(isSelected ? '#ffffff' : '#ff0000');
-    this.createButton.setBackgroundColor(isSelected ? '#ff5555' : '#ff9999');
+  private selectCritter(displayIndex: number) {
+    const selectedCritter = this.aliveCritters[displayIndex].critter;
+    this.game.registry.set('selectedCritter', selectedCritter);
+    this.scene.start('Game', { selectedCritter });
   }
-
-  private selectCritter(index: number) {
-    const critter = this.critters[index];
-    this.game.registry.set('selectedCritter', critter);
-    this.scene.start('Game', { selectedCritter: critter });
-  }
-
 }
