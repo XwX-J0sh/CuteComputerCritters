@@ -1,8 +1,7 @@
-
-
 import { BaseGame } from './BaseGame';
 import {Critter} from './helpers/constants';
 import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
+import Phaser from 'phaser';
 
 interface MedicineItem {
   name: string;
@@ -15,8 +14,8 @@ interface MedicineCabinetData {
 
 export class MedicineCabinet extends BaseGame {
   private medicineItems: MedicineItem[] = [];
-  private selectedMedicinendex = 0;
-  private foodContainers: Phaser.GameObjects.Container[] = [];
+  private selectedMedicineIndex = 0;
+  private medicineContainers: Phaser.GameObjects.Container[] = [];
   private keyboardNav?: {
     up: Phaser.Input.Keyboard.Key;
     down: Phaser.Input.Keyboard.Key;
@@ -26,12 +25,12 @@ export class MedicineCabinet extends BaseGame {
     space: Phaser.Input.Keyboard.Key;
   };
   private passedCritter?: Critter;
-/*
+
   constructor() {
-    super({ key: 'FoodPantry' });
+    super({ key: 'MedicineCabinet' });
   }
 
-  override init(data: FoodPantryData) {
+  override init(data: MedicineCabinetData) {
     this.passedCritter = data.selectedCritter;
     console.log('Received critter:', this.passedCritter);
   }
@@ -45,28 +44,26 @@ export class MedicineCabinet extends BaseGame {
 
   override async create() {
     super.create();
-    console.log('FoodPantry scene created');
+    console.log('MedicineCabinet scene created');
 
     if (!this.passedCritter) {
-      console.error('No critter passed to FoodPantry!');
+      console.error('No critter passed to MedicineCabinetScene!');
       this.scene.start('Game'); // Fallback
       return;
     }
 
     // Initialize food items data
-    this.foodItems = [
-      { name: 'Cake', spriteKey: 'Cake' },
-      { name: 'Bread', spriteKey: 'Bread' },
-      { name: 'Candy', spriteKey: 'Candy' },
-      { name: 'Salad', spriteKey: 'Salad' },
+    this.medicineItems = [
+      { name: 'Pill', spriteKey: 'Pill' },
+      { name: 'Band-Aid', spriteKey: 'Band-Aid' },
     ];
 
-    this.createFoodSelectionUI();
+    this.createMedicineSelectionUI();
     this.setupKeyboardNavigation();
     this.setupButtons();
 
     // Debug information
-    console.log('Food containers created:', this.foodContainers.length);
+    console.log('Med containers created:', this.medicineContainers.length);
     console.log('Selected critter:', this.selectedCritter);
   }
 
@@ -82,7 +79,8 @@ export class MedicineCabinet extends BaseGame {
       .on('pointerout', () => this.feedButton.setAlpha(1))
       .on('pointerdown', () => {
         console.log('Feed button pressed');
-        this.handleFeed();
+        this.scene.stop('MedicineCabinet');
+        this.scene.start('FoodPantry');
       });
 
     // Respond button
@@ -105,21 +103,21 @@ export class MedicineCabinet extends BaseGame {
   }
 
   private updateSelection() {
-    this.foodContainers.forEach((container, index) => {
-      this.highlightFood(container, index === this.selectedFoodIndex);
+    this.medicineContainers.forEach((container, index) => {
+      this.highlightMedicine(container, index === this.selectedMedicineIndex);
     });
   }
 
-  private selectFood(food: FoodItem) {
-    console.log(`Selected ${food.name} for critter`, this.passedCritter);
+  private selectMedicine(medicine: MedicineItem) {
+    console.log(`Selected ${medicine.name} for critter`, this.passedCritter);
     try {
-      this.eventBus.feedCritter(this.passedCritter!.critterId, food.name);
+      this.eventBus.feedCritter(this.passedCritter!.critterId, medicine.name);
     } catch (error) {
-      console.log('Failed to select food: ' ,error);
+      console.log('Failed to select meds: ' ,error);
     }
     this.scene.start('Game', { selectedCritter: this.passedCritter });
   }
-*/
+
   protected handleQuit = async () => {
     this.scene.start('Game', { selectedCritter: this.passedCritter });
     return Promise.resolve();
@@ -141,7 +139,6 @@ export class MedicineCabinet extends BaseGame {
     this.scene.start('FoodPantry');
   };
 
-
   private async getUpdatedCritter(): Promise<CritterGetResponse | undefined | null> {
     try {
       // Assuming your eventBus or critterService has a way to fetch current data
@@ -162,9 +159,8 @@ export class MedicineCabinet extends BaseGame {
       Object.values(this.keyboardNav).forEach(key => key.removeAllListeners());
     }
   }
-  /*
 
-  private highlightFood(container: Phaser.GameObjects.Container, isSelected: boolean) {
+  private highlightMedicine(container: Phaser.GameObjects.Container, isSelected: boolean) {
     const [sprite, text] = container.list as [Phaser.GameObjects.Sprite, Phaser.GameObjects.Text];
 
     sprite.setTint(isSelected ? 0x44ff44 : 0xffffff);
@@ -210,18 +206,18 @@ export class MedicineCabinet extends BaseGame {
   }
 
   private navigateFood(direction: number) {
-    if (this.foodItems.length === 0) return;
+    if (this.medicineItems.length === 0) return;
 
-    this.selectedFoodIndex = Phaser.Math.Wrap(
-      this.selectedFoodIndex + direction,
+    this.selectedMedicineIndex = Phaser.Math.Wrap(
+      this.selectedMedicineIndex + direction,
       0,
-      this.foodItems.length
+      this.medicineItems.length
     );
     this.updateSelection();
-    console.log(`Navigated to food index: ${this.selectedFoodIndex}`);
+    console.log(`Navigated to food index: ${this.selectedMedicineIndex}`);
   }
 
-  private createFoodSelectionUI() {
+  private createMedicineSelectionUI() {
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
     const itemSpacingX = 200; // Horizontal spacing between items
@@ -229,11 +225,11 @@ export class MedicineCabinet extends BaseGame {
     const itemScale = 1.5;
 
     // Clear any existing containers
-    this.foodContainers.forEach(container => container.destroy());
-    this.foodContainers = [];
+    this.medicineContainers.forEach(container => container.destroy());
+    this.medicineContainers = [];
 
     // Create a 2x2 grid layout
-    this.foodItems.forEach((food, index) => {
+    this.medicineItems.forEach((food, index: number) => {
       const container = this.add.container(0, 0);
 
       // Calculate position based on grid layout
@@ -271,19 +267,19 @@ export class MedicineCabinet extends BaseGame {
 
       // Mouse events
       container.on('pointerover', () => {
-        this.selectedFoodIndex = index;
+        this.selectedMedicineIndex = index;
         this.updateSelection();
       });
 
       container.on('pointerdown', () => {
-        this.selectFood(food);
+        this.selectMedicine(food);
       });
 
-      this.foodContainers.push(container);
+      this.medicineContainers.push(container);
 
       // Initial highlight for first item
       if (index === 0) {
-        this.highlightFood(container, true);
+        this.highlightMedicine(container, true);
       }
     });
 
@@ -299,5 +295,44 @@ export class MedicineCabinet extends BaseGame {
 
   protected override shouldCreateCritter(): boolean {
     return false;
-  }*/
+  }
+
+  protected async handleHeal(): Promise<void> {
+    console.log('Clicked Heal button');
+    const selectedFood = this.medicineItems[this.selectedMedicineIndex];
+
+    //if user has chosen no food, return to Game
+    if (!selectedFood) {
+      this.scene.stop('FoodPantry');
+      this.scene.start('Game');
+      return;
+    }
+
+    console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
+
+    try {
+      // 1. First feed the critter (this updates backend)
+      const success = await this.eventBus.feedCritter(
+        this.passedCritter!.critterId,
+        selectedFood.name
+      );
+
+      if (!success) {
+        console.error('Feeding failed');
+        return;
+      }
+
+      // 2. Get updated critter data (optional but recommended)
+      const updatedCritter = await this.getUpdatedCritter();
+
+      // 3. Return to GameScene with updated data
+      this.scene.start('Game', {
+        selectedCritter: updatedCritter || this.passedCritter
+      });
+    } catch (error) {
+      console.error('Feeding error:', error);
+      // Fallback - return with original critter data
+      this.scene.start('Game', {selectedCritter: this.passedCritter});
+    }
+  }
 }
