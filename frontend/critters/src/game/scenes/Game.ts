@@ -14,7 +14,7 @@ export class Game extends BaseGame {
         console.warn('Deactivation failed:', error);
       }
     }
-    this.scene.start('MainMenu');
+    this.scene.start('PetMenu');
   };
 
   protected handleRespond = () => {
@@ -28,7 +28,9 @@ export class Game extends BaseGame {
   };
 
   protected handleHeal(): void {
-    this.scene.start('MedicineCabinet');
+    this.scene.start('MedicineCabinet', {
+      selectedCritter: this.critter
+    });
   }
 
   protected handlePlay(): void {
