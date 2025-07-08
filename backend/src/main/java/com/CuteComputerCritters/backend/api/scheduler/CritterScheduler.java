@@ -2,9 +2,9 @@ package com.CuteComputerCritters.backend.api.scheduler;
 
 import com.CuteComputerCritters.backend.api.helpers.CritterBroadcaster;
 import com.CuteComputerCritters.backend.api.model.Critter.Critter;
-import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolution;
+import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolutions;
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
-import com.CuteComputerCritters.backend.api.repository.CritterEvolutionRepository;
+import com.CuteComputerCritters.backend.api.repository.CritterEvolutionsRepository;
 import com.CuteComputerCritters.backend.api.repository.CritterRepository;
 import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +23,16 @@ public class CritterScheduler {
 
     private final CritterRepository critterRepository;
     private final CritterBroadcaster critterBroadcaster;
-    private final CritterEvolutionRepository critterEvolutionsRepository;
+    private final CritterEvolutionsRepository critterEvolutionsRepository;
 
-    public CritterScheduler(CritterRepository critterRepository, CritterBroadcaster critterBroadcaster, CritterEvolutionRepository critterEvolutionsRepository) {
+    public CritterScheduler(CritterRepository critterRepository, CritterBroadcaster critterBroadcaster, CritterEvolutionsRepository critterEvolutionsRepository) {
         this.critterRepository = critterRepository;
         this.critterBroadcaster = critterBroadcaster;
         this.critterEvolutionsRepository = critterEvolutionsRepository;
     }
 
-    //scheduled to update every quarter of a minute
-    @Scheduled(fixedRate = 15000)
+    //scheduled to update every minute
+    @Scheduled(fixedRate = 60000)
     public void updateEvolutionStagesAndDecayStats() {
 
         List<Critter> activeCritters = critterRepository.findByIsActiveTrueAndIsDeadFalse();
@@ -49,7 +49,6 @@ public class CritterScheduler {
         }
     }
 
-    //handles the decay of the critter stats/when to evolve/call and sickness
     @Transactional
     public void processCritterDecay(Critter critter, Instant now) {
         Instant processingStart = Instant.now();
@@ -74,25 +73,18 @@ public class CritterScheduler {
         int chanceOfCall = 50;
 
         //after two minutes the critter gets sick
-        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() == 120) {
+        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 120000) {
             freshCritter.setHealthy(false);
         }
 
-        //call after one minute DEBUG
-        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 60000) {
-            critter.setHasCalled(true);
-            critter.setCalledSince(now);
-            log.info("Critter {} has called! (DEBUG)", critter.getCritterId());
-        }
-
         // Evolution
-        CritterEvolution currentEvolution = freshCritter.getEvolutionStage();
+        CritterEvolutions currentEvolution = freshCritter.getEvolutionStage();
 
         //after five minutes the critter enters the next evolutionary stage
         if (currentEvolution != null) {
             int currentStage = (int) currentEvolution.getStage();
 
-            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 300) {
+            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 300000) {
                 double nextStage;
                 freshCritter.setTraining(0);
 
@@ -109,7 +101,7 @@ public class CritterScheduler {
                 }
 
                 // Fetch the new evolution entity
-                CritterEvolution newEvolution = critterEvolutionsRepository.findEvolutionByStage(nextStage)
+                CritterEvolutions newEvolution = critterEvolutionsRepository.findEvolutionByStage(nextStage)
                         .orElseThrow(() -> new IllegalStateException("Evolution stage " + nextStage + " not found"));
 
                 freshCritter.setEvolutionStage(newEvolution);
@@ -174,7 +166,7 @@ public class CritterScheduler {
         }
 
         //if the critter hits more than 10 care misses it will die
-        if (freshCritter.getCareMisses() >= 10) {
+        if (freshCritter.getCareMisses() >= 1) {
             freshCritter.setDead(true);
             log.warn("Critter {} died due to care misses!", freshCritter.getCritterId());
         }
@@ -183,11 +175,8 @@ public class CritterScheduler {
         int newHunger = Math.max(freshCritter.getHunger() - hungerDecay, 0);
         int newHappiness = Math.max(freshCritter.getHappiness() - happinessDecay, 0);
 
-        //randomly make the critter sick (every 2 minutes)
-        if (sessionSeconds % 120 == 0){
-            getSick(freshCritter, chanceOfSickness, now);
-        }
-        //randomly make the critter call (every minute)
+        //randomly make the critter call out/sick
+        getSick(freshCritter, chanceOfSickness, now);
         maybeCall(freshCritter, chanceOfCall, now);
 
 

@@ -14,6 +14,7 @@ interface FoodPantryData {
 
 export class FoodPantry extends BaseGame {
   private foodItems: FoodItem[] = [];
+  private isFeedingInProgress = false;
   private selectedFoodIndex = 0;
   private foodContainers: Phaser.GameObjects.Container[] = [];
   private keyboardNav?: {
@@ -149,40 +150,34 @@ export class FoodPantry extends BaseGame {
   };
 
   protected handleFeed = async () => {
-    const selectedFood = this.foodItems[this.selectedFoodIndex];
-
-    //if user has chosen no food, return to Game
-    if (!selectedFood){
-      this.scene.stop('FoodPantry');
-      this.scene.start('Game');
+    // Prevent double-feeding
+    if (this.isFeedingInProgress) {
+      console.warn('Feeding already in progress - ignoring duplicate request');
       return;
     }
 
-    console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
+    const selectedFood = this.foodItems[this.selectedFoodIndex];
+    if (!selectedFood || !this.passedCritter) return;
 
+    this.isFeedingInProgress = true; // Lock feeding
     try {
-      // 1. First feed the critter (this updates backend)
-      const success = await this.eventBus.feedCritter(
-        this.passedCritter!.critterId,
-        selectedFood.name
-      );
+      console.log(`Attempting to feed ${selectedFood.name} to critter ${this.passedCritter.critterId}`);
 
-      if (!success) {
-        console.error('Feeding failed');
-        return;
+      // (1) Feed the critter
+      await this.eventBus.feedCritter(this.passedCritter.critterId, selectedFood.name);
+
+      // (2) Optional: Verify the update
+      const updatedCritter = await this.getUpdatedCritter();
+      if (updatedCritter) {
+        console.log('Critter updated successfully:', updatedCritter.hunger);
       }
 
-      // 2. Get updated critter data
-      const updatedCritter = await this.getUpdatedCritter();
-
-      // 3. Return to GameScene with updated data
-      this.scene.start('Game', {
-        selectedCritter: updatedCritter
-      });
-    } catch (error) {
-      console.error('Feeding error:', error);
-      // Fallback - return with original critter data
+      // (3) Transition back
       this.scene.start('Game', { selectedCritter: this.passedCritter });
+    } catch (error) {
+      console.error('Feeding failed:', error);
+    } finally {
+      this.isFeedingInProgress = false; // Always release lock
     }
   };
 
