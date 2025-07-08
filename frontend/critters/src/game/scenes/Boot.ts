@@ -19,6 +19,7 @@ export class Boot extends Scene {
     this.load.image('logo', '../assets/logo.png');
     this.load.image('buttonBg', '../assets/button_normal.PNG');
     this.load.image('buttonPressedBg', '../assets/button_clicked.PNG');
+    this.load.image('home', '../assets/home.PNG');
   }
 
   create ()

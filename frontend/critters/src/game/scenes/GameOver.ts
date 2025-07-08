@@ -16,13 +16,13 @@ export class GameOver extends Scene {
   create() {
     this.add.image(512, 384, 'background');
 
-    this.add.text(512, 384, 'Game Over', {
+    this.add.text(512, 384, 'Your Pet has Died', {
       font: '48px Arial',
       color: '#ff0000',
     }).setOrigin(0.5);
 
     this.input.once('pointerdown', () => {
-      this.scene.start('MainMenu', { eventBus: this.eventBus });
+      this.scene.start('PetMenu', { eventBus: this.eventBus });
     });
   }
 }
