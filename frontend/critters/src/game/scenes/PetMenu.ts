@@ -60,12 +60,6 @@ export class PetMenu extends Scene {
       console.log('Received critters:', critters);
       this.critters = critters || [];
       this.displayCritters();
-
-      // Auto-select new critter if it's the first load
-      if (this.isFirstLoad && this.critters.length > 0) {
-        this.isFirstLoad = false;
-        this.selectCritter(0);
-      }
     });
   }
 
