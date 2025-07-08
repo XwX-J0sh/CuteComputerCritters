@@ -23,5 +23,15 @@
 
 //form input styling
 .frm-primary {
-  @apply rounded-lg border border-gray-300 bg-blue-200 text-sm text-blue-950 focus:border-blue-500 focus:ring-blue-500;
+  @apply rounded-lg border border-gray-300 bg-purple-200 text-sm text-purple-950 focus:border-purple-500 focus:ring-purple-500;
 }
+
+.header-hero {
+  @apply p-8 text-8xl text-purple-950 dark:bg-purple-50 text-center
+}
+
+.header-detail {
+  @apply p-4 text-4xl text-purple-900 dark:text-purple-100 text-center
+}
+
+.
