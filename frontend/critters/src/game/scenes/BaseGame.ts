@@ -2,7 +2,6 @@ import { Scene } from 'phaser';
 import { EventBusService } from '../../app/services/event-bus.service';
 import { CritterStatsPanel } from './helpers/CritterStatsPanel';
 import { GameButton } from './helpers/GameButton';
-import { EVOLUTION_SPRITES, EvolutionStage } from './helpers/constants';
 import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
 
 export abstract class BaseGame extends Scene {
@@ -23,7 +22,9 @@ export abstract class BaseGame extends Scene {
   protected critter!: any;
   private critterUpdateSubscription?: Subscription;
   private hasCalledSubscription!: Subscription;
+  private statIsLowSubscription!: Subscription;
   private callSound!: Phaser.Sound.BaseSound;
+  private isDeadSubscription!: Subscription;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -120,6 +121,10 @@ export abstract class BaseGame extends Scene {
 
     //sound subscriptions
     this.setupHasCalledSubscription();
+    this.setupStatsIsLowSubscription();
+
+    //game over subscription
+    this.setupIsDeadSubscription();
   }
 
   private setupHasCalledSubscription() {
@@ -127,15 +132,62 @@ export abstract class BaseGame extends Scene {
       .pipe(
         filter(updatedCritter =>
           updatedCritter! &&
-          this.critter?.critterId === updatedCritter.critterId &&
-          updatedCritter.hasCalled
+          this.critter?.critterId === updatedCritter.critterId
         ),
-        distinctUntilChanged((prev, curr) => prev!.hasCalled === curr!.hasCalled)
+        distinctUntilChanged((prev, curr) =>
+          prev?.hasCalled === curr?.hasCalled &&
+          prev?.calledSince === curr?.calledSince
+        )
       )
       .subscribe(updatedCritter => {
-        if (updatedCritter!.hasCalled) {
+        // Play sound immediately when call starts
+        if (updatedCritter!.hasCalled && !updatedCritter!.calledSince) {
           this.playCallSound();
         }
+        // Also play if call was just initiated
+        else if (updatedCritter!.hasCalled && updatedCritter!.calledSince) {
+          const callTime = new Date(updatedCritter!.calledSince).getTime();
+          if (Date.now() - callTime < 5000) { // Only if called within last 5s
+            this.playCallSound();
+          }
+        }
+      });
+  }
+
+  private setupStatsIsLowSubscription() {
+    this.statIsLowSubscription = this.eventBus.critterUpdate$
+      .pipe(
+        filter(updatedCritter => updatedCritter! &&
+          this.critter?.critterId === updatedCritter?.critterId &&
+          (!updatedCritter?.isHealthy || (updatedCritter.hunger || updatedCritter.happiness) <= 1)
+        ),
+        distinctUntilChanged((previous, current) =>
+          previous?.isHealthy === current?.isHealthy &&
+          previous?.hunger === current?.hunger &&
+          previous?.happiness === current?.happiness
+        )
+      )
+      .subscribe(updatedCritter => {
+        // Handle the stat is low notification here
+        this.playCallSound();
+      });
+  }
+
+  private setupIsDeadSubscription() {
+    this.isDeadSubscription = this.eventBus.critterUpdate$
+      .pipe(
+        filter(updatedCritter => updatedCritter! &&
+          this.critter?.critterId === updatedCritter?.critterId &&
+          updatedCritter?.isDead
+        ),
+        distinctUntilChanged((previous, current) =>
+          previous?.isDead === current?.isDead
+        )
+      )
+      .subscribe(updatedCritter => {
+        //if the critter has died send to game over screen
+        this.scene.stop('BaseGame');
+        this.scene.start('GameOver');
       });
   }
 
@@ -157,10 +209,6 @@ export abstract class BaseGame extends Scene {
       this.statsPanel.updateStats(this.critter);
     }
 
-    // Update sprite if evolution stage changed
-    if (this.critter.evolutionStage) {
-      this.setCritterSprite(this.critter.evolutionStage);
-    }
   }
 
   private async activateCurrentCritter(): Promise<void> {
@@ -300,39 +348,9 @@ export abstract class BaseGame extends Scene {
 
     this.critterUpdateSubscription?.unsubscribe();
     this.hasCalledSubscription?.unsubscribe();
+    this.statIsLowSubscription?.unsubscribe();
+    this.isDeadSubscription?.unsubscribe();
   }
-  }
-
-  private setCritterSprite(stage: EvolutionStage) {
-    // Destroy previous sprite if exists
-    if (this.pet) {
-      this.pet.destroy();
-    }
-
-    const sprites = EVOLUTION_SPRITES[stage];
-
-    // Create new sprite
-    this.pet = this.add.sprite(550, 500, sprites.idle);
-
-    // Create animations for this stage
-    this.anims.create({
-      key: `${stage}_idle`,
-      frames: this.anims.generateFrameNumbers(sprites.idle, {
-        start: 0, end: 2 // adjust based on your frames
-      }),
-      frameRate: 6,
-      repeat: -1
-    });
-
-    // Play the idle animation
-    this.pet.play(`${stage}_idle`);
-
-    // Set scale if needed (different sizes per evolution)
-    const scales = {
-      [EvolutionStage.BABY]: 1.8,
-      [EvolutionStage.FINAL]: 1.2
-    };
-    this.pet.setScale(scales[stage]);
   }
 
 }
