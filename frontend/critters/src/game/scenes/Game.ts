@@ -6,6 +6,11 @@ export class Game extends BaseGame {
     super({ key: 'Game' });
   }
 
+  override async create(): Promise<void> {
+    super.create();
+    this.add.image(562, 405, 'home');
+  }
+
   protected handleQuit = async () => {
     if (this.critter?.critterId) {
       try {
