@@ -1,333 +1,160 @@
-import { BaseGame } from './BaseGame';
-import {Critter} from './helpers/constants';
-import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
+import Phaser from 'phaser';
+import { Critter, EVOLUTION_SPRITES, EvolutionStage } from './constants';
 
-interface FoodItem {
-  name: string;
-  spriteKey: string;
-}
+// Extended type for different final evolution variants
+type FinalEvolutionVariant = 'shisa' | 'chiikawa' | 'hachiware' | 'momonga' | 'usagi';
 
-interface FoodPantryData {
-  selectedCritter: Critter;
-}
+export class AnimationLoader {
+  private scene: Phaser.Scene;
+  private critterSprite: Phaser.GameObjects.Sprite;
+  private currentAnimation: string = 'idle';
+  private isPlayingSpecialAnimation: boolean = false;
+  private variant: FinalEvolutionVariant = 'chiikawa';
 
-export class FoodPantry extends BaseGame {
-  private foodItems: FoodItem[] = [];
-  private selectedFoodIndex = 0;
-  private foodContainers: Phaser.GameObjects.Container[] = [];
-  private keyboardNav?: {
-    up: Phaser.Input.Keyboard.Key;
-    down: Phaser.Input.Keyboard.Key;
-    left: Phaser.Input.Keyboard.Key;
-    right: Phaser.Input.Keyboard.Key;
-    enter: Phaser.Input.Keyboard.Key;
-    space: Phaser.Input.Keyboard.Key;
-  };
-  private passedCritter?: Critter;
-
-  constructor() {
-    super({ key: 'FoodPantry' });
+  constructor(scene: Phaser.Scene, critter: Critter) {
+    this.scene = scene;
+    this.variant = this.determineVariant(critter); // Determine variant based on critter
+    this.critterSprite = this.createCritterSprite(critter);
+    this.setupAnimations(critter);
+    this.playIdleAnimation();
   }
 
-  override init(data: FoodPantryData) {
-    this.passedCritter = data.selectedCritter;
-    console.log('Received critter:', this.passedCritter);
+  private determineVariant(critter: Critter): FinalEvolutionVariant {
+    // Implement your logic to determine the variant
+    // Example: Check critter.type or other properties
+    if (critter.evolution === 2.1) return 'hachiware';
+    if (critter.evolution === 2.2) return 'shisa';
+    if (critter.evolution === 2.3) return 'usagi';
+    if (critter.evolution === 2.4) return 'momonga';
+    return 'chiikawa'; // fallback
   }
 
-  override preload() {
-    this.load.spritesheet('Bread', '../assets/items/bread.PNG', {
-      frameWidth: 32,
-      frameHeight: 32
-    });
+  private createCritterSprite(critter: Critter): Phaser.GameObjects.Sprite {
+    const stage = critter.evolutionStage || this.determineEvolutionStage(critter.evolution);
+
+    // Get the appropriate sprite key based on stage and variant
+    const spriteKey = this.getSpriteKey(stage);
+
+    const sprite = this.scene.add.sprite(550, 500, spriteKey);
+    sprite.setScale(2);
+    return sprite;
   }
 
-  override async create() {
-    super.create();
-    console.log('FoodPantry scene created');
-
-    if (!this.passedCritter) {
-      console.error('No critter passed to FoodPantry!');
-      this.scene.start('Game'); // Fallback
-      return;
+  private getSpriteKey(stage: EvolutionStage): string {
+    if (stage === EvolutionStage.BABY) {
+      return EVOLUTION_SPRITES[stage].idle;
+    } else {
+      return `${this.variant}_idle1`;
     }
-
-    // Initialize food items data
-    this.foodItems = [
-      { name: 'Cake', spriteKey: 'Cake' },
-      { name: 'Bread', spriteKey: 'Bread' },
-      { name: 'Candy', spriteKey: 'Candy' },
-      { name: 'Salad', spriteKey: 'Salad' },
-    ];
-
-    this.createFoodSelectionUI();
-    this.setupKeyboardNavigation();
-    this.setupButtons();
-
-    // Debug information
-    console.log('Food containers created:', this.foodContainers.length);
-    console.log('Selected critter:', this.selectedCritter);
   }
 
-  private setupButtons() {
-    if (!this.feedButton || !this.respondButton || !this.quitButton) {
-      console.warn('Buttons not found!');
-      return;
-    }
+  private determineEvolutionStage(evolution: number): EvolutionStage {
+    return evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+  }
 
-    // Feed button
-    this.feedButton.setInteractive({ useHandCursor: true })
-      .on('pointerover', () => this.feedButton.setAlpha(0.8))
-      .on('pointerout', () => this.feedButton.setAlpha(1))
-      .on('pointerdown', () => {
-        console.log('Feed button pressed');
-        this.scene.stop('FoodPantry');
-        this.scene.start('Game');
+  private setupAnimations(critter: Critter) {
+    const stage = critter.evolutionStage || this.determineEvolutionStage(critter.evolution);
+
+    if (stage === EvolutionStage.BABY) {
+      this.setupBabyAnimations();
+    } else {
+      this.setupFinalEvolutionAnimations();
+    }
+  }
+
+  private setupBabyAnimations() {
+    const sprites = EVOLUTION_SPRITES[EvolutionStage.BABY];
+
+    // Baby-specific animations
+    if (!this.scene.anims.exists(`${sprites.idle}_anim`)) {
+      this.scene.anims.create({
+        key: `${sprites.idle}_anim`,
+        frames: this.scene.anims.generateFrameNumbers(sprites.idle, { start: 0, end: 1 }),
+        frameRate: 2,
+        repeat: -1
       });
+    }
 
-    // Respond button
-    this.respondButton.setInteractive({ useHandCursor: true })
-      .on('pointerover', () => this.respondButton.setAlpha(0.8))
-      .on('pointerout', () => this.respondButton.setAlpha(1))
-      .on('pointerdown', () => {
-        console.log('Respond button pressed');
-        this.handleRespond();
+    // ... other baby animations
+  }
+
+  private setupFinalEvolutionAnimations() {
+    // Variant-specific animations
+    const idleKey = `${this.variant}_idle`;
+    const eatKey = `${this.variant}_eat`;
+
+    // Setup idle animation for variant
+    if (!this.scene.anims.exists(`${idleKey}_anim`)) {
+      this.scene.anims.create({
+        key: `${idleKey}_anim`,
+        frames: this.scene.anims.generateFrameNumbers(idleKey, { start: 0, end: 1 }),
+        frameRate: 2,
+        repeat: -1
       });
+    }
 
-    // Quit button
-    this.quitButton.setInteractive({ useHandCursor: true })
-      .on('pointerover', () => this.quitButton.setAlpha(0.8))
-      .on('pointerout', () => this.quitButton.setAlpha(1))
-      .on('pointerdown', () => {
-        console.log('Quit button pressed');
-        this.handleQuit();
+    // Setup eat animation for variant
+    if (!this.scene.anims.exists(`${eatKey}_anim`)) {
+      this.scene.anims.create({
+        key: `${eatKey}_anim`,
+        frames: this.scene.anims.generateFrameNumbers(eatKey, { start: 0, end: 3 }),
+        frameRate: 8,
+        repeat: 0
       });
+    }
+
+    // Setup sick animation for variant
+    if (!this.scene.anims.exists(`${idleKey}_sick`)) {
+      this.scene.anims.create({
+        key: `${idleKey}_sick`,
+        frames: this.scene.anims.generateFrameNumbers(idleKey, { frames: [2, 3] }),
+        frameRate: 3,
+        repeat: -1
+      });
+    }
   }
 
-  private updateSelection() {
-    this.foodContainers.forEach((container, index) => {
-      this.highlightFood(container, index === this.selectedFoodIndex);
-    });
+  public playIdleAnimation(): void {
+    if (this.isPlayingSpecialAnimation) return;
+
+    const stage = this.determineEvolutionStage(this.critterSprite.data.get('evolution'));
+    let animKey: string;
+
+    if (stage === EvolutionStage.BABY) {
+      const sprites = EVOLUTION_SPRITES[stage];
+      animKey = this.critterSprite.data.get('isHealthy') === false ?
+        `${sprites.idle}_sick` : `${sprites.idle}_anim`;
+    } else {
+      // Final evolution uses variant-specific animations
+      animKey = this.critterSprite.data.get('isHealthy') === false ?
+        `${this.variant}_idle_sick` : `${this.variant}_idle_anim`;
+    }
+
+    this.currentAnimation = 'idle';
+    this.critterSprite.play(animKey);
   }
 
-  private selectFood(food: FoodItem) {
-    console.log(`Selected ${food.name} for critter`, this.passedCritter);
-    try {
-      this.eventBus.feedCritter(this.passedCritter!.critterId, food.name);
-    } catch (error) {
-      console.log('Failed to select food: ' ,error);
-    }
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
-  }
+  public playEatAnimation(): Promise<void> {
+    return new Promise((resolve) => {
+      this.isPlayingSpecialAnimation = true;
+      const stage = this.determineEvolutionStage(this.critterSprite.data.get('evolution'));
+      let animKey: string;
 
-  protected handleQuit = async () => {
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
-    return Promise.resolve();
-  };
-
-  protected handleRespond = async () => {
-    try {
-      this.eventBus.respondToCall(this.passedCritter!.critterId);
-    }
-    catch (error) {
-      console.log('Failed to respond to call: ' ,error);
-    }
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
-    return Promise.resolve();
-  };
-
-  protected handleFeed = async () => {
-    const selectedFood = this.foodItems[this.selectedFoodIndex];
-
-    //if user has chosen no food, return to Game
-    if (!selectedFood){
-      this.scene.stop('FoodPantry');
-      this.scene.start('Game');
-      return;
-    }
-
-    console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
-
-    try {
-      // 1. First feed the critter (this updates backend)
-      const success = await this.eventBus.feedCritter(
-        this.passedCritter!.critterId,
-        selectedFood.name
-      );
-
-      if (!success) {
-        console.error('Feeding failed');
-        return;
+      if (stage === EvolutionStage.BABY) {
+        animKey = `${EVOLUTION_SPRITES[stage].eat}_anim`;
+      } else {
+        animKey = `${this.variant}_eat_anim`;
       }
 
-      // 2. Get updated critter data (optional but recommended)
-      const updatedCritter = await this.getUpdatedCritter();
+      this.critterSprite.play(animKey);
 
-      // 3. Return to GameScene with updated data
-      this.scene.start('Game', {
-        selectedCritter: updatedCritter || this.passedCritter
+      this.critterSprite.once('animationcomplete', () => {
+        this.isPlayingSpecialAnimation = false;
+        this.playIdleAnimation();
+        resolve();
       });
-    } catch (error) {
-      console.error('Feeding error:', error);
-      // Fallback - return with original critter data
-      this.scene.start('Game', { selectedCritter: this.passedCritter });
-    }
-  };
-
-  private async getUpdatedCritter(): Promise<CritterGetResponse | undefined | null> {
-    try {
-      // Assuming your eventBus or critterService has a way to fetch current data
-      const updatedCritter = await this.eventBus.critterService.getCritterById(
-        this.passedCritter!.critterId
-      ).toPromise();
-
-      return updatedCritter;
-    } catch (error) {
-      console.warn('Failed to fetch updated critter:', error);
-      return null;
-    }
-  }
-
-  override shutdown() {
-    super.shutdown();
-    if (this.keyboardNav) {
-      Object.values(this.keyboardNav).forEach(key => key.removeAllListeners());
-    }
-  }
-
-  private highlightFood(container: Phaser.GameObjects.Container, isSelected: boolean) {
-    const [sprite, text] = container.list as [Phaser.GameObjects.Sprite, Phaser.GameObjects.Text];
-
-    sprite.setTint(isSelected ? 0x44ff44 : 0xffffff);
-    text.setStyle({
-      color: isSelected ? '#ff9900' : '#ffffff',
-      fontStyle: isSelected ? 'bold' : 'normal'
     });
   }
 
-  private setupKeyboardNavigation() {
-    if (!this.input?.keyboard) {
-      console.warn('Keyboard input not available');
-      return;
-    }
-
-    this.keyboardNav = {
-      up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
-      down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
-      left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
-      right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
-      enter: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER),
-      space: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-    };
-
-    // Arrow key navigation
-    this.keyboardNav.up.on('down', () => this.navigateFood(-1));
-    this.keyboardNav.down.on('down', () => this.navigateFood(1));
-    this.keyboardNav.left.on('down', () => this.navigateFood(-1));
-    this.keyboardNav.right.on('down', () => this.navigateFood(1));
-
-    // Selection
-    this.keyboardNav.enter.on('down', () => this.handleFeed());
-    this.keyboardNav.space.on('down', () => this.handleFeed());
-
-    // WASD navigation
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W).on('down', () => this.navigateFood(-1));
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S).on('down', () => this.navigateFood(1));
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A).on('down', () => this.navigateFood(-1));
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D).on('down', () => this.navigateFood(1));
-
-    // Escape for quit
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', this.handleQuit);
-  }
-
-  private navigateFood(direction: number) {
-    if (this.foodItems.length === 0) return;
-
-    this.selectedFoodIndex = Phaser.Math.Wrap(
-      this.selectedFoodIndex + direction,
-      0,
-      this.foodItems.length
-    );
-    this.updateSelection();
-    console.log(`Navigated to food index: ${this.selectedFoodIndex}`);
-  }
-
-  private createFoodSelectionUI() {
-    const centerX = this.cameras.main.width / 2;
-    const centerY = this.cameras.main.height / 2;
-    const itemSpacingX = 200; // Horizontal spacing between items
-    const itemSpacingY = 150; // Vertical spacing between rows
-    const itemScale = 1.5;
-
-    // Clear any existing containers
-    this.foodContainers.forEach(container => container.destroy());
-    this.foodContainers = [];
-
-    // Create a 2x2 grid layout
-    this.foodItems.forEach((food, index) => {
-      const container = this.add.container(0, 0);
-
-      // Calculate position based on grid layout
-      const row = index < 2 ? 0 : 1; // First two items in top row, next two in bottom row
-      const col = index % 2; // Alternating columns
-
-      const xPos = centerX + (col === 0 ? -itemSpacingX/2 : itemSpacingX/2);
-      const yPos = centerY + (row === 0 ? -itemSpacingY : itemSpacingY);
-
-      // Food sprite
-      const foodSprite = this.add.sprite(xPos, yPos - 30, food.spriteKey)
-        .setScale(itemScale)
-        .setInteractive({ useHandCursor: true });
-
-      // Food label
-      const foodLabel = this.add.text(xPos, yPos + 50, food.name, {
-        font: '24px Arial',
-        color: '#ffffff',
-        align: 'center'
-      }).setOrigin(0.5);
-
-      // Add to container
-      container.add([foodSprite, foodLabel]);
-
-      // Set interactive area (larger than the sprite for better UX)
-      container.setInteractive(
-        new Phaser.Geom.Rectangle(
-          xPos - foodSprite.displayWidth/2 - 10,
-          yPos - 30 - foodSprite.displayHeight/2 - 10,
-          foodSprite.displayWidth + 20,
-          foodSprite.displayHeight + 90 // Includes label space
-        ),
-        Phaser.Geom.Rectangle.Contains
-      );
-
-      // Mouse events
-      container.on('pointerover', () => {
-        this.selectedFoodIndex = index;
-        this.updateSelection();
-      });
-
-      container.on('pointerdown', () => {
-        this.selectFood(food);
-      });
-
-      this.foodContainers.push(container);
-
-      // Initial highlight for first item
-      if (index === 0) {
-        this.highlightFood(container, true);
-      }
-    });
-
-    // Add instructional text
-    this.add.text(centerX, centerY + 200,
-      'Use arrow keys or click to select food\nPress ENTER or click Feed to confirm',
-      {
-        font: '18px Arial',
-        color: '#ffffff',
-        align: 'center'
-      }).setOrigin(0.5);
-  }
-
-  protected override shouldCreateCritter(): boolean {
-    return false;
-  }
+  // ... rest of the methods remain similar but should use variant-specific keys where needed
 }
