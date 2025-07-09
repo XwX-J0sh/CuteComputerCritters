@@ -3,6 +3,7 @@ import { EventBusService } from '../../app/services/event-bus.service';
 import { CritterStatsPanel } from './helpers/CritterStatsPanel';
 import { GameButton } from './helpers/GameButton';
 import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
+import {AnimationLoader} from './helpers/AnimationLoader';
 
 export abstract class BaseGame extends Scene {
   protected pet!: Phaser.GameObjects.Sprite;
@@ -10,6 +11,7 @@ export abstract class BaseGame extends Scene {
   protected eventBus!: EventBusService;
   protected selectedCritter: any;
   protected statsPanel!: CritterStatsPanel;
+  protected animationManager!: AnimationLoader;
 
   // Buttons
   protected quitButton!: GameButton;
@@ -201,15 +203,6 @@ export abstract class BaseGame extends Scene {
     }
   }
 
-  private updateCritterDisplay() {
-    if (!this.critter) return;
-
-    // Update stats panel
-    if (this.statsPanel) {
-      this.statsPanel.updateStats(this.critter);
-    }
-
-  }
 
   private async activateCurrentCritter(): Promise<void> {
     const critterId = Number(this.critter.critterId);
@@ -266,13 +259,12 @@ export abstract class BaseGame extends Scene {
       onClick: () => this.handlePlay()
     });
 
+    // Add buttons to scene without sound
     this.add.existing(this.quitButton);
     this.add.existing(this.respondButton);
     this.add.existing(this.healButton);
     this.add.existing(this.feedButton);
     this.add.existing(this.playButton);
-
-    console.log(this.healButton);
   }
 
   protected setupKeyboard() {
@@ -287,20 +279,27 @@ export abstract class BaseGame extends Scene {
   }
 
   protected createCritter() {
-    if (!this.anims.exists('shisa_idle1')) {
-      this.anims.create({
-        key: 'shisa_idle1',
-        frames: this.anims.generateFrameNumbers('pet', { start: 0, end: 1 }),
-        frameRate: 2,
-        repeat: -1,
-      });
+    if (!this.critter) return;
+
+    // Clear previous animation if exists
+    if (this.animationManager) {
+      this.animationManager.getSprite().destroy();
     }
 
-    const pet = this.add.sprite(550, 500, 'pet');
-    pet.play('shisa_idle1');
-    pet.setScale(2);
+    this.animationManager = new AnimationLoader(this, this.critter);
+    this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
+  }
 
-    this.statsPanel = new CritterStatsPanel(this, this.selectedCritter, 850, 200);
+  private updateCritterDisplay() {
+    if (!this.critter) return;
+
+    // Update animation manager first
+    this.animationManager.updateCritterData(this.critter);
+
+    // Then update stats panel
+    if (this.statsPanel) {
+      this.statsPanel.updateStats(this.critter);
+    }
   }
 
   // Abstract methods child classes must implement
