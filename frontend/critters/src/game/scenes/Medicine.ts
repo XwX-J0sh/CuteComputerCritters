@@ -36,10 +36,7 @@ export class MedicineCabinet extends BaseGame {
   }
 
   override preload() {
-    this.load.spritesheet('Bread', '../assets/items/bread.PNG', {
-      frameWidth: 32,
-      frameHeight: 32
-    });
+
   }
 
   override async create() {
@@ -106,16 +103,6 @@ export class MedicineCabinet extends BaseGame {
     this.medicineContainers.forEach((container, index) => {
       this.highlightMedicine(container, index === this.selectedMedicineIndex);
     });
-  }
-
-  private selectMedicine(medicine: MedicineItem) {
-    console.log(`Selected ${medicine.name} for critter`, this.passedCritter);
-    try {
-      this.eventBus.feedCritter(this.passedCritter!.critterId, medicine.name);
-    } catch (error) {
-      console.log('Failed to select meds: ' ,error);
-    }
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
   }
 
   protected handleQuit = async () => {
@@ -186,26 +173,26 @@ export class MedicineCabinet extends BaseGame {
     };
 
     // Arrow key navigation
-    this.keyboardNav.up.on('down', () => this.navigateFood(-1));
-    this.keyboardNav.down.on('down', () => this.navigateFood(1));
-    this.keyboardNav.left.on('down', () => this.navigateFood(-1));
-    this.keyboardNav.right.on('down', () => this.navigateFood(1));
+    this.keyboardNav.up.on('down', () => this.navigateMedicine(-1));
+    this.keyboardNav.down.on('down', () => this.navigateMedicine(1));
+    this.keyboardNav.left.on('down', () => this.navigateMedicine(-1));
+    this.keyboardNav.right.on('down', () => this.navigateMedicine(1));
 
     // Selection
     this.keyboardNav.enter.on('down', () => this.handleFeed());
     this.keyboardNav.space.on('down', () => this.handleFeed());
 
     // WASD navigation
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W).on('down', () => this.navigateFood(-1));
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S).on('down', () => this.navigateFood(1));
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A).on('down', () => this.navigateFood(-1));
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D).on('down', () => this.navigateFood(1));
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W).on('down', () => this.navigateMedicine(-1));
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S).on('down', () => this.navigateMedicine(1));
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A).on('down', () => this.navigateMedicine(-1));
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D).on('down', () => this.navigateMedicine(1));
 
     // Escape for quit
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', this.handleQuit);
   }
 
-  private navigateFood(direction: number) {
+  private navigateMedicine(direction: number) {
     if (this.medicineItems.length === 0) return;
 
     this.selectedMedicineIndex = Phaser.Math.Wrap(
@@ -214,7 +201,7 @@ export class MedicineCabinet extends BaseGame {
       this.medicineItems.length
     );
     this.updateSelection();
-    console.log(`Navigated to food index: ${this.selectedMedicineIndex}`);
+    console.log(`Navigated to medicine index: ${this.selectedMedicineIndex}`);
   }
 
   private createMedicineSelectionUI() {
@@ -229,7 +216,7 @@ export class MedicineCabinet extends BaseGame {
     this.medicineContainers = [];
 
     // Create a 2x2 grid layout
-    this.medicineItems.forEach((food, index: number) => {
+    this.medicineItems.forEach((medicine, index: number) => {
       const container = this.add.container(0, 0);
 
       // Calculate position based on grid layout
@@ -239,28 +226,28 @@ export class MedicineCabinet extends BaseGame {
       const xPos = centerX + (col === 0 ? -itemSpacingX/2 : itemSpacingX/2);
       const yPos = centerY + (row === 0 ? -itemSpacingY : itemSpacingY);
 
-      // Food sprite
-      const foodSprite = this.add.sprite(xPos, yPos - 30, food.spriteKey)
+      // Medicine sprite
+      const medicineSprite = this.add.sprite(xPos, yPos - 30, medicine.spriteKey)
         .setScale(itemScale)
         .setInteractive({ useHandCursor: true });
 
-      // Food label
-      const foodLabel = this.add.text(xPos, yPos + 50, food.name, {
+      // Medicine label
+      const medicineLabel = this.add.text(xPos, yPos + 50, medicine.name, {
         font: '24px Arial',
         color: '#ffffff',
         align: 'center'
       }).setOrigin(0.5);
 
       // Add to container
-      container.add([foodSprite, foodLabel]);
+      container.add([medicineSprite, medicineLabel]);
 
       // Set interactive area (larger than the sprite for better UX)
       container.setInteractive(
         new Phaser.Geom.Rectangle(
-          xPos - foodSprite.displayWidth/2 - 10,
-          yPos - 30 - foodSprite.displayHeight/2 - 10,
-          foodSprite.displayWidth + 20,
-          foodSprite.displayHeight + 90 // Includes label space
+          xPos - medicineSprite.displayWidth/2 - 10,
+          yPos - 30 - medicineSprite.displayHeight/2 - 10,
+          medicineSprite.displayWidth + 20,
+          medicineSprite.displayHeight + 90 // Includes label space
         ),
         Phaser.Geom.Rectangle.Contains
       );
@@ -272,7 +259,7 @@ export class MedicineCabinet extends BaseGame {
       });
 
       container.on('pointerdown', () => {
-        this.selectMedicine(food);
+        this.handleHeal();
       });
 
       this.medicineContainers.push(container);
@@ -282,15 +269,6 @@ export class MedicineCabinet extends BaseGame {
         this.highlightMedicine(container, true);
       }
     });
-
-    // Add instructional text
-    this.add.text(centerX, centerY + 200,
-      'Use arrow keys or click to select food\nPress ENTER or click Feed to confirm',
-      {
-        font: '18px Arial',
-        color: '#ffffff',
-        align: 'center'
-      }).setOrigin(0.5);
   }
 
   protected override shouldCreateCritter(): boolean {
@@ -299,38 +277,43 @@ export class MedicineCabinet extends BaseGame {
 
   protected async handleHeal(): Promise<void> {
     console.log('Clicked Heal button');
-    const selectedFood = this.medicineItems[this.selectedMedicineIndex];
+    const selectedMedicine = this.medicineItems[this.selectedMedicineIndex];
 
-    //if user has chosen no food, return to Game
-    if (!selectedFood) {
-      this.scene.stop('FoodPantry');
+    //if user has chosen no meds, return to Game
+    if (!selectedMedicine) {
+      this.scene.stop('MedicineCabinet');
       this.scene.start('Game');
       return;
     }
 
-    console.log(`Feeding ${selectedFood.name} to critter`, this.passedCritter);
+    console.log(`Healing critter with ${selectedMedicine.name}`, this.passedCritter);
 
     try {
-      // 1. First feed the critter (this updates backend)
-      const success = await this.eventBus.feedCritter(
+      //First heal the critter (request to backend)
+
+      const medicineType = selectedMedicine.name.toUpperCase().replace('-', '_');
+
+      const success = await this.eventBus.healCritter(
         this.passedCritter!.critterId,
-        selectedFood.name
+        medicineType
       );
 
+      console.log("MedicineType: ", medicineType);
+
       if (!success) {
-        console.error('Feeding failed');
+        console.error('Healing failed');
         return;
       }
 
-      // 2. Get updated critter data (optional but recommended)
+      //Then get updated critter data
       const updatedCritter = await this.getUpdatedCritter();
 
-      // 3. Return to GameScene with updated data
+      //Return to GameScene with updated data
       this.scene.start('Game', {
         selectedCritter: updatedCritter || this.passedCritter
       });
     } catch (error) {
-      console.error('Feeding error:', error);
+      console.error('Healing error:', error);
       // Fallback - return with original critter data
       this.scene.start('Game', {selectedCritter: this.passedCritter});
     }
