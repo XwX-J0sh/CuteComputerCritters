@@ -294,7 +294,7 @@ public class CritterService {
             if(critter.isInjured()){
                 critter.setInjured(false);
                 critter.setInjuredSince(null);
-                critterRepository.save(critter);
+                logger.info("BAND_AID SET IS_HEALTHY TO TRUE");
             }
             else {
                 critter.setHappiness(Math.max(critter.getHappiness() - 1, 0));
@@ -305,13 +305,16 @@ public class CritterService {
             if(!(critter.isHealthy())){
                 critter.setHealthy(true);
                 critter.setSickSince(null);
-                critterRepository.save(critter);
+                logger.info("PILL SET IS_HEALTHY TO TRUE");
             }
             else {
                 critter.setHappiness(Math.min(critter.getHappiness() - 2, 0));
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not sick");
             }
         }
+        critterRepository.save(critter);
+        logger.info("Critter with id {} healed with {}. New health status: {}",
+                critterId, medicineType, critter.isHealthy());
     }
 
     //Helpers:
