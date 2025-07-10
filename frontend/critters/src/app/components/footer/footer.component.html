@@ -64,13 +64,23 @@
               <a
                 routerLink="/terms-and-conditions"
                 class=""
-              >Terms & Conditions</a
-              >
+              >Terms & Conditions
+              </a>
             </li>
             <li>
-              <button>
-                '🌙 dark' '☀️ light'
-              </button>
+              <select [(ngModel)]="selectedTheme"
+                      (ngModelChange)="onThemeChange($event)"
+                      class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-medium">
+                <option value="dark" class="text-sm font-medium text-gray-600">
+                  🌙Dark
+                </option>
+                <option value="light" class="text-sm font-medium text-gray-600">
+                  ☀️Light
+                </option>
+                <option value="system" class="text-sm font-medium text-gray-600">
+                  🖥️System
+                </option>
+              </select>
             </li>
           </ul>
         </div>
