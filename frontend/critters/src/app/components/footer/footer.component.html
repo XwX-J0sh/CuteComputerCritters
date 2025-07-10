@@ -68,19 +68,20 @@
               </a>
             </li>
             <li>
-              <select [(ngModel)]="selectedTheme"
-                      (ngModelChange)="onThemeChange($event)"
-                      class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-medium">
-                <option value="dark" class="text-sm font-medium text-gray-600">
-                  🌙Dark
-                </option>
-                <option value="light" class="text-sm font-medium text-gray-600">
-                  ☀️Light
-                </option>
-                <option value="system" class="text-sm font-medium text-gray-600">
-                  🖥️System
-                </option>
-              </select>
+              <div class="relative">
+                <select
+                  [(ngModel)]="selectedTheme"
+                  (ngModelChange)="onThemeChange($event)"
+                  class="appearance-none w-full bg-white dark:bg-purple-900 text-purple-900 dark:text-white border border-gray-300 dark:border-white rounded px-4 py-2 pr-10 text-sm font-medium">
+                  <option value="dark">🌙 Dark</option>
+                  <option value="light">☀️ Light</option>
+                  <option value="system">🖥️ System</option>
+                </select>
+                <!-- Custom dropdown arrow -->
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-900 dark:text-white">
+                  ▼
+                </div>
+              </div>
             </li>
           </ul>
         </div>
