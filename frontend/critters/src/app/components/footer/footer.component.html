@@ -1,6 +1,6 @@
 <!--site footer pulled from flowbite "social media icons"-->
 <footer
-  class="relative bottom-0 left-0 w-full border-t border-gray-200 bg-sky-50 dark:bg-sky-950"
+  class="footer-custom"
 >
   <!--div applies to entirety of footer content-->
   <div class="mx-auto w-full max-w-screen-xl p-4 py-6 lg:py-8">
@@ -8,15 +8,15 @@
       <!--logo segment changed from template-->
       <div class="mb-6 md:mb-0">
         <a
-          routerLink="#"
-          class="self-center whitespace-nowrap text-2xl font-semibold text-sky-950"
+          routerLink="/home"
+          class="self-center whitespace-nowrap text-2xl font-semibold"
         >
           CuteComputerCritter
         </a>
       </div>
       <!--sitemap link section-->
       <div
-        class="grid grid-cols-2 gap-8 font-medium text-gray-500 sm:grid-cols-3 sm:gap-6"
+        class="grid grid-cols-2 gap-8 font-medium sm:grid-cols-3 sm:gap-6"
       >
         <!--first column of sitemap links-->
         <div>
@@ -64,13 +64,23 @@
               <a
                 routerLink="/terms-and-conditions"
                 class=""
-              >Terms & Conditions</a
-              >
+              >Terms & Conditions
+              </a>
             </li>
             <li>
-              <button>
-                '🌙 dark' '☀️ light'
-              </button>
+              <select [(ngModel)]="selectedTheme"
+                      (ngModelChange)="onThemeChange($event)"
+                      class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-medium">
+                <option value="dark" class="text-sm font-medium text-gray-600">
+                  🌙Dark
+                </option>
+                <option value="light" class="text-sm font-medium text-gray-600">
+                  ☀️Light
+                </option>
+                <option value="system" class="text-sm font-medium text-gray-600">
+                  🖥️System
+                </option>
+              </select>
             </li>
           </ul>
         </div>

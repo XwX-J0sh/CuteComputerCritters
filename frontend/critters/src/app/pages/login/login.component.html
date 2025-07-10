@@ -1,4 +1,4 @@
-<section class="mx-auto max-w-sm bg-blue-50" aria-labelledby="Login Form">
+<section class="mx-auto max-w-sm pt-10" aria-labelledby="Login Form">
   <ng-container *ngIf="!(isLoggedIn$ | async); else loggedInTemplate">
     <form
       name="form"
@@ -6,11 +6,14 @@
       (ngSubmit)="f.form.valid && onSubmit()"
       novalidate
     >
+      <h1 class="text-3xl font-bold text-center text-purple-900 mb-6">
+        Login
+      </h1>
       <!-- USERNAME -->
       <div class="mb-5">
         <label
           for="username"
-          class="mb-2 block text-sm font-medium text-gray-600"
+          class="mb-2 block frm-text"
           >Username</label
         >
         <input
@@ -44,7 +47,7 @@
       <div class="mb-5">
         <label
           for="password"
-          class="mb-2 block text-sm font-medium text-gray-600"
+          class="mb-2 block frm-text"
           >Password</label
         >
         <input
@@ -77,7 +80,7 @@
       </div>
 
       <!--submit form-->
-      <button type="submit" id="submit-button" class="btn-primary mb-2 me-2">
+      <button type="submit" id="submit-button" class="btn-primary mb-2 me-2 w-full">
         Login
       </button>
       <div *ngIf="f.submitted && isLoginFailed" class="alert alert-warning">

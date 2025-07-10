@@ -17,6 +17,8 @@ import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.com
 import { GameLandingComponent} from './pages/game-landing/game-landing.component';
 import { CritterStatsComponent} from './critter-stats/critter-stats.component';
 import {GameComponent} from './game/game.component';
+import {SettingsComponent} from './pages/settings/settings.component';
+import {AuthGuard} from './auth.guard';
 
 export const routes: Routes = [
   { path: '',
@@ -32,8 +34,9 @@ export const routes: Routes = [
       { path: 'overview-critters', component: OverviewCrittersComponent },
       { path: 'privacy-policy', component: PrivacyPolicyComponent },
       { path: 'register', component: RegisterComponent },
-      { path: 'profile', component: ProfileComponent },
+      { path: 'profile', component: ProfileComponent , canActivate: [AuthGuard] },
       { path: 'support', component: SupportComponent },
+      { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
       { path: 'terms-and-conditions', component: TermsAndConditionsComponent },
       { path: 'updates', component: UpdatesComponent },
       { path: 'critter-stats', component: CritterStatsComponent },
@@ -46,7 +49,11 @@ export const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, {
+    scrollPositionRestoration: 'enabled',
+    anchorScrolling: 'enabled',
+    scrollOffset: [0, 48],
+  })],
   exports: [RouterModule],
 })
 

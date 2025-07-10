@@ -2,26 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-/*breakdown of structuring utilities classes
-  layout/display/position (flex, grid, block, absolute/relative, z-val, inset
-  box model (w-val, h-val, padding, m-2, mx-auto)
-  flex/grid alignment (items-center, justify between gap, space-x)
-  typography (text-sm font, text-color, uppercase etc)
-  background/border (bg-col, bg-opac, border, rounded-md, ring-2)
-  effects (shadow, opacity, transition, duration)
-  state/variant modifiers (hover, focus, dark)
-*/
+@layer base{
+  html,
+  body {
+    @apply bg-pink-50 dark:bg-purple-900
+  }
 
-//button styling
-.btn-primary {
-  @apply rounded-lg bg-violet-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-violet-800 focus:ring-4 focus:ring-violet-300;
 }
 
-.btn-secondary {
-  @apply rounded-lg bg-violet-200 px-5 py-2.5 text-sm font-medium text-violet-950 hover:bg-violet-300 focus:ring-4 focus:ring-violet-600;
+@layer components {
+  .btn-primary {
+    @apply bg-purple-800 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 transition;
+  }
+
+  .btn-secondary {
+    @apply bg-pink-100 text-purple-800 font-medium py-2 px-4 rounded-lg hover:bg-pink-200 border border-purple-300 shadow-sm transition
+  }
+
+  //form input styling
+  .frm-primary {
+    @apply rounded-lg border border-gray-200 bg-purple-50 text-sm text-purple-950 focus:border-purple-500 focus:ring-purple-500
+  }
+
+  .frm-text {
+    @apply text-sm font-medium text-gray-600
+  }
+  .navbar-custom {
+    @apply bg-white dark:bg-purple-950 text-purple-900 dark:text-purple-100 border-b border-gray-300 p-2 fixed top-0 left-0 w-full z-20
+  }
+
+  .footer-custom {
+    @apply relative bottom-0 left-0 w-full bg-white dark:bg-purple-900 text-purple-900 dark:text-purple-100 border-gray-300 text-center text-sm p-4 border-t z-10
+  }
+
+  .text-body {
+    @apply text-base text-purple-900 dark:text-purple-100 leading-relaxed
+  }
+
+  .link {
+    @apply text-pink-600 hover:text-pink-700 underline underline-offset-2 transition
+  }
+
+  .banner-color {
+    @apply bg-opacity-25 bg-purple-500
+  }
+
 }
 
-//form input styling
-.frm-primary {
-  @apply rounded-lg border border-gray-300 bg-blue-200 text-sm text-blue-950 focus:border-blue-500 focus:ring-blue-500;
-}

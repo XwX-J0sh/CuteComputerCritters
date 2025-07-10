@@ -2,16 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Critters</title>
+    <title>ComputerCritters</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" href="../public/icon.png" />
     <link
       rel="stylesheet"
       href="https://unpkg.com/bootstrap@4.6.0/dist/css/bootstrap.min.css"
     />
       <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/fonts/fonts.scss">
+    <!--Prevents FLOUC for darkmode-->
+    <script>
+      const theme = localStorage.getItem('theme');
+      if (
+        theme === 'dark' ||
+        (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
   <body>
     <app-root></app-root>
