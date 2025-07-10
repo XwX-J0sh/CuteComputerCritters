@@ -56,8 +56,8 @@ export abstract class BaseGame extends Scene {
 
     // Idle animations (multiple frames)
     this.load.spritesheet(`${variant}_idle`, `${basePath}${variant}_idle1.PNG`, {
-      frameWidth: variant === 'baby' ? 512 : 512,
-      frameHeight: variant === 'baby' ? 512 : 512,
+      frameWidth: variant === 'baby' ? 256 : 512,
+      frameHeight: variant === 'baby' ? 256 : 512,
       margin: 0,
       spacing: 0
     });
@@ -90,12 +90,12 @@ export abstract class BaseGame extends Scene {
   async create() {
     this.createCommonElements();
     await this.initializeCritter();
-    this.setupSubscriptions();
 
     if (this.shouldCreateCritter()) {
       this.createCritter();
     }
 
+    this.setupSubscriptions();
   }
 
   protected createCommonElements() {
@@ -309,26 +309,40 @@ export abstract class BaseGame extends Scene {
   }
 
   protected createCritter() {
-    if (!this.critter) return;
-
-    // Clear previous animation if exists
-    if (this.animationManager) {
-      this.animationManager.getSprite().destroy();
+    if (!this.critter) {
+      console.error('Cannot create critter - no critter data');
+      return;
     }
 
+    // Clean up previous
+    if (this.animationManager) {
+      this.animationManager.destroy();
+    }
+
+    // Create new
     this.animationManager = new AnimationLoader(this, this.critter);
-    this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
+
+    // Initialize stats panel if needed
+    if (!this.statsPanel) {
+      this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
+    }
+
+    console.log('Animation manager initialized for critter:', this.critter.critterId);
   }
 
   private updateCritterDisplay() {
-    if (!this.critter) return;
+    if (!this.critter || !this.animationManager) {
+      console.warn('Cannot update display - critter or animation manager not ready');
+      return;
+    }
 
-    // Update animation manager first
-    this.animationManager.updateCritterData(this.critter);
-
-    // Then update stats panel
-    if (this.statsPanel) {
-      this.statsPanel.updateStats(this.critter);
+    try {
+      this.animationManager.updateCritterData(this.critter);
+      if (this.statsPanel) {
+        this.statsPanel.updateStats(this.critter);
+      }
+    } catch (error) {
+      console.error('Error updating critter display:', error);
     }
   }
 
