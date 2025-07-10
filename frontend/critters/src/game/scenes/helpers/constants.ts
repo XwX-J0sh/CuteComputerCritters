@@ -16,7 +16,7 @@ export const EVOLUTION_SPRITES: EvolutionSprites = {
     idle: 'baby_idle',
     eat: 'baby_eat',
     turn_sick: 'baby_turn_sick',
-    sick_idle: 'baby_sick_idle'
+    sick_idle: 'baby_idle_sick'
   },
   [EvolutionStage.FINAL]: {
     idle: 'final_idle',
