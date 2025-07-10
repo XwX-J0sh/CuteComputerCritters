@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import {RouterLink} from "@angular/router";
+import {NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-about-us',
-    imports: [
-        RouterLink
-    ],
+  imports: [
+    NgOptimizedImage
+  ],
   templateUrl: './about-us.component.html',
   styleUrl: './about-us.component.scss',
 })

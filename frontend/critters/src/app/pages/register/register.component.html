@@ -1,9 +1,13 @@
-<div class="mx-auto max-w-sm bg-blue-50" aria-labelledby="Registration Form">
+<div class="mx-auto max-w-sm pt-10" aria-labelledby="Registration Form">
   @if (!isSuccessful) {
     <form name="form" #f="ngForm" (ngSubmit)="f.form.valid && onSubmit()">
+      <h1 class="text-3xl font-bold text-center text-purple-900 mb-6">
+        Register
+      </h1>
       <!-- USERNAME -->
-      <label for="username">Username</label>
-      <br />
+      <label for="username" class="mb-2 block frm-text">
+        Username
+      </label>
       <input
         required
         name="username"
@@ -11,6 +15,7 @@
         type="text"
         minlength="5"
         maxlength="15"
+        class="frm-primary block w-full p-2.5"
         #username="ngModel"
         [(ngModel)]="form.username"
         [ngClass]="{
@@ -36,13 +41,16 @@
       }
 
       <!-- EMAIL -->
-      <label for="email">E-Mail</label>
+      <label for="email" class="mb-2 block frm-text">
+        E-Mail
+      </label>
       <input
         required
         email
         name="email"
         id="email"
         type="email"
+        class="frm-primary block w-full p-2.5"
         #email="ngModel"
         [(ngModel)]="form.email"
         [ngClass]="{
@@ -60,16 +68,18 @@
           }
         </div>
       }
-      <br />
 
       <!-- PASSWORD -->
-      <label for="password">Password</label>
+      <label for="password" class="mb-2 block frm-text">
+        Password
+      </label>
       <input
         required
         name="password"
         id="password"
         type="password"
         minlength="8"
+        class="frm-primary block w-full p-2.5"
         #password="ngModel"
         [(ngModel)]="form.password"
         [ngClass]="{
@@ -90,7 +100,7 @@
           }
         </div>
       }
-      <button type="submit" id="submit-button">Sign Up</button>
+      <button type="submit" id="submit-button" class="btn-primary mt-4 w-full">Sign Up</button>
 
       @if (f.submitted && isSignUpFailed) {
         <div class="alert alert-warning">

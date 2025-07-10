@@ -1,12 +1,28 @@
 <div class="flex w-full flex-grow flex-col items-center">
-  <div class="w-full h-64 bg-purple-900 dark:bg-purple-400"></div>
-  <section class="flex flex-col items-center text-center">
-    <header class="text-center">
-      <h1 class="p-8 text-7xl text-sky-950">
-        Cute Computer Critters
+  <div class="w-full h-32 banner-color"></div>
+  <section class="grid grid-cols-3 grid-rows-3 relative gap-8 -mt-24">
+    <div class="col-start-1 row-start-1 flex justify-center items-center">
+      <img ngSrc="/assets/avatar.PNG"
+           class="w-64 h-auto object-scale-down image-render-pixel"
+           alt="Mascot of the dev team: A small crudely drawn puppy with barely ledgible writing next to it.
+                It reads 'Shchen', which is short for 'Shchenok'. It's Russian for the word 'puppy'"
+           height="512" width="512">
+    </div>
+    <header class="col-start-2 row-start-1 flex flex-col justify-self-start">
+      <h1 class="p-8 text-8xl text-purple-950 dark:bg-purple-50">
+        About us
       </h1>
-      <p class="p-4 text-4xl text-sky-900">Bored? Meet your new virtual pet!</p>
+      <p class="p-4 text-4xl text-purple-900 dark:text-purple-100">Two idiots and a dream</p>
     </header>
-    <a routerLink="/game-landing" class="btn-primary">Meet your pet</a>
+    <article class="col-span-3 row-start-2 text-center px-4 md:px-16">
+      <p class="text-xl text-purple-900 dark:text-purple-100 max-w-4xl mx-auto leading-relaxed text-justify">
+      You might wonder why two people would be this stupid to recreate a 90s game for a Web Engineering module in uni,
+      but you'll be surprised at what people come up with at like two am in the morning.
+      This was a spontaneous idea born from the pitch that tamagotchi, or generally known as virtual pets,
+      should be free but retain those older pixel-graphics rather than some of the modern versions that look uncannily
+      smooth. Additionally, both devs had wishes of incorporating characters from their own favourite media
+      and in the future expanding as they went.
+      </p>
+    </article>
   </section>
 </div>
