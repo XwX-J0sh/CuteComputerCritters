@@ -12,7 +12,7 @@ import {
 // Frame configuration for each animation type and variant
 const ANIMATION_CONFIG = {
   baby: {
-    idle: { frames: 1, frameRate: 3 },
+    idle: { frames: 2, frameRate: 3 },
     eat: { frames: 4, frameRate: 8 },
     sick_idle: { frames: 3, frameRate: 5 },
     turn_sick: { frames: 4, frameRate: 6 }
@@ -87,7 +87,7 @@ export class AnimationLoader {
 
   private getAnimationFileName(animationType: AnimationType): string {
     switch(animationType) {
-      case 'idle': return 'idle1';
+      case 'idle': return 'idle';
       case 'eat': return 'eating';
       case 'sick_idle': return 'sick_idle';
       case 'turn_sick': return 'turn_sick';
