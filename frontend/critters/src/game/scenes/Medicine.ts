@@ -65,7 +65,7 @@ export class MedicineCabinet extends BaseGame {
   }
 
   private setupButtons() {
-    if (!this.feedButton || !this.respondButton || !this.quitButton) {
+    if (!this.feedButton || !this.respondButton || !this.quitButton || !this.healButton) {
       console.warn('Buttons not found!');
       return;
     }
@@ -87,6 +87,16 @@ export class MedicineCabinet extends BaseGame {
       .on('pointerdown', () => {
         console.log('Respond button pressed');
         this.handleRespond();
+      });
+
+    // Heal button
+    this.healButton.setInteractive({ useHandCursor: true })
+      .on('pointerover', () => this.feedButton.setAlpha(0.8))
+      .on('pointerout', () => this.feedButton.setAlpha(1))
+      .on('pointerdown', () => {
+        console.log('Heal button pressed');
+        this.scene.stop('MedicineCabinet');
+        this.scene.start('Game');
       });
 
     // Quit button
@@ -117,8 +127,6 @@ export class MedicineCabinet extends BaseGame {
     catch (error) {
       console.log('Failed to respond to call: ' ,error);
     }
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
-    return Promise.resolve();
   };
 
   protected handleFeed = async () => {
@@ -279,10 +287,9 @@ export class MedicineCabinet extends BaseGame {
     console.log('Clicked Heal button');
     const selectedMedicine = this.medicineItems[this.selectedMedicineIndex];
 
-    //if user has chosen no meds, return to Game
+    //if user has chosen no meds return
     if (!selectedMedicine) {
-      this.scene.stop('MedicineCabinet');
-      this.scene.start('Game');
+      console.log('No medicine selected');
       return;
     }
 
