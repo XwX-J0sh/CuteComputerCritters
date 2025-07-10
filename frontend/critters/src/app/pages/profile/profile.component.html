@@ -1,4 +1,12 @@
-<p>profile works!</p>
+<div class="w-full h-32 banner-color"></div>
+<header>
+  <h1 class="-mt-14 text-center p-8 text-8xl text-purple-950 dark:bg-purple-50 bg-none">
+    Profile
+  </h1>
+  <p class="p-4 text-4xl text-purple-900 dark:text-purple-100">
+    Hello, {{ (authService.currentUser$ | async)?.username || 'User' }}! <br>
+  </p>
+</header>
 
 @if (currentUser) {
   <div class="container">
