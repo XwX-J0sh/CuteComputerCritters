@@ -145,8 +145,6 @@ export class FoodPantry extends BaseGame {
     catch (error) {
       console.log('Failed to respond to call: ' ,error);
     }
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
-    return Promise.resolve();
   };
 
   protected handleFeed = async () => {

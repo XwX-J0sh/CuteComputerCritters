@@ -39,22 +39,52 @@ export abstract class BaseGame extends Scene {
   }
 
   preload() {
-    // Load common assets
-    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
-      frameWidth: 256,
-      frameHeight: 256,
-      margin: 0,
-      spacing: 0,
-    });
-
-    this.load.spritesheet('pet', '../assets/shisa/shisa_idle1.PNG', {
-      frameWidth: 148,
-      frameHeight: 128,
-      margin: 0,
-      spacing: 0,
-    });
-
+    // Common assets
     this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
+
+    // Load all critter variants
+    this.loadCritterAssets('baby');
+    this.loadCritterAssets('chiikawa');
+    this.loadCritterAssets('shisa');
+    this.loadCritterAssets('hachiware');
+    this.loadCritterAssets('momonga');
+    this.loadCritterAssets('usagi');
+  }
+
+  private loadCritterAssets(variant: string) {
+    const basePath = `../assets/${variant}/`;
+
+    // Idle animations (multiple frames)
+    this.load.spritesheet(`${variant}_idle`, `${basePath}${variant}_idle1.PNG`, {
+      frameWidth: variant === 'baby' ? 512 : 512,
+      frameHeight: variant === 'baby' ? 512 : 512,
+      margin: 0,
+      spacing: 0
+    });
+
+    // Eating animations
+    this.load.spritesheet(`${variant}_eat`, `${basePath}${variant}_eating.PNG`, {
+      frameWidth: variant === 'baby' ? 256 : 148,
+      frameHeight: variant === 'baby' ? 256 : 128,
+      margin: 0,
+      spacing: 0
+    });
+
+    // Sick animations
+    this.load.spritesheet(`${variant}_sick`, `${basePath}${variant}_sick_idle.PNG`, {
+      frameWidth: variant === 'baby' ? 256 : 148,
+      frameHeight: variant === 'baby' ? 256 : 128,
+      margin: 0,
+      spacing: 0
+    });
+
+    // Transition to sick animation
+    this.load.spritesheet(`${variant}_turn_sick`, `${basePath}${variant}_turn_sick.PNG`, {
+      frameWidth: variant === 'baby' ? 256 : 148,
+      frameHeight: variant === 'baby' ? 256 : 128,
+      margin: 0,
+      spacing: 0
+    });
   }
 
   async create() {

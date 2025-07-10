@@ -1,18 +1,67 @@
+// animation-loader.ts
 import Phaser from 'phaser';
-import { Critter, EVOLUTION_SPRITES, EvolutionStage, FinalEvolutionVariant, EVOLUTION_VARIANTS } from './constants';
+import {
+  AnimationType,
+  Critter,
+  EVOLUTION_SPRITES,
+  EVOLUTION_VARIANTS,
+  EvolutionStage,
+  FinalEvolutionVariant
+} from './constants';
+
+// Frame configuration for each animation type and variant
+const ANIMATION_CONFIG = {
+  baby: {
+    idle: { frames: 1, frameRate: 3 },
+    eat: { frames: 4, frameRate: 8 },
+    sick_idle: { frames: 3, frameRate: 5 },
+    turn_sick: { frames: 4, frameRate: 6 }
+  },
+  chiikawa: {
+    idle: { frames: 2, frameRate: 3 },
+    eat: { frames: 6, frameRate: 10 },
+    sick_idle: { frames: 4, frameRate: 6 },
+    turn_sick: { frames: 5, frameRate: 8 }
+  },
+  shisa: {
+    idle: { frames: 3, frameRate: 4 },
+    eat: { frames: 5, frameRate: 12 },
+    sick_idle: { frames: 4, frameRate: 5 },
+    turn_sick: { frames: 6, frameRate: 7 }
+  },
+  hachiware: {
+    idle: { frames: 2, frameRate: 3 },
+    eat: { frames: 4, frameRate: 8 },
+    sick_idle: { frames: 3, frameRate: 5 },
+    turn_sick: { frames: 4, frameRate: 6 }
+  },
+  momonga: {
+    idle: { frames: 2, frameRate: 3 },
+    eat: { frames: 5, frameRate: 10 },
+    sick_idle: { frames: 3, frameRate: 5 },
+    turn_sick: { frames: 5, frameRate: 7 }
+  },
+  usagi: {
+    idle: { frames: 2, frameRate: 3 },
+    eat: { frames: 4, frameRate: 8 },
+    sick_idle: { frames: 3, frameRate: 5 },
+    turn_sick: { frames: 4, frameRate: 6 }
+  }
+};
 
 export class AnimationLoader {
   private scene: Phaser.Scene;
   private critterSprite: Phaser.GameObjects.Sprite;
   private currentVariant: FinalEvolutionVariant;
   private isPlayingSpecialAnimation: boolean = false;
+  private currentAnimation: string = '';
 
   constructor(scene: Phaser.Scene, critter: Critter) {
     this.scene = scene;
     this.currentVariant = this.getVariant(critter);
     this.critterSprite = this.createSprite(critter);
     this.setupAnimations();
-    this.updateCritterData(critter); // Initialize with critter data
+    this.updateCritterData(critter);
   }
 
   private getVariant(critter: Critter): FinalEvolutionVariant {
@@ -21,63 +70,148 @@ export class AnimationLoader {
 
   private createSprite(critter: Critter): Phaser.GameObjects.Sprite {
     const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
-    const spriteKey = stage === EvolutionStage.BABY
-      ? EVOLUTION_SPRITES[stage].idle
-      : `${this.currentVariant}_idle`;
+    const spriteKey = this.getSpriteKey(stage, 'idle');
 
     const sprite = this.scene.add.sprite(600, 400, spriteKey);
-    sprite.setScale(2);
-    sprite.setData('critter', critter); // Store critter reference
+    sprite.setScale(stage === EvolutionStage.BABY ? 1.5 : 2);
+    sprite.setData('critter', critter);
     return sprite;
   }
 
-  private setupAnimations(): void {
-    // Setup animations for current variant
-    const idleKey = this.currentVariant === 'chiikawa' ? 'pet' : `${this.currentVariant}_idle`;
+  private getSpriteKey(stage: EvolutionStage, animationType: AnimationType): string {
+    if (stage === EvolutionStage.BABY) {
+      return `baby_${this.getAnimationFileName(animationType)}`;
+    }
+    return `${this.currentVariant}_${this.getAnimationFileName(animationType)}`;
+  }
 
-    if (!this.scene.anims.exists(`${idleKey}_anim`)) {
+  private getAnimationFileName(animationType: AnimationType): string {
+    switch(animationType) {
+      case 'idle': return 'idle1';
+      case 'eat': return 'eating';
+      case 'sick_idle': return 'sick_idle';
+      case 'turn_sick': return 'turn_sick';
+      default: return 'idle1';
+    }
+  }
+
+  private setupAnimations(): void {
+    this.createAnimation('idle');
+    this.createAnimation('eat');
+    this.createAnimation('sick_idle');
+    this.createAnimation('turn_sick');
+  }
+
+  private createAnimation(animationType: AnimationType): void {
+    const critter = this.critterSprite.getData('critter') as Critter;
+    const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+    const spriteKey = this.getSpriteKey(stage, animationType);
+    const animKey = this.getAnimationKey(stage, animationType);
+
+    const variant = stage === EvolutionStage.BABY ? 'baby' : this.currentVariant;
+    const frameConfig = ANIMATION_CONFIG[variant][animationType];
+
+    if (!this.scene.anims.exists(animKey)) {
       this.scene.anims.create({
-        key: `${idleKey}_anim`,
-        frames: this.scene.anims.generateFrameNumbers(idleKey, { start: 0, end: 1 }),
-        frameRate: 2,
-        repeat: -1
+        key: animKey,
+        frames: this.scene.anims.generateFrameNumbers(spriteKey, {
+          start: 0,
+          end: frameConfig.frames - 1
+        }),
+        frameRate: frameConfig.frameRate,
+        repeat: animationType === 'idle' || animationType === 'sick_idle' ? -1 : 0
       });
     }
   }
 
+  private getAnimationKey(stage: EvolutionStage, animationType: AnimationType): string {
+    if (stage === EvolutionStage.BABY) {
+      return `baby_${animationType}_anim`;
+    }
+    return `${this.currentVariant}_${animationType}_anim`;
+  }
+
   public updateCritterData(critter: Critter): void {
-    // Update stored critter data
+    const previousVariant = this.currentVariant;
+    this.currentVariant = this.getVariant(critter);
     this.critterSprite.setData('critter', critter);
 
-    // Only update animation if not playing special animation
-    if (!this.isPlayingSpecialAnimation) {
+    if (previousVariant !== this.currentVariant && !this.isPlayingSpecialAnimation) {
+      this.setupAnimations();
+      this.playAppropriateIdleAnimation();
+    }
+
+    // Handle automatic animation transitions based on critter state
+    if (!critter.isHealthy && this.currentAnimation !== 'sick_idle') {
+      if (this.currentAnimation !== 'turn_sick') {
+        this.playSickTransition();
+      }
+    } else if (critter.isHealthy &&
+      (this.currentAnimation === 'sick_idle' || this.currentAnimation === 'turn_sick')) {
+      this.playIdleAnimation();
+    }
+  }
+
+  private playAppropriateIdleAnimation() {
+    const critter = this.critterSprite.getData('critter') as Critter;
+    if (!critter.isHealthy) {
+      this.playSickIdleAnimation();
+    } else {
       this.playIdleAnimation();
     }
   }
 
   public playIdleAnimation(): void {
-    const critter = this.critterSprite.getData('critter') as Critter;
-    const animKey = critter.evolution < 2
-      ? `${EVOLUTION_SPRITES[EvolutionStage.BABY].idle}_anim`
-      : `${this.currentVariant}_idle_anim`;
+    if (this.currentAnimation === 'idle') return;
 
+    const critter = this.critterSprite.getData('critter') as Critter;
+    const animKey = this.getAnimationKey(
+      critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
+      'idle'
+    );
+
+    this.currentAnimation = 'idle';
+    this.critterSprite.play(animKey);
+  }
+
+  private playSickIdleAnimation(): void {
+    if (this.currentAnimation === 'sick_idle') return;
+
+    const critter = this.critterSprite.getData('critter') as Critter;
+    const animKey = this.getAnimationKey(
+      critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
+      'sick_idle'
+    );
+
+    this.currentAnimation = 'sick_idle';
     this.critterSprite.play(animKey);
   }
 
   public async playEatAnimation(): Promise<void> {
+    await this.playSpecialAnimation('eat');
+  }
+
+  private async playSickTransition(): Promise<void> {
+    await this.playSpecialAnimation('turn_sick');
+    this.playSickIdleAnimation();
+  }
+
+  private async playSpecialAnimation(type: 'eat' | 'turn_sick'): Promise<void> {
     if (this.isPlayingSpecialAnimation) return;
     this.isPlayingSpecialAnimation = true;
 
     const critter = this.critterSprite.getData('critter') as Critter;
-    const animKey = critter.evolution < 2
-      ? `${EVOLUTION_SPRITES[EvolutionStage.BABY].eat}_anim`
-      : `${this.currentVariant}_eat_anim`;
+    const animKey = this.getAnimationKey(
+      critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
+      type
+    );
 
     return new Promise(resolve => {
+      this.currentAnimation = type;
       this.critterSprite.play(animKey);
+
       this.critterSprite.once('animationcomplete', () => {
         this.isPlayingSpecialAnimation = false;
-        this.playIdleAnimation();
         resolve();
       });
     });
@@ -85,5 +219,9 @@ export class AnimationLoader {
 
   public getSprite(): Phaser.GameObjects.Sprite {
     return this.critterSprite;
+  }
+
+  public destroy(): void {
+    this.critterSprite.destroy();
   }
 }
