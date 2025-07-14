@@ -16,7 +16,6 @@ export class PetMenu extends Scene {
   private instructionsText!: GameObjects.Text;
   private noCrittersText?: GameObjects.Text;
   private aliveCritters: Array<{critter: CritterGetResponse, originalIndex: number}> = [];
-  private isFirstLoad = true;
 
 
   constructor() {
@@ -123,12 +122,12 @@ export class PetMenu extends Scene {
       color: '#ff0000',
       backgroundColor: '#ff9999',
       padding: { x: 20, y: 15 },
-      fixedWidth: 200 // Match width with critter options
+      fixedWidth: 200
     });
 
     this.createButton.setInteractive({
-      useHandCursor: true, // This enables the pointer cursor
-      cursor: 'pointer'   // Alternative way to specify cursor
+      useHandCursor: true,
+      cursor: 'pointer'
     });
 
     // Mouse hover states
@@ -138,7 +137,7 @@ export class PetMenu extends Scene {
     });
 
     this.createButton.on('pointerout', () => {
-      // Only revert if not selected by keyboard
+
       if (!this.navigator || this.navigator.currentIndex !== this.critters.length) {
         this.createButton!.setColor('#ff5555');
         this.createButton!.setBackgroundColor('#ffffff');

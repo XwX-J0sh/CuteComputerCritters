@@ -6,7 +6,7 @@ import {
   EVOLUTION_SPRITES,
   EVOLUTION_VARIANTS,
   EvolutionStage,
-  FinalEvolutionVariant
+  FinalEvolutionVariant, PhaserTextureFrame
 } from './constants';
 
 // Frame configuration for each animation type and variant
@@ -55,9 +55,15 @@ export class AnimationLoader {
   private currentVariant: FinalEvolutionVariant;
   private isPlayingSpecialAnimation: boolean = false;
   private currentAnimation: string = '';
+  private critter: Critter;
+  private animationsCreated = false;
+  private static instanceCount = 0;
 
   constructor(scene: Phaser.Scene, critter: Critter) {
+    AnimationLoader.instanceCount++;
+    console.log(`AnimationLoader instance created (Total: ${AnimationLoader.instanceCount})`);
     this.scene = scene;
+    this.critter = critter;
     this.currentVariant = this.getVariant(critter);
     this.critterSprite = this.createSprite(critter);
     this.setupAnimations();
@@ -72,9 +78,22 @@ export class AnimationLoader {
     const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     const spriteKey = this.getSpriteKey(stage, 'idle');
 
-    const sprite = this.scene.add.sprite(600, 400, spriteKey);
-    sprite.setScale(stage === EvolutionStage.BABY ? 1.5 : 2);
-    sprite.setData('critter', critter);
+    const sprite = this.scene.add.sprite(600, 400, spriteKey)
+      .setScale(stage === EvolutionStage.BABY ? 1.5 : 2)
+      .setData('critter', critter)
+      .setVisible(true)
+      .setDepth(1000);
+
+    // Proper debug output for sprite
+    console.log('Sprite debug:', {
+      x: sprite.x,
+      y: sprite.y,
+      visible: sprite.visible,
+      frame: sprite.frame?.name || 'none',
+      texture: sprite.texture?.key || 'none',
+      inCameraView: this.scene.cameras.main.worldView.contains(sprite.x, sprite.y)
+    });
+
     return sprite;
   }
 
@@ -100,35 +119,69 @@ export class AnimationLoader {
     this.createAnimation('eat');
     this.createAnimation('sick_idle');
     this.createAnimation('turn_sick');
+
+    this.animationsCreated = true;
   }
 
   private createAnimation(animationType: AnimationType): void {
-    const critter = this.critterSprite.getData('critter') as Critter;
-    const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
-    const spriteKey = this.getSpriteKey(stage, animationType);
-    const animKey = this.getAnimationKey(stage, animationType);
+    const spriteKey = `baby_${this.getAnimationFileName(animationType)}`;
+    const animKey = this.getAnimationKey(EvolutionStage.BABY, animationType);
 
-    const variant = stage === EvolutionStage.BABY ? 'baby' : this.currentVariant;
-    const frameConfig = ANIMATION_CONFIG[variant][animationType];
+    console.log(`Creating animation ${animKey} from texture ${spriteKey}`);
 
-    if (!this.scene.anims.exists(animKey)) {
-      this.scene.anims.create({
-        key: animKey,
-        frames: this.scene.anims.generateFrameNumbers(spriteKey, {
-          start: 0,
-          end: frameConfig.frames - 1
-        }),
-        frameRate: frameConfig.frameRate,
-        repeat: animationType === 'idle' || animationType === 'sick_idle' ? -1 : 0
-      });
+    if (!this.scene.textures.exists(spriteKey)) {
+      console.error(`Texture not found: ${spriteKey}`);
+      return;
     }
+
+    const texture = this.scene.textures.get(spriteKey);
+    const frameConfig = ANIMATION_CONFIG.baby[animationType];
+
+    // Debug texture info
+    console.log(`Creating ${animKey} from ${spriteKey}`, {
+      textureSize: { width: texture.source[0].width, height: texture.source[0].height },
+      frameTotal: texture.frameTotal,
+      configFrames: frameConfig.frames
+    });
+
+    // Skip if animation exists
+    if (this.scene.anims.exists(animKey)) {
+      console.log(`Animation already exists: ${animKey}`);
+      return;
+    }
+
+    // Safety check - don't exceed available frames
+    const endFrame = Math.min(frameConfig.frames - 1, texture.frameTotal - 1);
+
+    // Debug frame generation
+    const frames = this.scene.anims.generateFrameNumbers(spriteKey, {
+      start: 0,
+      end: endFrame
+    });
+    console.log(`Generated frames for ${animKey}:`, frames);
+
+    this.scene.anims.create({
+      key: animKey,
+      frames: frames,
+      frameRate: frameConfig.frameRate,
+      repeat: animationType === 'idle' || animationType === 'sick_idle' ? -1 : 0
+    });
+
+    console.log(`Created ${animKey} with frames 0-${endFrame}`);
   }
 
   private getAnimationKey(stage: EvolutionStage, animationType: AnimationType): string {
-    if (stage === EvolutionStage.BABY) {
-      return `baby_${animationType}_anim`;
-    }
-    return `${this.currentVariant}_${animationType}_anim`;
+    const baseKey = stage === EvolutionStage.BABY ? 'baby' : this.currentVariant;
+
+    // Map animation types to consistent keys
+    const typeMap = {
+      idle: 'idle',
+      eat: 'eating',  // Changed from 'eat' to match texture naming
+      sick_idle: 'sick_idle',
+      turn_sick: 'turn_sick'
+    };
+
+    return `${baseKey}_${typeMap[animationType]}_anim`;
   }
 
   public updateCritterData(critter: Critter): void {
@@ -162,16 +215,30 @@ export class AnimationLoader {
   }
 
   public playIdleAnimation(): void {
-    if (this.currentAnimation === 'idle') return;
+    const animKey = 'baby_idle_anim';
 
-    const critter = this.critterSprite.getData('critter') as Critter;
-    const animKey = this.getAnimationKey(
-      critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
-      'idle'
-    );
+    // Debug animation existence
+    if (!this.scene.anims.exists(animKey)) {
+      console.error(`Animation ${animKey} does not exist!`);
+      return;
+    }
 
-    this.currentAnimation = 'idle';
+    // Debug before playing
+    console.log('Playing animation with config:', {
+      animKey,
+      sprite: this.critterSprite.texture.key,
+      currentFrame: this.critterSprite.frame
+    });
+
     this.critterSprite.play(animKey);
+
+    // Debug after playing
+    this.critterSprite.once('animationstart', () => {
+      console.log('Animation started:', {
+        currentAnim: this.critterSprite.anims.currentAnim,
+        currentFrame: this.critterSprite.frame
+      });
+    });
   }
 
   private playSickIdleAnimation(): void {
@@ -222,6 +289,17 @@ export class AnimationLoader {
   }
 
   public destroy(): void {
+    AnimationLoader.instanceCount--;
+    console.log(`AnimationLoader instance destroyed (Remaining: ${AnimationLoader.instanceCount})`);
     this.critterSprite.destroy();
+
+    // Clean up all resources
+    this.critterSprite?.destroy();
+    this.critterSprite?.off('animationcomplete');
+    this.critterSprite?.off('animationstart');
+
+    // Remove all references
+    this.scene = null as any;
+    this.critter = null as any;
   }
 }

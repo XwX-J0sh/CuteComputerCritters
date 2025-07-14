@@ -61,8 +61,8 @@ export const ANIMATION_FRAME_DATA: Record<
 > = {
   baby: {
     idle: { frames: 2, frameRate: 3 },
-    eat: { frames: 17, frameRate: 8 },
-    turn_sick: { frames: 5, frameRate: 5 },
+    eat: { frames: 17, frameRate: 1 },
+    turn_sick: { frames: 2, frameRate: 3 },
     sick_idle: { frames: 5, frameRate: 5 }
   },
   chiikawa: {
@@ -84,7 +84,7 @@ export const ANIMATION_FRAME_DATA: Record<
     sick_idle: { frameRate: 2, frames: 1 }
   },
   momonga: {
-    idle: { frameRate: 2, frames: 1 },
+    idle: { frameRate: 1, frames: 1 },
     eat: { frameRate: 13, frames: 3 },
     turn_sick: { frameRate: 12, frames: 2 },
     sick_idle: { frameRate: 12, frames: 2 },
@@ -97,3 +97,13 @@ export const ANIMATION_FRAME_DATA: Record<
   },
 
 };
+
+export type PhaserTextureFrame = {
+  width: number;
+  height: number;
+  cutX: number;
+  cutY: number;
+  cutWidth: number;
+  cutHeight: number;
+};
+
