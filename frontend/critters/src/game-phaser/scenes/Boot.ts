@@ -15,10 +15,10 @@ export class Boot extends Scene {
 
   preload ()
   {
-    this.load.image('background', '../assets/game-elements/bg.PNG');
+    this.load.image('background', '../assets/bg.png');
     this.load.image('logo', '../assets/logo.png');
-    this.load.image('buttonBg', '../assets/game-elements/button_normal.PNG');
-    this.load.image('buttonPressedBg', '../assets/game-elements/button_clicked.PNG');
+    this.load.image('buttonBg', '../assets/button_normal.PNG');
+    this.load.image('buttonPressedBg', '../assets/button_clicked.PNG');
     this.load.image('home', '../assets/home.PNG');
   }
 
