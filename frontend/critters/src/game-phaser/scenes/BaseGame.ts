@@ -4,6 +4,7 @@ import { CritterStatsPanel } from './helpers/CritterStatsPanel';
 import { GameButton } from './helpers/GameButton';
 import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
 import {AnimationLoader} from './helpers/AnimationLoader';
+import {PhaserTextureFrame} from './helpers/constants';
 
 export abstract class BaseGame extends Scene {
   protected pet!: Phaser.GameObjects.Sprite;
@@ -11,7 +12,7 @@ export abstract class BaseGame extends Scene {
   protected eventBus!: EventBusService;
   protected selectedCritter: any;
   protected statsPanel!: CritterStatsPanel;
-  protected animationManager!: AnimationLoader;
+  protected animationManager!: AnimationLoader | null;
 
   // Buttons
   protected quitButton!: GameButton;
@@ -43,45 +44,27 @@ export abstract class BaseGame extends Scene {
     this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
 
     // Load all critter variants
-    this.loadCritterAssets('baby');
-    this.loadCritterAssets('chiikawa');
-    this.loadCritterAssets('shisa');
-    this.loadCritterAssets('hachiware');
-    this.loadCritterAssets('momonga');
-    this.loadCritterAssets('usagi');
-  }
-
-  private loadCritterAssets(variant: string) {
-    const basePath = `../assets/${variant}/`;
-
-    // Idle animations (multiple frames)
-    this.load.spritesheet(`${variant}_idle`, `${basePath}${variant}_idle1.PNG`, {
-      frameWidth: variant === 'baby' ? 256 : 512,
-      frameHeight: variant === 'baby' ? 256 : 512,
+    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
+      frameWidth: 256,
+      frameHeight: 256,
       margin: 0,
       spacing: 0
     });
-
-    // Eating animations
-    this.load.spritesheet(`${variant}_eat`, `${basePath}${variant}_eating.PNG`, {
-      frameWidth: variant === 'baby' ? 256 : 148,
-      frameHeight: variant === 'baby' ? 256 : 128,
+    this.load.spritesheet('baby_eating', '../assets/baby/baby_eating.PNG', {
+      frameWidth: 256,
+      frameHeight: 256,
       margin: 0,
       spacing: 0
     });
-
-    // Sick animations
-    this.load.spritesheet(`${variant}_sick`, `${basePath}${variant}_sick_idle.PNG`, {
-      frameWidth: variant === 'baby' ? 256 : 148,
-      frameHeight: variant === 'baby' ? 256 : 128,
+    this.load.spritesheet('baby_sick_idle', '../assets/baby/baby_sick_idle.PNG', {
+      frameWidth: 256,
+      frameHeight: 256,
       margin: 0,
       spacing: 0
     });
-
-    // Transition to sick animation
-    this.load.spritesheet(`${variant}_turn_sick`, `${basePath}${variant}_turn_sick.PNG`, {
-      frameWidth: variant === 'baby' ? 256 : 148,
-      frameHeight: variant === 'baby' ? 256 : 128,
+    this.load.spritesheet('baby_turn_sick', '../assets/baby/baby_turn_sick.PNG', {
+      frameWidth: 256,
+      frameHeight: 256,
       margin: 0,
       spacing: 0
     });
@@ -91,11 +74,32 @@ export abstract class BaseGame extends Scene {
     this.createCommonElements();
     await this.initializeCritter();
 
-    if (this.shouldCreateCritter()) {
-      this.createCritter();
+    // Debug texture before creating animations
+    if (this.textures.exists('baby_idle')) {
+      const texture = this.textures.get('baby_idle');
+      console.log('Actual baby_idle frames:', texture.frameTotal);
     }
 
+    // Create animation manager and stats panel together
+    this.createCritter();
+    this.updateCritterDisplay();
     this.setupSubscriptions();
+
+    // Debug play
+    this.time.delayedCall(1000, () => {
+      console.log('Attempting to play idle animation...');
+      this.animationManager?.playIdleAnimation();
+
+      // Debug stats panel
+      if (this.statsPanel) {
+        console.log('Stats panel exists:', this.statsPanel);
+        this.children.each(child => {
+          console.log('Scene child:', child);
+        });
+      } else {
+        console.error('Stats panel not created!');
+      }
+    });
   }
 
   protected createCommonElements() {
@@ -253,7 +257,7 @@ export abstract class BaseGame extends Scene {
       scene: this,
       x: 233,
       y: 375,
-      label: 'quit button',
+      label: 'QUIT',
       onClick: async () => this.handleQuit()
     });
 
@@ -261,7 +265,7 @@ export abstract class BaseGame extends Scene {
       scene: this,
       x: 233,
       y: 776,
-      label: 'respond',
+      label: 'RESPOND',
       onClick: () => this.handleRespond()
     });
 
@@ -269,7 +273,7 @@ export abstract class BaseGame extends Scene {
       scene: this,
       x: 446,
       y: 776,
-      label: 'feed',
+      label: 'FEED',
       onClick: () => this.handleFeed()
     });
 
@@ -309,25 +313,27 @@ export abstract class BaseGame extends Scene {
   }
 
   protected createCritter() {
-    if (!this.critter) {
-      console.error('Cannot create critter - no critter data');
-      return;
-    }
+    if (!this.critter || !this.shouldCreateCritter()) return;
 
-    // Clean up previous
+    // Debug: Check critter data
+    console.log('Creating critter with:', this.critter);
+
+    // Clear previous animation if exists
     if (this.animationManager) {
       this.animationManager.destroy();
     }
 
-    // Create new
+    // Create new animation manager
     this.animationManager = new AnimationLoader(this, this.critter);
 
-    // Initialize stats panel if needed
-    if (!this.statsPanel) {
-      this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
-    }
+    // Create stats panel
+    this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
 
-    console.log('Animation manager initialized for critter:', this.critter.critterId);
+    // Debug: Verify sprite creation
+    const sprite = this.animationManager.getSprite();
+    console.log('Critter sprite created at:', sprite.x, sprite.y);
+    console.log('Sprite visible:', sprite.visible);
+    console.log('Texture key:', sprite.texture.key);
   }
 
   private updateCritterDisplay() {

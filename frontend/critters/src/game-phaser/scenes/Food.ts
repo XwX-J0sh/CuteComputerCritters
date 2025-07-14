@@ -61,6 +61,7 @@ export class FoodPantry extends BaseGame {
 
     if (!this.passedCritter) {
       console.error('No critter passed to FoodPantry!');
+      this.scene.stop('FoodPantry');
       this.scene.start('Game'); // Fallback
       return;
     }
@@ -124,16 +125,23 @@ export class FoodPantry extends BaseGame {
   }
 
   private selectFood(food: FoodItem) {
-    console.log(`Selected ${food.name} for critter`, this.passedCritter);
-    try {
-      this.eventBus.feedCritter(this.passedCritter!.critterId, food.name);
-    } catch (error) {
-      console.log('Failed to select food: ' ,error);
-    }
-    this.scene.start('Game', { selectedCritter: this.passedCritter });
+    if (this.isFeedingInProgress) return;
+    this.isFeedingInProgress = true;
+
+    console.log(`Feeding ${food.name} to critter`);
+    this.eventBus.feedCritter(this.passedCritter!.critterId, food.name)
+      .finally(() => {
+        this.isFeedingInProgress = false;
+        this.scene.stop('FoodPantry');
+        this.scene.start('Game', {
+          selectedCritter: this.passedCritter,
+          food: food.name
+        });
+      });
   }
 
   protected handleQuit = async () => {
+    this.scene.stop('FoodPantry')
     this.scene.start('Game', { selectedCritter: this.passedCritter });
     return Promise.resolve();
   };
@@ -171,6 +179,7 @@ export class FoodPantry extends BaseGame {
       }
 
       // (3) Transition back
+      this.scene.stop('FoodPantry')
       this.scene.start('Game', { selectedCritter: this.passedCritter });
     } catch (error) {
       console.error('Feeding failed:', error);
@@ -198,6 +207,28 @@ export class FoodPantry extends BaseGame {
     if (this.keyboardNav) {
       Object.values(this.keyboardNav).forEach(key => key.removeAllListeners());
     }
+
+    // Clean up food containers and their interactive elements
+    this.foodContainers.forEach(container => {
+      // Remove all listeners from the container
+      container.removeAllListeners();
+
+      // Remove interactive from the container
+      container.removeInteractive();
+
+      // Destroy all children of the container
+      container.getAll().forEach(child => {
+        if (child instanceof Phaser.GameObjects.Sprite || child instanceof Phaser.GameObjects.Text) {
+          child.destroy();
+        }
+      });
+
+      // Destroy the container itself
+      container.destroy();
+    });
+
+    // Clear the array reference
+    this.foodContainers = [];
   }
 
   private highlightFood(container: Phaser.GameObjects.Container, isSelected: boolean) {
