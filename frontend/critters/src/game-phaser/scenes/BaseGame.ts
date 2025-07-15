@@ -5,6 +5,7 @@ import { GameButton } from './helpers/GameButton';
 import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
 import {AnimationLoader} from './helpers/AnimationLoader';
 import {PhaserTextureFrame} from './helpers/constants';
+import {ASSET_CONFIG} from './helpers/assets-config';
 
 export abstract class BaseGame extends Scene {
   protected pet!: Phaser.GameObjects.Sprite;
@@ -43,30 +44,24 @@ export abstract class BaseGame extends Scene {
     // Common assets
     this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
 
-    // Load all critter variants
-    this.load.spritesheet('baby_idle', '../assets/baby/baby_idle1.PNG', {
-      frameWidth: 256,
-      frameHeight: 256,
-      margin: 0,
-      spacing: 0
+    // Load baby sprites
+    Object.entries(ASSET_CONFIG.baby).forEach(([animation, path]) => {
+      this.load.spritesheet(
+        `baby_${animation}`,
+        path,
+        ASSET_CONFIG.spritesheetSettings
+      );
     });
-    this.load.spritesheet('baby_eating', '../assets/baby/baby_eating.PNG', {
-      frameWidth: 256,
-      frameHeight: 256,
-      margin: 0,
-      spacing: 0
-    });
-    this.load.spritesheet('baby_sick_idle', '../assets/baby/baby_sick_idle.PNG', {
-      frameWidth: 256,
-      frameHeight: 256,
-      margin: 0,
-      spacing: 0
-    });
-    this.load.spritesheet('baby_turn_sick', '../assets/baby/baby_turn_sick.PNG', {
-      frameWidth: 256,
-      frameHeight: 256,
-      margin: 0,
-      spacing: 0
+
+    // Load variant sprites
+    Object.entries(ASSET_CONFIG.variants).forEach(([variant, animations]) => {
+      Object.entries(animations).forEach(([animation, path]) => {
+        this.load.spritesheet(
+          `${variant}_${animation}`,
+          path,
+          ASSET_CONFIG.spritesheetSettings
+        );
+      });
     });
   }
 
