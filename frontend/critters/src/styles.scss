@@ -43,7 +43,11 @@
   }
 
   .link {
-    @apply text-pink-600 hover:text-pink-700 underline underline-offset-2 transition
+    @apply text-pink-950 dark:text-pink-50 hover:text-pink-700 dark:hover:text-pink-700 hover:underline underline-offset-2 transition
+  }
+
+  .link-no-underline {
+    @apply text-pink-950 dark:text-pink-50 hover:text-pink-700 dark:hover:text-pink-700 transition self-center whitespace-nowrap text-2xl font-semibold
   }
 
   .banner-color {
