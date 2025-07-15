@@ -28,7 +28,7 @@
   }
 
   .frm-text {
-    @apply text-sm font-medium text-gray-600
+    @apply text-sm font-medium text-gray-600 dark:text-gray-300
   }
   .navbar-custom {
     @apply bg-white dark:bg-purple-950 text-purple-900 dark:text-purple-100 border-b border-gray-300 dark:border-gray-600 p-2 fixed top-0 left-0 w-full z-20
@@ -50,5 +50,8 @@
     @apply bg-opacity-25 bg-purple-500
   }
 
+  .header-text {
+    @apply p-8 text-center text-8xl text-purple-950 dark:text-purple-50
+  }
 }
 
