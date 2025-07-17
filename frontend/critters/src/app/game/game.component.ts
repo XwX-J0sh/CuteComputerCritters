@@ -31,7 +31,6 @@ export class GameComponent implements OnInit, OnDestroy{
       await this.ngZone.runOutsideAngular(async () => {
         const Phaser = await import('phaser');
         const { default: createGame } = await import('../../game-phaser/main');
-
         this.game = createGame('game-container', this.eventBus);
         this.gameInitialized = true;
 
@@ -58,7 +57,6 @@ export class GameComponent implements OnInit, OnDestroy{
       },
       error: (err) => {
         console.error('Error loading critters:', err);
-        // Optionally emit empty array on error
         this.eventBus.emitCritters([]);
       }
     });
