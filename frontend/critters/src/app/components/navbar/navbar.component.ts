@@ -1,9 +1,9 @@
-import {Component, OnInit, HostListener, inject} from '@angular/core';
+import { Component,OnInit, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Observable } from 'rxjs';
 import {AsyncPipe, NgClass, NgIf} from '@angular/common';
-import {Router, RouterLink, RouterLinkActive} from '@angular/router';
+import {RouterLink, RouterLinkActive} from '@angular/router';
 
 
 @Component({
@@ -14,11 +14,9 @@ import {Router, RouterLink, RouterLinkActive} from '@angular/router';
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent implements OnInit {
-private router = inject(Router);
-  menuOpen = false;
-  dropdownOpen = false;
+
   username?: string;
-  isLoggedIn$: Observable<boolean>
+  isLoggedIn$: Observable<boolean>;
 
   constructor(
     protected authService: AuthService,
@@ -39,7 +37,6 @@ private router = inject(Router);
       },
     });
   }
-
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
@@ -62,6 +59,12 @@ private router = inject(Router);
     if (!clickedInsideDropdown && !clickedAvatar) {
       this.dropdownOpen = false;
     }
+  }
+
+  dropdownOpen = false;
+
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
   }
 
   logout(): void {

@@ -1,7 +1,7 @@
 <!---navbar pulled from flowbite sticky navbar-->
 <!--defines what the general navbar looks like-->
 <nav
-  class="navbar-custom"
+  class="fixed left-0 top-0 z-20 w-full border-b border-gray-200 bg-sky-50 p-2"
 >
   <!--container defining the entire content inside of the nav bar-->
   <div
@@ -12,7 +12,7 @@
       href="#"
       class="link-no-underline"
     >
-      CuteComputerCritters
+      CuteComputerCritter
     </a>
     <!--section for either button pill (login/signup) or user menu dropdown-->
     <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
@@ -106,7 +106,7 @@
         </button>
         <!--Dropdown profile menu--->
         <div *ngIf="dropdownOpen"
-          class="custom-dropdown-container absolute right-0 mt-2 z-30 w-44 font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-violet-900 dark:divide-gray-600"
+          class="custom-dropdown-container absolute right-0 mt-2 z-30 w-44 font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-violet-900 dark:divide-gray-600"
              >
           <ul class="py-2 text-sm text-gray-600 dark:text-gray-400">
             <li>
