@@ -28,6 +28,7 @@ export abstract class BaseGame extends Scene {
   private hasCalledSubscription!: Subscription;
   private statIsLowSubscription!: Subscription;
   private callSound!: Phaser.Sound.BaseSound;
+  private alertSound!: Phaser.Sound.BaseSound;
   private isDeadSubscription!: Subscription;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
@@ -41,25 +42,41 @@ export abstract class BaseGame extends Scene {
   }
 
   preload() {
-    // Common assets
-    this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
+    // Add error handling for loading
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      console.error('Failed to load:', file.key, file.url);
+    });
 
-    // Load baby sprites
-    Object.entries(ASSET_CONFIG.baby).forEach(([animation, path]) => {
+    // sounds
+    this.load.audio('critterCall', '../assets/sounds/tamagotchi_alert.mp3');
+    this.load.audio('critterAlert', '../assets/sounds/tamagotchi_alert2.mp3');
+
+    // Load baby sprites with debug logging
+    Object.entries(ASSET_CONFIG.baby).forEach(([animation, config]) => {
+      const key = `baby_${animation}`;
+      console.log(`Loading baby texture: ${key} from ${config.path}`);
       this.load.spritesheet(
-        `baby_${animation}`,
-        path,
-        ASSET_CONFIG.spritesheetSettings
+        key,
+        config.path,
+        {
+          frameWidth: config.frameWidth,
+          frameHeight: config.frameHeight
+        }
       );
     });
 
-    // Load variant sprites
+    // Load variant sprites with debug logging
     Object.entries(ASSET_CONFIG.variants).forEach(([variant, animations]) => {
-      Object.entries(animations).forEach(([animation, path]) => {
+      Object.entries(animations).forEach(([animation, config]) => {
+        const key = `${variant}_${animation}`;
+        console.log(`Loading variant texture: ${key} from ${config.path}`);
         this.load.spritesheet(
-          `${variant}_${animation}`,
-          path,
-          ASSET_CONFIG.spritesheetSettings
+          key,
+          config.path,
+          {
+            frameWidth: config.frameWidth,
+            frameHeight: config.frameHeight
+          }
         );
       });
     });
@@ -69,11 +86,9 @@ export abstract class BaseGame extends Scene {
     this.createCommonElements();
     await this.initializeCritter();
 
-    // Debug texture before creating animations
-    if (this.textures.exists('baby_idle')) {
-      const texture = this.textures.get('baby_idle');
-      console.log('Actual baby_idle frames:', texture.frameTotal);
-    }
+    this.createStatsPanel();
+
+    console.log('Loaded Textures:', this.textures.getTextureKeys());
 
     // Create animation manager and stats panel together
     this.createCritter();
@@ -97,6 +112,21 @@ export abstract class BaseGame extends Scene {
     });
   }
 
+  private createStatsPanel() {
+    // Destroy existing panel if any
+    if (this.statsPanel) {
+      this.statsPanel.destroy();
+    }
+
+    // Create new panel with current critter or empty data
+    this.statsPanel = new CritterStatsPanel(
+      this,
+      this.critter || { health: 0, hunger: 0, happiness: 0 },
+      770,
+      270
+    );
+  }
+
   protected createCommonElements() {
     const { width, height } = this.scale;
 
@@ -117,8 +147,8 @@ export abstract class BaseGame extends Scene {
     this.setupKeyboard();
 
     this.callSound = this.sound.add('critterCall');
+    this.alertSound = this.sound.add('critterAlert');
   }
-
 
   protected async initializeCritter() {
     if (!this.critter && this.selectedCritter?.critterId) {
@@ -188,19 +218,24 @@ export abstract class BaseGame extends Scene {
   private setupStatsIsLowSubscription() {
     this.statIsLowSubscription = this.eventBus.critterUpdate$
       .pipe(
-        filter(updatedCritter => updatedCritter! &&
-          this.critter?.critterId === updatedCritter?.critterId &&
-          (!updatedCritter?.isHealthy || (updatedCritter.hunger || updatedCritter.happiness) <= 1)
-        ),
-        distinctUntilChanged((previous, current) =>
-          previous?.isHealthy === current?.isHealthy &&
-          previous?.hunger === current?.hunger &&
-          previous?.happiness === current?.happiness
-        )
+        filter(updatedCritter => {
+          if (!updatedCritter || this.critter?.critterId !== updatedCritter.critterId) {
+            return false;
+          }
+
+          // Trigger when: critter is sickk or the stats are low (below or equal to 3)
+          return !updatedCritter.isHealthy ||
+            updatedCritter.hunger <= 3 ||
+            updatedCritter.happiness <= 3;
+        }),
+        distinctUntilChanged((previous, current) => {
+          return previous?.isHealthy === current?.isHealthy &&
+            previous?.hunger === current?.hunger &&
+            previous?.happiness === current?.happiness;
+        })
       )
       .subscribe(updatedCritter => {
-        // Handle the stat is low notification here
-        this.playCallSound();
+        this.playAlertSound();
       });
   }
 
@@ -222,6 +257,7 @@ export abstract class BaseGame extends Scene {
       });
   }
 
+  //play call noise when critter calls for attention
   private playCallSound() {
     try {
       if (!this.callSound.isPlaying) {
@@ -229,6 +265,17 @@ export abstract class BaseGame extends Scene {
       }
     } catch (error) {
       console.error('Error playing call sound:', error);
+    }
+  }
+
+  //play alert noise (for sickness/low stats)
+  private playAlertSound() {
+    try {
+      if (!this.alertSound.isPlaying) {
+        this.alertSound.play();
+      }
+    } catch (error) {
+      console.error('Error playing alert sound:', error);
     }
   }
 
@@ -251,7 +298,7 @@ export abstract class BaseGame extends Scene {
     this.quitButton = new GameButton({
       scene: this,
       x: 233,
-      y: 375,
+      y: 100,
       label: 'QUIT',
       onClick: async () => this.handleQuit()
     });
@@ -321,8 +368,12 @@ export abstract class BaseGame extends Scene {
     // Create new animation manager
     this.animationManager = new AnimationLoader(this, this.critter);
 
-    // Create stats panel
-    this.statsPanel = new CritterStatsPanel(this, this.critter, 850, 200);
+    this.animationManager.debugTextureScales();
+
+    //update stats panel with current critter
+    if (this.statsPanel) {
+      this.statsPanel.updateStats(this.critter);
+    }
 
     // Debug: Verify sprite creation
     const sprite = this.animationManager.getSprite();

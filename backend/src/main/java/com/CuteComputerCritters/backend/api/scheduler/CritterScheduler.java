@@ -31,8 +31,8 @@ public class CritterScheduler {
         this.critterEvolutionsRepository = critterEvolutionsRepository;
     }
 
-    //scheduled to update every minute
-    @Scheduled(fixedRate = 60000)
+    //scheduled to update every quarter of a minute
+    @Scheduled(fixedRate = 15000)
     public void updateEvolutionStagesAndDecayStats() {
 
         List<Critter> activeCritters = critterRepository.findByIsActiveTrueAndIsDeadFalse();
@@ -74,7 +74,7 @@ public class CritterScheduler {
         int chanceOfCall = 50;
 
         //after two minutes the critter gets sick
-        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 120000) {
+        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() == 120) {
             freshCritter.setHealthy(false);
         }
 
@@ -85,7 +85,7 @@ public class CritterScheduler {
         if (currentEvolution != null) {
             int currentStage = (int) currentEvolution.getStage();
 
-            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 300000) {
+            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 300) {
                 double nextStage;
                 freshCritter.setTraining(0);
 
@@ -176,9 +176,11 @@ public class CritterScheduler {
         int newHunger = Math.max(freshCritter.getHunger() - hungerDecay, 0);
         int newHappiness = Math.max(freshCritter.getHappiness() - happinessDecay, 0);
 
-        //randomly make the critter call out/sick
-        getSick(freshCritter, chanceOfSickness, now);
-        maybeCall(freshCritter, chanceOfCall, now);
+        //randomly make the critter call out/sick (every 2 minutes)
+        if (sessionSeconds % 120 == 0){
+            getSick(freshCritter, chanceOfSickness, now);
+            maybeCall(freshCritter, chanceOfCall, now);
+        }
 
 
         //set and save the changes

@@ -6,43 +6,43 @@ export const ASSET_CONFIG = {
 
     // Baby sprites
     baby: {
-        idle: '../assets/baby/baby_idle1.PNG',
-        eat: '../assets/baby/baby_eating.PNG',
-        sick_idle: '../assets/baby/baby_sick_idle.PNG',
-        turn_sick: '../assets/baby/baby_turn_sick.PNG'
+        idle: { path: '../assets/baby/baby_idle1.PNG', frameWidth: 256, frameHeight: 256 },
+        eat: { path: '../assets/baby/baby_eating.PNG', frameWidth: 128, frameHeight: 128},
+        sick_idle: { path: '../assets/baby/baby_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
+        turn_sick: { path: '../assets/baby/baby_turn_sick.PNG' , frameWidth: 256, frameHeight: 256 }
     },
 
     // Adult variants
     variants: {
         chiikawa: {
-            idle: '../assets/chiikawa/chiikawa_idle1.PNG',
-            eat: '../assets/chiikawa/chiikawa_eating.PNG',
-            sick_idle: '../assets/chiikawa/chiikawa_sick_idle.PNG',
-            turn_sick: '../assets/chiikawa/chiikawa_turn_sick.PNG'
+            idle: { path: '../assets/chiikawa/chiikawa_idle1.PNG', frameWidth: 128, frameHeight: 128 },
+            eat: { path: '../assets/chiikawa/chiikawa_eating.PNG', frameWidth: 128, frameHeight: 128 },
+            sick_idle: { path: '../assets/chiikawa/chiikawa_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
+            turn_sick: { path: '../assets/chiikawa/chiikawa_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
         },
         hachiware: {
-            idle: '../assets/hachiware/hachiware_idle1.PNG',
-            eat: '../assets/hachiware/hachiware_eating.PNG',
-            sick_idle: '../assets/hachiware/hachiware_sick_idle.PNG',
-            turn_sick: '../assets/hachiware/hachiware_turn_sick.PNG'
+            idle: { path: '../assets/hachiware/hachiware_idle1.PNG', frameWidth: 256, frameHeight: 256 },
+            eat: { path: '../assets/hachiware/hachiware_eating.PNG', frameWidth: 128, frameHeight: 128 },
+            sick_idle: { path: '../assets/hachiware/hachiware_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
+            turn_sick: { path: '../assets/hachiware/hachiware_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
         },
         usagi: {
-            idle: '../assets/usagi/usagi_idle1.PNG',
-            eat: '../assets/usagi/usagi_eating.PNG',
-            sick_idle: '../assets/usagi/usagi_sick_idle.PNG',
-            turn_sick: '../assets/usagi/usagi_turn_sick.PNG'
+            idle: { path: '../assets/usagi/usagi_idle1.PNG', frameWidth: 128, frameHeight: 158 },
+            eat: { path: '../assets/usagi/usagi_eating.PNG', frameWidth: 128, frameHeight: 158 },
+            sick_idle: { path: '../assets/usagi/usagi_sick_idle.PNG', frameWidth: 316, frameHeight: 316 },
+            turn_sick: { path: '../assets/usagi/usagi_turn_sick.PNG', frameWidth: 316, frameHeight: 316 }
         },
         momonga: {
-            idle: '../assets/momonga/momonga_idle1.PNG',
-            eat: '../assets/momonga/momonga_eating.PNG',
-            sick_idle: '../assets/momonga/momonga_sick_idle.PNG',
-            turn_sick: '../assets/momonga/momonga_turn_sick.PNG'
+            idle: { path: '../assets/momonga/momonga_idle1.PNG', frameWidth: 256, frameHeight: 256 },
+            eat: { path: '../assets/momonga/momonga_eating.PNG', frameWidth: 256, frameHeight: 256 },
+            sick_idle: { path: '../assets/momonga/momonga_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
+            turn_sick: { path: '../assets/momonga/momonga_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
         },
         shisa: {
-            idle: '../assets/shisa/shisa_idle1.PNG',
-            eat: '../assets/shisa/shisa_eating.PNG',
-            sick_idle: '../assets/shisa/shisa_sick_idle.PNG',
-            turn_sick: '../assets/shisa/shisa_turn_sick.PNG'
+            idle: { path: '../assets/shisa/shisa_idle1.PNG', frameWidth: 128, frameHeight: 128 },
+            eat: { path: '../assets/shisa/shisa_eating.PNG', frameWidth: 256, frameHeight: 256 },
+            sick_idle: { path: '../assets/shisa/shisa_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
+            turn_sick: { path: '../assets/shisa/shisa_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
         },
 
     },
