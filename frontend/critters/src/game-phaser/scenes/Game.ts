@@ -1,7 +1,6 @@
-import {BaseGame} from './BaseGame';
+import { BaseGame } from './BaseGame';
 
 export class Game extends BaseGame {
-
   private returningFromFeeding = false;
   private selectedFood: string | null = null;
   private wasFoodSelected = false;
@@ -14,13 +13,13 @@ export class Game extends BaseGame {
     super.init(data);
     this.selectedCritter = data.selectedCritter;
 
-    // Only set feeding flags if coming from FoodPantry WITH food selected
+    // Set feeding flags only if food is provided
     if (data.food) {
       this.selectedFood = data.food;
       this.returningFromFeeding = true;
-      this.wasFoodSelected = true; // Mark that food was actually selected
+      this.wasFoodSelected = true;
     } else {
-      this.wasFoodSelected = false; // No food was selected
+      this.wasFoodSelected = false;
     }
   }
 
@@ -33,49 +32,44 @@ export class Game extends BaseGame {
       return;
     }
 
-    // Only play feed animation if:
-    // 1. returningFromFeeding flag is true
-    // 2. selectedFood is not null/undefined
-    if (this.returningFromFeeding && this.selectedFood) {
-      console.log(`Playing feed animation for ${this.selectedFood}`);
-      await this.playFeedAnimation();
-      this.returningFromFeeding = false;
-      this.selectedFood = null;
-    } else {
-      // Default to idle animation in all other cases
-      console.log('Playing idle animation (no food selected)');
-      this.playIdleAnimation();
+    // Initialize animation manager if not already done
+    if (!this.animationManager) {
+      console.error('Animation manager not initialized');
+      return;
     }
 
-    // Play idle animation by default
-    this.animationManager?.playIdleAnimation();
-
-    // Only play feed animation if specifically returning from feeding
-    if (this.returningFromFeeding && this.selectedFood) {
-      await this.playFeedAnimation();
-      this.returningFromFeeding = false;
-      this.selectedFood = null;
+    // Single source of truth for animation logic
+    if (this.returningFromFeeding && this.selectedFood && this.wasFoodSelected) {
+      console.log(`Playing feed animation for ${this.selectedFood}`);
+      try {
+        await this.playFeedAnimation();
+      } catch (error) {
+        console.error('Feed animation failed, falling back to idle', error);
+        this.playIdleAnimation();
+      }
     } else {
-      // Default to idle animation
+      console.log('Playing idle animation');
       this.playIdleAnimation();
     }
   }
 
-  private async playFeedAnimation() {
-    if (!this.animationManager) return;
+  private async playFeedAnimation(): Promise<void> {
+    if (!this.animationManager) {
+      throw new Error('Animation manager not available');
+    }
 
     try {
-      // Play eat animation
       await this.animationManager.playEatAnimation();
-
-      // Return to idle animation after eating
       this.animationManager.playIdleAnimation();
-    } catch (error) {
-      console.error('Error playing feed animation:', error);
+    } finally {
+      // Reset feeding state regardless of success/failure
+      this.returningFromFeeding = false;
+      this.selectedFood = null;
+      this.wasFoodSelected = false;
     }
   }
 
-  private playIdleAnimation() {
+  private playIdleAnimation(): void {
     if (!this.animationManager) {
       console.error('Animation manager not ready');
       return;
@@ -83,29 +77,30 @@ export class Game extends BaseGame {
     this.animationManager.playIdleAnimation();
   }
 
-  protected handleQuit = async () => {
-    if (this.critter?.critterId) {
-      try {
+  protected handleQuit = async (): Promise<void> => {
+    try {
+      if (this.critter?.critterId) {
         await this.eventBus.deactivateCritter(Number(this.critter.critterId));
-      } catch (error) {
-        console.warn('Deactivation failed:', error);
       }
+    } catch (error) {
+      console.warn('Deactivation failed:', error);
+    } finally {
+      this.scene.stop('Game');
+      this.scene.start('PetMenu');
     }
-    this.scene.stop('Game')
-    this.scene.start('PetMenu');
   };
 
-  protected handleRespond = () => {
+  protected handleRespond = (): void => {
+    if (!this.critter?.critterId) {
+      console.error('No critter available to respond');
+      return;
+    }
     this.eventBus.respondToCall(this.critter.critterId);
   };
 
-  protected handleFeed = () => {
-    // Reset feeding flags when entering food pantry
-    this.returningFromFeeding = false;
-    this.wasFoodSelected = false;
-    this.selectedFood = null;
-
-    this.scene.stop('Game')
+  protected handleFeed = (): void => {
+    this.resetFeedingState();
+    this.scene.stop('Game');
     this.scene.start('FoodPantry', {
       selectedCritter: this.critter,
       returnScene: 'Game'
@@ -113,24 +108,32 @@ export class Game extends BaseGame {
   };
 
   protected handleHeal(): void {
-    this.scene.stop('Game')
+    this.scene.stop('Game');
     this.scene.start('MedicineCabinet', {
       selectedCritter: this.critter
     });
   }
 
   protected handlePlay(): void {
+    if (!this.critter?.critterId) {
+      console.error('No critter available to play with');
+      return;
+    }
     this.eventBus.playWithCritter(this.critter.critterId, 10);
   }
 
-  override shutdown() {
-    super.shutdown();
+  private resetFeedingState(): void {
+    this.returningFromFeeding = false;
+    this.wasFoodSelected = false;
+    this.selectedFood = null;
+  }
 
+  override shutdown(): void {
     if (this.animationManager) {
       this.animationManager.destroy();
       this.animationManager = null;
     }
-
+    super.shutdown();
     console.log('Game scene shutdown complete');
   }
 }
