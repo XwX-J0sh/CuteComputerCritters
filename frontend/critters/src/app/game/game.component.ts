@@ -30,7 +30,7 @@ export class GameComponent implements OnInit, OnDestroy{
     try {
       await this.ngZone.runOutsideAngular(async () => {
         const Phaser = await import('phaser');
-        const { default: createGame } = await import('../../game/main');
+        const { default: createGame } = await import('../../game-phaser/main');
 
         this.game = createGame('game-container', this.eventBus);
         this.gameInitialized = true;
