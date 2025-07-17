@@ -1,0 +1,160 @@
+import Phaser from 'phaser';
+import { Critter, EVOLUTION_SPRITES, EvolutionStage } from './constants';
+
+// Extended type for different final evolution variants
+type FinalEvolutionVariant = 'shisa' | 'chiikawa' | 'hachiware' | 'momonga' | 'usagi';
+
+export class AnimationLoader {
+  private scene: Phaser.Scene;
+  private critterSprite: Phaser.GameObjects.Sprite;
+  private currentAnimation: string = 'idle';
+  private isPlayingSpecialAnimation: boolean = false;
+  private variant: FinalEvolutionVariant = 'chiikawa';
+
+  constructor(scene: Phaser.Scene, critter: Critter) {
+    this.scene = scene;
+    this.variant = this.determineVariant(critter); // Determine variant based on critter
+    this.critterSprite = this.createCritterSprite(critter);
+    this.setupAnimations(critter);
+    this.playIdleAnimation();
+  }
+
+  private determineVariant(critter: Critter): FinalEvolutionVariant {
+    // Implement your logic to determine the variant
+    // Example: Check critter.type or other properties
+    if (critter.evolution === 2.1) return 'hachiware';
+    if (critter.evolution === 2.2) return 'shisa';
+    if (critter.evolution === 2.3) return 'usagi';
+    if (critter.evolution === 2.4) return 'momonga';
+    return 'chiikawa'; // fallback
+  }
+
+  private createCritterSprite(critter: Critter): Phaser.GameObjects.Sprite {
+    const stage = critter.evolutionStage || this.determineEvolutionStage(critter.evolution);
+
+    // Get the appropriate sprite key based on stage and variant
+    const spriteKey = this.getSpriteKey(stage);
+
+    const sprite = this.scene.add.sprite(550, 500, spriteKey);
+    sprite.setScale(2);
+    return sprite;
+  }
+
+  private getSpriteKey(stage: EvolutionStage): string {
+    if (stage === EvolutionStage.BABY) {
+      return EVOLUTION_SPRITES[stage].idle;
+    } else {
+      return `${this.variant}_idle1`;
+    }
+  }
+
+  private determineEvolutionStage(evolution: number): EvolutionStage {
+    return evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+  }
+
+  private setupAnimations(critter: Critter) {
+    const stage = critter.evolutionStage || this.determineEvolutionStage(critter.evolution);
+
+    if (stage === EvolutionStage.BABY) {
+      this.setupBabyAnimations();
+    } else {
+      this.setupFinalEvolutionAnimations();
+    }
+  }
+
+  private setupBabyAnimations() {
+    const sprites = EVOLUTION_SPRITES[EvolutionStage.BABY];
+
+    // Baby-specific animations
+    if (!this.scene.anims.exists(`${sprites.idle}_anim`)) {
+      this.scene.anims.create({
+        key: `${sprites.idle}_anim`,
+        frames: this.scene.anims.generateFrameNumbers(sprites.idle, { start: 0, end: 1 }),
+        frameRate: 2,
+        repeat: -1
+      });
+    }
+
+    // ... other baby animations
+  }
+
+  private setupFinalEvolutionAnimations() {
+    // Variant-specific animations
+    const idleKey = `${this.variant}_idle`;
+    const eatKey = `${this.variant}_eat`;
+
+    // Setup idle animation for variant
+    if (!this.scene.anims.exists(`${idleKey}_anim`)) {
+      this.scene.anims.create({
+        key: `${idleKey}_anim`,
+        frames: this.scene.anims.generateFrameNumbers(idleKey, { start: 0, end: 1 }),
+        frameRate: 2,
+        repeat: -1
+      });
+    }
+
+    // Setup eat animation for variant
+    if (!this.scene.anims.exists(`${eatKey}_anim`)) {
+      this.scene.anims.create({
+        key: `${eatKey}_anim`,
+        frames: this.scene.anims.generateFrameNumbers(eatKey, { start: 0, end: 3 }),
+        frameRate: 8,
+        repeat: 0
+      });
+    }
+
+    // Setup sick animation for variant
+    if (!this.scene.anims.exists(`${idleKey}_sick`)) {
+      this.scene.anims.create({
+        key: `${idleKey}_sick`,
+        frames: this.scene.anims.generateFrameNumbers(idleKey, { frames: [2, 3] }),
+        frameRate: 3,
+        repeat: -1
+      });
+    }
+  }
+
+  public playIdleAnimation(): void {
+    if (this.isPlayingSpecialAnimation) return;
+
+    const stage = this.determineEvolutionStage(this.critterSprite.data.get('evolution'));
+    let animKey: string;
+
+    if (stage === EvolutionStage.BABY) {
+      const sprites = EVOLUTION_SPRITES[stage];
+      animKey = this.critterSprite.data.get('isHealthy') === false ?
+        `${sprites.idle}_sick` : `${sprites.idle}_anim`;
+    } else {
+      // Final evolution uses variant-specific animations
+      animKey = this.critterSprite.data.get('isHealthy') === false ?
+        `${this.variant}_idle_sick` : `${this.variant}_idle_anim`;
+    }
+
+    this.currentAnimation = 'idle';
+    this.critterSprite.play(animKey);
+  }
+
+  public playEatAnimation(): Promise<void> {
+    return new Promise((resolve) => {
+      this.isPlayingSpecialAnimation = true;
+      const stage = this.determineEvolutionStage(this.critterSprite.data.get('evolution'));
+      let animKey: string;
+
+      if (stage === EvolutionStage.BABY) {
+        animKey = `${EVOLUTION_SPRITES[stage].eat}_anim`;
+      } else {
+        animKey = `${this.variant}_eat_anim`;
+      }
+
+      this.critterSprite.play(animKey);
+
+      this.critterSprite.once('animationcomplete', () => {
+        this.isPlayingSpecialAnimation = false;
+        this.playIdleAnimation();
+        resolve();
+      });
+    });
+  }
+
+  // ... rest of the methods remain similar but should use variant-specific keys where needed
+}

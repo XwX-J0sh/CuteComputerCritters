@@ -1,7 +1,7 @@
 package com.CuteComputerCritters.backend.api.helpers;
 
 import com.CuteComputerCritters.backend.api.model.Critter.Critter;
-import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolutions;
+import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolution;
 import com.CuteComputerCritters.backend.api.model.User.User;
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
 import org.springframework.stereotype.Component;
@@ -59,7 +59,7 @@ public class CritterMapper {
         response.setOwnerUsername(owner.getUsername());
 
         // Evolution-based info
-        CritterEvolutions evo = critter.getEvolutionStage();
+        CritterEvolution evo = critter.getEvolutionStage();
         if (evo != null) {
             response.setEvolution(evo.getStage());
             response.setEvolutionName(evo.getEvolutionName());
