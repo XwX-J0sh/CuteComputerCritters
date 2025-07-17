@@ -14,12 +14,11 @@ import {Router, RouterLink, RouterLinkActive} from '@angular/router';
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent implements OnInit {
-
   private router = inject(Router);
   menuOpen = false;
   dropdownOpen = false;
   username?: string;
-  isLoggedIn$: Observable<boolean>;
+  isLoggedIn$: Observable<boolean>
 
   constructor(
     protected authService: AuthService,
@@ -41,33 +40,27 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  //for the navbar menu option on mobile
+
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
     console.log('Toggled menuOpen:', this.menuOpen);
   }
 
-  //section for profile drop down menu
+  //Profile dropdown menu logic
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
 
-
-  //closes dropdown for profile when clicking outside the menu
+  //closes dropdown menu when clicking outside of it
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event): void {
     const target = event.target as HTMLElement;
     const clickedInsideDropdown = target.closest('.custom-dropdown-container');
     const clickedAvatar = target.closest('.custom-dropdown-toggle');
-    if (target.closest('#game-container')) {
-      return;
-    }
-    console.log("Ya-ha! Ya-Hoo!")
     if (!clickedInsideDropdown && !clickedAvatar) {
       this.dropdownOpen = false;
     }
-  }
-
-  dropdownOpen = false;
-
-  toggleDropdown() {
-    this.dropdownOpen = !this.dropdownOpen;
   }
 
   logout(): void {
