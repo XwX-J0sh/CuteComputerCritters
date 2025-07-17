@@ -176,11 +176,12 @@ public class CritterScheduler {
         int newHunger = Math.max(freshCritter.getHunger() - hungerDecay, 0);
         int newHappiness = Math.max(freshCritter.getHappiness() - happinessDecay, 0);
 
-        //randomly make the critter call out/sick (every 2 minutes)
+        //randomly make the critter sick (every 2 minutes)
         if (sessionSeconds % 120 == 0){
             getSick(freshCritter, chanceOfSickness, now);
-            maybeCall(freshCritter, chanceOfCall, now);
         }
+        //randomly make the critter call (every minute)
+        maybeCall(freshCritter, chanceOfCall, now);
 
 
         //set and save the changes

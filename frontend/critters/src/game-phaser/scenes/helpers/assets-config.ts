@@ -29,12 +29,12 @@ export const ASSET_CONFIG = {
         usagi: {
             idle: { path: '../assets/usagi/usagi_idle1.PNG', frameWidth: 128, frameHeight: 158 },
             eat: { path: '../assets/usagi/usagi_eating.PNG', frameWidth: 128, frameHeight: 158 },
-            sick_idle: { path: '../assets/usagi/usagi_sick_idle.PNG', frameWidth: 316, frameHeight: 316 },
-            turn_sick: { path: '../assets/usagi/usagi_turn_sick.PNG', frameWidth: 316, frameHeight: 316 }
+            sick_idle: { path: '../assets/usagi/usagi_sick_idle.PNG', frameWidth: 256, frameHeight: 316 },
+            turn_sick: { path: '../assets/usagi/usagi_turn_sick.PNG', frameWidth: 256, frameHeight: 316 }
         },
         momonga: {
             idle: { path: '../assets/momonga/momonga_idle1.PNG', frameWidth: 256, frameHeight: 256 },
-            eat: { path: '../assets/momonga/momonga_eating.PNG', frameWidth: 256, frameHeight: 256 },
+            eat: { path: '../assets/momonga/momonga_eating.PNG', frameWidth: 128, frameHeight: 128 },
             sick_idle: { path: '../assets/momonga/momonga_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
             turn_sick: { path: '../assets/momonga/momonga_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
         },

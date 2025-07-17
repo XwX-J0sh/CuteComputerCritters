@@ -83,6 +83,7 @@ export abstract class BaseGame extends Scene {
   }
 
   async create() {
+
     this.createCommonElements();
     await this.initializeCritter();
 
