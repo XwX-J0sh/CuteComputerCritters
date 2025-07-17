@@ -19,7 +19,7 @@ export class NavbarComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
   }
