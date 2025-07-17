@@ -54,7 +54,7 @@ export class Game extends BaseGame {
 
     if (this.returningFromFeeding && this.selectedFood && this.animationManager) {
       console.log('Playing feed animation for', this.selectedFood);
-      await this.playFeedAnimation();
+      this.animationManager.playFeedingSequence(this.selectedFood);
       this.resetFeedingState(); // Clear the feeding flags
       return; // Skip the rest of create if we just played feed animation
     }
@@ -66,22 +66,6 @@ export class Game extends BaseGame {
         this.animationManager?.playSickIdleAnimation();
       }
     });
-  }
-
-  private async playFeedAnimation(): Promise<void> {
-    if (!this.animationManager) {
-      throw new Error('Animation manager not available');
-    }
-
-    try {
-      await this.animationManager.playEatAnimation();
-      this.animationManager.playIdleAnimation();
-    } finally {
-      // Reset feeding state regardless of success/failure
-      this.returningFromFeeding = false;
-      this.selectedFood = null;
-      this.wasFoodSelected = false;
-    }
   }
 
   protected handleQuit = async (): Promise<void> => {
