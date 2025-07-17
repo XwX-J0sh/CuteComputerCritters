@@ -4,7 +4,7 @@ export class Game extends BaseGame {
   private returningFromFeeding = false;
   private selectedFood: string | null = null;
   private wasFoodSelected = false;
-  private wasSickBeforeTransition = false; // NEW: Track sick state
+  private wasSickBeforeTransition = false; 
 
   constructor() {
     super({ key: 'Game' });
