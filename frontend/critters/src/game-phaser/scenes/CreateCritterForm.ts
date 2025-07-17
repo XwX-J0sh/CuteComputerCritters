@@ -105,10 +105,6 @@ export class CreateCritterForm extends Scene {
     });
 
     // Cursor
-    const isCommand = ['BACK', 'SAVE', 'DEL'].includes(this.alphabet[this.cursorY][this.cursorX]);
-    const xOffset = isCommand ? cellSize/2 : 5;
-    const cursorXPos = gridStartX + (this.cursorX * cellSize) + (this.cursorX >= 6 ? padding : 0) + xOffset;
-
     this.cursor = this.add.rectangle(
       gridStartX + (this.cursorX * cellSize) + (this.cursorX >= 6 ? padding : 0) +
       (this.cursorX >= 11 ? 0 : 0) + cellSize/2,
@@ -210,14 +206,54 @@ export class CreateCritterForm extends Scene {
     }
   }
 
-  private submit() {
+
+  private async submit() {
     if (this.inputText.trim()) {
-      this.eventBus.createCritter.emit(this.inputText.trim());
-      this.scene.start('PetMenu');
+      try {
+        const loadingText = this.add.text(250, 250, 'Creating...', {
+          font: '20px Arial',
+          color: '#ffffff'
+        }).setOrigin(0.5);
+
+        const success = await this.eventBus.createCritter(this.inputText.trim());
+        loadingText.destroy();
+
+        if (success) {
+          // Proper cleanup before transition
+          this.cleanupScene();
+          this.scene.start('PetMenu');
+        } else {
+          this.showError('Failed to create critter');
+        }
+      } catch (error) {
+        this.showError('Error creating critter');
+      }
     }
   }
 
-  private handleCharacterSelection(char: string) {
+  private showError(message: string) {
+    this.add.text(250, 250, message, {
+      font: '20px Arial',
+      color: '#ff0000'
+    }).setOrigin(0.5);
+  }
+
+  private cleanupScene() {
+    // Clear all interactive elements
+    this.charTexts.forEach(row => row.forEach(text => {
+      text.removeAllListeners();
+      text.destroy();
+    }));
+    this.charTexts = [];
+
+    // Clear other elements
+    this.nameDisplay?.destroy();
+    this.cursor?.destroy();
+    this.input.keyboard?.removeAllListeners();
+    this.inputText = '';
+  }
+
+    private handleCharacterSelection(char: string) {
     if (char === 'BACK') {
       this.scene.start('PetMenu');
     } else if (char === 'SAVE') {
@@ -231,5 +267,6 @@ export class CreateCritterForm extends Scene {
 
   shutdown() {
     this.input.keyboard?.removeAllListeners();
+    this.inputText = '';
   }
 }
