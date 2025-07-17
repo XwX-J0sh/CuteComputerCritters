@@ -67,7 +67,7 @@
   .section-heading {
     @apply text-2xl text-purple-900 dark:text-pink-200
   }
-  
+
 #phaser-container,
 #phaser-container canvas {
   pointer-events: auto;
@@ -76,4 +76,5 @@
 select {
   box-shadow: none !important;
   background-color: transparent !important;
+  }
 }
