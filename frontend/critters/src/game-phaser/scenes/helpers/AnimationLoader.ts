@@ -260,6 +260,33 @@ export class AnimationLoader {
     }
   }
 
+  public async playFeedingSequence(food: string): Promise<void> {
+    try {
+      // Unlock if currently locked (e.g., by sick state)
+      const wasLocked = this.animationLock;
+      this.setAnimationLock(false);
+
+      // Play eat animation
+      await this.playEatAnimation();
+
+      // Return to appropriate state
+      if (this.critter.isHealthy) {
+        await this.playIdleAnimation();
+      } else {
+        await this.playSickIdleAnimation();
+      }
+
+      // Restore lock state if needed
+      if (wasLocked) {
+        this.setAnimationLock(true);
+      }
+    } catch (error) {
+      console.error('Feeding sequence failed:', error);
+      // Fallback to idle state
+      this.playIdleAnimation();
+    }
+  }
+
   private getSpriteScale(textureKey: string, baseScale: number): number {
     // Debug logging
     console.log(`Scaling check for: ${textureKey}`);
