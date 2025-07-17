@@ -39,10 +39,10 @@ export const ASSET_CONFIG = {
             turn_sick: { path: '../assets/momonga/momonga_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
         },
         shisa: {
-            idle: { path: '../assets/shisa/shisa_idle1.PNG', frameWidth: 128, frameHeight: 128 },
-            eat: { path: '../assets/shisa/shisa_eating.PNG', frameWidth: 256, frameHeight: 256 },
-            sick_idle: { path: '../assets/shisa/shisa_sick_idle.PNG', frameWidth: 256, frameHeight: 256 },
-            turn_sick: { path: '../assets/shisa/shisa_turn_sick.PNG', frameWidth: 256, frameHeight: 256 }
+            idle: { path: '../assets/shisa/shisa_idle1.PNG', frameWidth: 148, frameHeight: 128 },
+            eat: { path: '../assets/shisa/shisa_eating.PNG', frameWidth: 148, frameHeight: 128 },
+            sick_idle: { path: '../assets/shisa/shisa_sick_idle.PNG', frameWidth: 296, frameHeight: 256 },
+            turn_sick: { path: '../assets/shisa/shisa_turn_sick.PNG', frameWidth: 296, frameHeight: 256 }
         },
 
     },

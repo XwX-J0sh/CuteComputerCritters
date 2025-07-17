@@ -303,7 +303,35 @@ export class MedicineCabinet extends BaseGame {
       });
 
       container.on('pointerdown', () => {
-        this.handleHeal();
+        // When clicking a medicine item, actually perform the healing
+        if (this.isHealingInProgress) return;
+        this.isHealingInProgress = true;
+
+        const selectedMedicine = this.medicineItems[index];
+        if (!selectedMedicine || !this.passedCritter) {
+          this.isHealingInProgress = false;
+          return;
+        }
+
+        console.log(`Healing with ${selectedMedicine.name}`);
+        const medicineType = selectedMedicine.name.toUpperCase().replace('-', '_');
+        this.eventBus.healCritter(
+          this.passedCritter.critterId,
+          medicineType
+        ).then(() => {
+          this.scene.stop('MedicineCabinet');
+          this.scene.start('Game', {
+            selectedCritter: this.passedCritter
+          });
+        }).catch(error => {
+          console.error('Healing failed:', error);
+          this.scene.start('Game', {
+            selectedCritter: this.passedCritter,
+            forceSick: !this.passedCritter!.isHealthy
+          });
+        }).finally(() => {
+          this.isHealingInProgress = false;
+        });
       });
 
       this.medicineContainers.push(container);
@@ -320,34 +348,24 @@ export class MedicineCabinet extends BaseGame {
   }
 
   protected async handleHeal(): Promise<void> {
-    if (this.isHealingInProgress) return; // Prevent double-healing
+    if (this.isHealingInProgress) return;
     this.isHealingInProgress = true;
 
-    const selectedMedicine = this.medicineItems[this.selectedMedicineIndex];
-    if (!selectedMedicine || !this.passedCritter) {
-      this.isHealingInProgress = false;
-      return;
-    }
-
     try {
-      console.log(`Healing with ${selectedMedicine.name}`);
-
-      const medicineType = selectedMedicine.name.toUpperCase().replace('-', '_');
-      await this.eventBus.healCritter(
-        this.passedCritter.critterId,
-        medicineType
-      );
-
-      const updatedCritter = await this.getUpdatedCritter();
-      console.log('Healing successful:', updatedCritter);
-
+      // Simply exit the scene without healing
+      console.log('Exiting MedicineCabinet without healing');
       this.scene.stop('MedicineCabinet');
       this.scene.start('Game', {
-        selectedCritter: updatedCritter || this.passedCritter
+        selectedCritter: this.passedCritter,
+        // Force sick idle animation to continue
+        forceSick: !this.passedCritter!.isHealthy
       });
     } catch (error) {
-      console.error('Healing failed:', error);
-      this.scene.start('Game', {selectedCritter: this.passedCritter});
+      console.error('Error during exit:', error);
+      this.scene.start('Game', {
+        selectedCritter: this.passedCritter,
+        forceSick: !this.passedCritter!.isHealthy
+      });
     } finally {
       this.isHealingInProgress = false;
     }

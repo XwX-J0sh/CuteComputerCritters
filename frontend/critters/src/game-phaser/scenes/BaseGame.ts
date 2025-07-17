@@ -4,7 +4,6 @@ import { CritterStatsPanel } from './helpers/CritterStatsPanel';
 import { GameButton } from './helpers/GameButton';
 import {distinctUntilChanged, filter, lastValueFrom, Subscription} from 'rxjs';
 import {AnimationLoader} from './helpers/AnimationLoader';
-import {PhaserTextureFrame} from './helpers/constants';
 import {ASSET_CONFIG} from './helpers/assets-config';
 
 export abstract class BaseGame extends Scene {
