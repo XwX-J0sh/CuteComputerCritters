@@ -58,12 +58,21 @@ const DOUBLE_SCALE_TEXTURES = [
 ];
 
 const NORMAL_SCALE_TEXTURES = [
+  // All sick idle textures
   'baby_sick_idle',
   'chiikawa_sick_idle',
   'hachiware_sick_idle',
   'momonga_sick_idle',
   'shisa_sick_idle',
-  'usagi_sick_idle'
+  'usagi_sick_idle',
+
+  // All turn sick animations
+  'baby_turn_sick',
+  'chiikawa_turn_sick',
+  'hachiware_turn_sick',
+  'momonga_turn_sick',
+  'shisa_turn_sick',
+  'usagi_turn_sick'
 ];
 
 export class AnimationLoader {
@@ -249,35 +258,23 @@ export class AnimationLoader {
   }
 
   private getSpriteScale(textureKey: string, baseScale: number): number {
-    // Exact match check for normal scale textures
-    const normalScaleKeys = [
-      'baby_sick_idle',
-      'chiikawa_sick_idle',
-      'hachiware_sick_idle',
-      'momonga_sick_idle',
-      'shisa_sick_idle',
-      'usagi_sick_idle'
-    ];
+    // Debug logging
+    console.log(`Scaling check for: ${textureKey}`);
 
-    if (normalScaleKeys.includes(textureKey)) {
+    // Exact match for normal scale textures
+    if (NORMAL_SCALE_TEXTURES.includes(textureKey)) {
+      console.log(`Normal scale applied to: ${textureKey}`);
       return baseScale;
     }
 
-    // Exact match check for double scale textures
-    const doubleScaleKeys = [
-      'baby_eat',
-      'chiikawa_idle',
-      'usagi_idle',
-      'hachiware_eat',
-      'momonga_eat',
-      'chiikawa_eat',
-      'usagi_eat'
-    ];
-
-    if (doubleScaleKeys.includes(textureKey)) {
+    // Exact match for double scale textures
+    if (DOUBLE_SCALE_TEXTURES.includes(textureKey)) {
+      console.log(`Double scale applied to: ${textureKey}`);
       return baseScale * 2;
     }
 
+    // Default scale with warning
+    console.warn(`Texture ${textureKey} not in scaling lists, using base scale`);
     return baseScale;
   }
 
@@ -321,8 +318,24 @@ export class AnimationLoader {
   }
 
   private async playSickTransition(): Promise<void> {
+    const originalScale = this.critterSprite.scale;
+    const textureKey = this.getSpriteKey(
+      this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
+      'turn_sick'
+    );
+
+    // Force normal scale for sick animations
+    this.critterSprite.setScale(this.getSpriteScale(textureKey, 1.5));
+
     await this.playSpecialAnimation('turn_sick');
     this.playSickIdleAnimation();
+
+    // Ensure scale stays normal after transition
+    const sickIdleKey = this.getSpriteKey(
+      this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
+      'sick_idle'
+    );
+    this.critterSprite.setScale(this.getSpriteScale(sickIdleKey, 1.5));
   }
 
   private async playSpecialAnimation(type: 'eat' | 'turn_sick'): Promise<void> {
