@@ -97,7 +97,7 @@ public class Critter {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "EVOLUTION_STAGE", referencedColumnName = "EVOLUTION_STAGE")
-    private CritterEvolutions evolutionStage;
+    private CritterEvolution evolutionStage;
 
     @ManyToOne
     @JoinColumn(name = "USER_ID")
