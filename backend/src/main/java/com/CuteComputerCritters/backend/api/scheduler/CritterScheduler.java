@@ -2,9 +2,9 @@ package com.CuteComputerCritters.backend.api.scheduler;
 
 import com.CuteComputerCritters.backend.api.helpers.CritterBroadcaster;
 import com.CuteComputerCritters.backend.api.model.Critter.Critter;
-import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolution;
+import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolutions;
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
-import com.CuteComputerCritters.backend.api.repository.CritterEvolutionRepository;
+import com.CuteComputerCritters.backend.api.repository.CritterEvolutionsRepository;
 import com.CuteComputerCritters.backend.api.repository.CritterRepository;
 import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,18 +21,18 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class CritterScheduler {
 
-    private final CritterRepository critterRepository;
+    private CritterRepository critterRepository;
     private final CritterBroadcaster critterBroadcaster;
-    private final CritterEvolutionRepository critterEvolutionsRepository;
+    private final CritterEvolutionsRepository critterEvolutionsRepository;
 
-    public CritterScheduler(CritterRepository critterRepository, CritterBroadcaster critterBroadcaster, CritterEvolutionRepository critterEvolutionsRepository) {
+    public CritterScheduler(CritterRepository critterRepository, CritterBroadcaster critterBroadcaster, CritterEvolutionsRepository critterEvolutionsRepository) {
         this.critterRepository = critterRepository;
         this.critterBroadcaster = critterBroadcaster;
         this.critterEvolutionsRepository = critterEvolutionsRepository;
     }
 
-    //scheduled to update every quarter of a minute
-    @Scheduled(fixedRate = 15000)
+    //scheduled to update every minute
+    @Scheduled(fixedRate = 60000)
     public void updateEvolutionStagesAndDecayStats() {
 
         List<Critter> activeCritters = critterRepository.findByIsActiveTrueAndIsDeadFalse();
@@ -49,12 +49,8 @@ public class CritterScheduler {
         }
     }
 
-    //handles the decay of the critter stats/when to evolve/call and sickness
     @Transactional
     public void processCritterDecay(Critter critter, Instant now) {
-        Instant processingStart = Instant.now();
-        log.debug("Scheduler started at {}", processingStart);
-
         // Refresh from DB to avoid stale version
         Critter freshCritter = critterRepository.findById(critter.getCritterId())
                 .orElseThrow(() -> new IllegalStateException("Critter not found"));
@@ -73,19 +69,19 @@ public class CritterScheduler {
         int chanceOfSickness = 50;
         int chanceOfCall = 50;
 
-        //after two minutes the critter gets sick
-        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() == 120) {
+        //after ten minutes the critter gets sick
+        if (evolutionStage == 1 && freshCritter.getTotalActiveTime() >= 600000) {
             freshCritter.setHealthy(false);
         }
 
         // Evolution
-        CritterEvolution currentEvolution = freshCritter.getEvolutionStage();
+        CritterEvolutions currentEvolution = freshCritter.getEvolutionStage();
 
-        //after five minutes the critter enters the next evolutionary stage
+        //after half an hour the critter enters the next evolutionary stage
         if (currentEvolution != null) {
             int currentStage = (int) currentEvolution.getStage();
 
-            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 300) {
+            if (currentStage == 1 && freshCritter.getTotalActiveTime() >= 1800000) {
                 double nextStage;
                 freshCritter.setTraining(0);
 
@@ -94,7 +90,7 @@ public class CritterScheduler {
                 } else if (freshCritter.getWeight() > 12 || freshCritter.getWeight() < 6) {
                     nextStage = 2.3; // Usagi
                 } else if (freshCritter.isCanDefend() && freshCritter.getTrainingSessions() > 5) {
-                    nextStage = 2.2; // Shisa
+                    nextStage = 2.2; // Chisa
                 } else if (!freshCritter.isCanDefend() && freshCritter.getTrainingSessions() > 5) {
                     nextStage = 2.1; // Hachiware
                 } else {
@@ -102,7 +98,7 @@ public class CritterScheduler {
                 }
 
                 // Fetch the new evolution entity
-                CritterEvolution newEvolution = critterEvolutionsRepository.findEvolutionByStage(nextStage)
+                CritterEvolutions newEvolution = critterEvolutionsRepository.findEvolutionByStage(nextStage)
                         .orElseThrow(() -> new IllegalStateException("Evolution stage " + nextStage + " not found"));
 
                 freshCritter.setEvolutionStage(newEvolution);
@@ -122,15 +118,15 @@ public class CritterScheduler {
             }
         }
 
-        //if the critter gets sick and the User does not heal it within 3min a care miss will be noted
-        //if its still sick after another 3min, it will die
+        //if the critter gets sick and the User does not heal it within 5min a care miss will be noted
+        //if its still sick after another 5min, it will die
         if (!freshCritter.isHealthy() && freshCritter.getSickSince() != null) {
             Duration sickDuration = Duration.between(freshCritter.getSickSince(), now);
-            if (sickDuration.toMinutes() >= 3) {
+            if (sickDuration.toMinutes() >= 5) {
                 freshCritter.setCareMisses(freshCritter.getCareMisses() + 1);
                 log.info("Critter {} was sick and unattended.", freshCritter.getCritterId());
             }
-            if (sickDuration.toMinutes() >= 6) {
+            if (sickDuration.toMinutes() >= 10) {
                 freshCritter.setDead(true);
                 log.warn("Critter {} died from sickness!", freshCritter.getCritterId());
             }
@@ -167,7 +163,7 @@ public class CritterScheduler {
         }
 
         //if the critter hits more than 10 care misses it will die
-        if (freshCritter.getCareMisses() >= 10) {
+        if (freshCritter.getCareMisses() >= 1) {
             freshCritter.setDead(true);
             log.warn("Critter {} died due to care misses!", freshCritter.getCritterId());
         }
@@ -176,11 +172,8 @@ public class CritterScheduler {
         int newHunger = Math.max(freshCritter.getHunger() - hungerDecay, 0);
         int newHappiness = Math.max(freshCritter.getHappiness() - happinessDecay, 0);
 
-        //randomly make the critter sick (every 2 minutes)
-        if (sessionSeconds % 120 == 0){
-            getSick(freshCritter, chanceOfSickness, now);
-        }
-        //randomly make the critter call (every minute)
+        //randomly make the critter call out/sick
+        getSick(freshCritter, chanceOfSickness, now);
         maybeCall(freshCritter, chanceOfCall, now);
 
 
@@ -192,9 +185,6 @@ public class CritterScheduler {
         //broadcast (for websockets)
         CritterGetResponse response = CritterGetResponse.fromEntity(freshCritter);
         critterBroadcaster.broadcast(response);
-
-        log.debug("Scheduler completed in {}ms",
-                Duration.between(processingStart, Instant.now()).toMillis());
     }
 
     //Helpers
@@ -212,20 +202,16 @@ public class CritterScheduler {
     }
 
     private void maybeCall(Critter critter, int chanceOfCall, Instant now) {
-        if (critter.isHasCalled()) return;
-
         Duration timeSinceLastCall = critter.getCalledSince() == null
                 ? Duration.ofMinutes(5)
                 : Duration.between(critter.getCalledSince(), now);
 
-        if (shouldHappen(chanceOfCall) && timeSinceLastCall.toMinutes() >= 5) {
+        if (!critter.isHasCalled()
+                && shouldHappen(chanceOfCall)
+                && timeSinceLastCall.toMinutes() >= 5) {
             critter.setHasCalled(true);
             critter.setCalledSince(now);
             log.info("Critter {} has called!", critter.getCritterId());
-
-            //immediately push update to frontend
-            CritterGetResponse response = CritterGetResponse.fromEntity(critter);
-            critterBroadcaster.broadcast(response);
         }
     }
 

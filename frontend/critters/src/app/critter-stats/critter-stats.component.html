@@ -71,28 +71,6 @@
     <p>No critters found. Create one to get started!</p>
   </ng-template>
 
-  <input
-    type="text"
-    [(ngModel)]="critterId"
-    placeholder="Enter critter id"
-  />
-  <button (click)="loadCritterById(critterId)">Load Critter</button>
-  <div *ngIf="critter != null">
-      <strong>{{ critter.critterId }}</strong>
-      <br>
-      <strong>stats</strong>
-      <p>Happiness: {{ critter.happiness }}</p>
-      <p>Hunger: {{ critter.hunger }}</p>
-      <p>Training: {{ critter.training }}</p>
-      <p>Training Sessions: {{ critter.trainingSessions }}</p>
-      <p>Snack counter: {{ critter.snackCounter }}</p>
-      <p>Meal counter: {{ critter.mealCounter }}</p>
-      <p>Weight: {{ critter.weight }} pound(s)</p>
-      <p>Evolution: {{critter.evolution}}</p>
-      <p>Care Misses: {{ critter.careMisses }}</p>
-      <hr>
-  </div>
-
   <!-- Toggle Button -->
   <button *ngIf="!showCreateForm" (click)="showCreateForm = true">Click to Create Critter</button>
 

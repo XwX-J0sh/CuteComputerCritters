@@ -164,7 +164,7 @@ public class CritterController {
 
         critterService.healCritter(critterId, owner.getUserId(), medicineType);
         CritterGetResponse response = broadcast(critterId, owner);
-        System.out.println("REQUEST: Critter with id " + critterId + " healed with " + medicineType + "passed through!");
+        System.out.println("Critter with id" + critterId + " healed with " + medicineType);
         return ResponseEntity.ok(response);
     }
 

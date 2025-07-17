@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name="CRITTER_EVOLUTIONS")
-public class CritterEvolution {
+public class CritterEvolutions {
 
     @Id
     @Column(name = "EVOLUTION_STAGE")
@@ -52,7 +52,7 @@ public class CritterEvolution {
     @Column(name ="EVOLUTION_NAME")
     private String evolutionName;
 
-    public CritterEvolution(double stage, int sleepCycleDuration, int sleepDuration, int decayRateHunger, int decayRateHappy, int sicknessChance, int callChance, double trainingFactor, String evolutionName) {
+    public CritterEvolutions(double stage, int sleepCycleDuration, int sleepDuration, int decayRateHunger, int decayRateHappy, int sicknessChance, int callChance, double trainingFactor, String evolutionName) {
         this.stage = stage;
         this.sleepCycleDuration = sleepCycleDuration;
         this.sleepDuration = sleepDuration;
@@ -64,6 +64,6 @@ public class CritterEvolution {
         this.evolutionName = evolutionName;
     }
 
-    public CritterEvolution() {
+    public CritterEvolutions() {
     }
 }

@@ -5,7 +5,6 @@ import {CritterService} from "../services/critter.service";
 import {Subscription} from "rxjs";
 import {FormsModule} from '@angular/forms';
 import {AuthService} from '../services/auth.service';
-import {EventBusService} from '../services/event-bus.service';
 
 @Component({
   selector: 'app-critter-stats',
@@ -15,17 +14,12 @@ import {EventBusService} from '../services/event-bus.service';
 })
 export class CritterStatsComponent implements OnInit, OnDestroy {
   critters: CritterGetResponse[] = [];
-  critter!: CritterGetResponse;
-  private subscription!: Subscription;
   private subscriptions: Subscription[] = [];
   showCreateForm = false;
   newCritterName = '';
-  critterId!: number;
   private loginSubscription?: Subscription
 
-  constructor(private critterService: CritterService, private authService: AuthService, private cdr: ChangeDetectorRef,
-  private eventBusService: EventBusService) {
-  }
+  constructor(private critterService: CritterService, private authService: AuthService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loginSubscription = this.authService.isLoggedIn$.subscribe(loggedIn => {
@@ -52,7 +46,6 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
     this.critterService.getAllCritters().subscribe({
       next: (critters) => {
         this.critters = critters;
-        this.eventBusService.emitCritters(critters);
         console.log('Loaded critters:', critters);
 
         // Clear old subscriptions
@@ -67,7 +60,6 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
               this.critters[index] = { ...this.critters[index], ...data };
               console.log('Data critter:', data);
               this.cdr.detectChanges();
-              this.eventBusService.emitCritters(critters);
             }
           });
           this.subscriptions.push(sub);
@@ -76,39 +68,6 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Failed to load critters:', err);
-      }
-    });
-  }
-
-  loadCritterById(critterId: number): void {
-    // Unsubscribe from any previous subscription to avoid leaks
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-
-    // First, fetch critter by ID via HTTP
-    this.critterService.getCritterById(critterId).subscribe({
-      next: (critter) => {
-        this.critter = critter;
-        console.log('Loaded Critter:', critter);
-
-        // Subscribe to realtime updates for this critter
-        this.subscription = this.critterService.subscribeToCritter(critterId).subscribe({
-          next: (updatedData) => {
-            // Merge updated data into local critter object
-            this.critter = { ...this.critter, ...updatedData };
-            console.log('Realtime update for critter:', updatedData);
-
-            // Trigger Angular change detection
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            console.error('Error receiving realtime critter updates:', err);
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Failed to load critter by ID:', err);
       }
     });
   }
@@ -173,10 +132,10 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
   }
 
   //delete critter
-  delete(critterId: number) {
-    this.critterService.deleteCritter(critterId).subscribe(() => {
+  delete(id: number) {
+    this.critterService.deleteCritter(id).subscribe(() => {
       console.log('Deleted critter!');
-      this.critters = this.critters.filter(c => c.critterId !== critterId);
+      this.critters = this.critters.filter(c => c.critterId !== id);
 
       // Optionally, unsubscribe from its WebSocket if needed
       // (only if you’re tracking per-critter subscriptions individually)
