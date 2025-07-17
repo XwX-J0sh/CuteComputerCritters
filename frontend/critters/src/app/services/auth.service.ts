@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment} from '../../environment/environment';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, map, Observable, of, tap } from 'rxjs';
+import {BehaviorSubject, filter, map, Observable, of, tap} from 'rxjs';
 import { User } from '../shared/model/user';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class AuthService {
   private FAKE_MODE = environment.production;
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
+  public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
 
   public readonly isLoggedIn$ = this.currentUser$.pipe(
     map(user => !!user)
