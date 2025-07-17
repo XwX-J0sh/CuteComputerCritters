@@ -7,6 +7,8 @@ import { GameOver } from './scenes/GameOver';
 import {PetMenu} from './scenes/PetMenu';
 import {EventBusService} from '../app/services/event-bus.service';
 import {CreateCritterForm} from './scenes/CreateCritterForm';
+import {FoodPantry} from './scenes/Food';
+import {MedicineCabinet} from './scenes/Medicine';
 
 export default function StartGame(parentId: string, eventBus: EventBusService): Phaser.Game {
   const config: Phaser.Types.Core.GameConfig = {
@@ -21,7 +23,7 @@ export default function StartGame(parentId: string, eventBus: EventBusService): 
     height: 808,
     parent: parentId, // this should match your HTML div id
     backgroundColor: '#333399',
-    scene: [Boot, Preloader, MainMenu, PetMenu, CreateCritterForm, Game, GameOver],
+    scene: [Boot, Preloader, MainMenu, PetMenu, FoodPantry, MedicineCabinet, CreateCritterForm, Game, GameOver],
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,

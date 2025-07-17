@@ -1,7 +1,7 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import {BehaviorSubject, catchError, distinctUntilChanged, EMPTY, Subscription} from 'rxjs';
 import {CritterService} from './critter.service';
-import {Critter} from '../../game/scenes/helpers/constants';
+import {Critter} from '../../game-phaser/scenes/helpers/constants';
 import {CritterGetResponse} from '../shared/model/CritterGetResponse';
 
 @Injectable({
