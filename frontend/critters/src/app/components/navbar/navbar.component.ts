@@ -38,9 +38,6 @@ export class NavbarComponent implements OnInit {
     });
   }
 
-  //for the navbar menu option on mobile
-  menuOpen = false;
-
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
     console.log('Toggled menuOpen:', this.menuOpen);

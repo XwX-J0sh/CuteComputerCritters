@@ -97,7 +97,7 @@
     <ul class="">
       <li class="relative">
         <!-- Dropdown Toggle Button -->
-        <button (click)="toggleDropdown()" class="custom-dropdown-toggle relative z-40 flex items-center space-x-2">
+        <button (click)="toggleMenu()" class="custom-dropdown-toggle relative z-40 flex items-center space-x-2">
           <span class="text-sm font-medium text-purple-900">
             {{ (authService.currentUser$ | async)?.username || 'User' }}</span>
           <svg class="w-4 h-4 text-purple-900 dark:text-purple-50" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
