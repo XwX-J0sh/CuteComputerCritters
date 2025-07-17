@@ -61,7 +61,7 @@ export const ANIMATION_FRAME_DATA: Record<
 > = {
   baby: {
     idle: { frames: 2, frameRate: 3 },
-    eat: { frames: 17, frameRate: 1 },
+    eat: { frames: 16, frameRate: 1 },
     turn_sick: { frames: 2, frameRate: 3 },
     sick_idle: { frames: 5, frameRate: 5 }
   },

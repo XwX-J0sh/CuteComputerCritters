@@ -25,23 +25,44 @@ export class MedicineCabinet extends BaseGame {
     space: Phaser.Input.Keyboard.Key;
   };
   private passedCritter?: Critter;
+  private isHealingInProgress = false;
 
   constructor() {
     super({ key: 'MedicineCabinet' });
   }
 
   override init(data: MedicineCabinetData) {
+    super.init(data); // CRUCIAL - like FoodPantry
     this.passedCritter = data.selectedCritter;
-    console.log('Received critter:', this.passedCritter);
+    this.critter = data.selectedCritter; // Sync with BaseGame
+    console.log('MedicineCabinet received critter:', this.passedCritter);
   }
 
   override preload() {
-
+    this.load.spritesheet('Pill', '../assets/items/pill.png', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
   }
 
   override async create() {
     super.create();
     console.log('MedicineCabinet scene created');
+
+    await super.create(); // Important await like FoodPantry
+    console.log('MedicineCabinet scene created');
+
+    if (!this.passedCritter) {
+      console.error('No critter passed!');
+      this.scene.stop('MedicineCabinet');
+      this.scene.start('Game');
+      return;
+    }
+
+    // Update stats panel like FoodPantry
+    if (this.statsPanel) {
+      this.statsPanel.updateStats(this.passedCritter);
+    }
 
     if (!this.passedCritter) {
       console.error('No critter passed to MedicineCabinetScene!');
@@ -91,12 +112,11 @@ export class MedicineCabinet extends BaseGame {
 
     // Heal button
     this.healButton.setInteractive({ useHandCursor: true })
-      .on('pointerover', () => this.feedButton.setAlpha(0.8))
-      .on('pointerout', () => this.feedButton.setAlpha(1))
+      .on('pointerover', () => this.healButton.setAlpha(0.8))
+      .on('pointerout', () => this.healButton.setAlpha(1))
       .on('pointerdown', () => {
         console.log('Heal button pressed');
-        this.scene.stop('MedicineCabinet');
-        this.scene.start('Game');
+        this.handleHeal();  // Call handleHeal directly
       });
 
     // Quit button
@@ -150,9 +170,24 @@ export class MedicineCabinet extends BaseGame {
 
   override shutdown() {
     super.shutdown();
+
     if (this.keyboardNav) {
       Object.values(this.keyboardNav).forEach(key => key.removeAllListeners());
     }
+
+    this.medicineContainers.forEach(container => {
+      container.removeAllListeners();
+      container.removeInteractive();
+      container.getAll().forEach(child => {
+        if (child instanceof Phaser.GameObjects.Sprite ||
+          child instanceof Phaser.GameObjects.Text) {
+          child.destroy();
+        }
+      });
+      container.destroy();
+    });
+
+    this.medicineContainers = [];
   }
 
   private highlightMedicine(container: Phaser.GameObjects.Container, isSelected: boolean) {
@@ -187,8 +222,8 @@ export class MedicineCabinet extends BaseGame {
     this.keyboardNav.right.on('down', () => this.navigateMedicine(1));
 
     // Selection
-    this.keyboardNav.enter.on('down', () => this.handleFeed());
-    this.keyboardNav.space.on('down', () => this.handleFeed());
+    this.keyboardNav.enter.on('down', () => this.handleHeal());
+    this.keyboardNav.space.on('down', () => this.handleHeal());
 
     // WASD navigation
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W).on('down', () => this.navigateMedicine(-1));
@@ -213,7 +248,8 @@ export class MedicineCabinet extends BaseGame {
   }
 
   private createMedicineSelectionUI() {
-    const centerX = this.cameras.main.width / 2;
+    const leftOffset = 220;
+    const centerX = this.cameras.main.width / 2 - leftOffset;
     const centerY = this.cameras.main.height / 2;
     const itemSpacingX = 200; // Horizontal spacing between items
     const itemSpacingY = 150; // Vertical spacing between rows
@@ -284,45 +320,36 @@ export class MedicineCabinet extends BaseGame {
   }
 
   protected async handleHeal(): Promise<void> {
-    console.log('Clicked Heal button');
-    const selectedMedicine = this.medicineItems[this.selectedMedicineIndex];
+    if (this.isHealingInProgress) return; // Prevent double-healing
+    this.isHealingInProgress = true;
 
-    //if user has chosen no meds return
-    if (!selectedMedicine) {
-      console.log('No medicine selected');
+    const selectedMedicine = this.medicineItems[this.selectedMedicineIndex];
+    if (!selectedMedicine || !this.passedCritter) {
+      this.isHealingInProgress = false;
       return;
     }
 
-    console.log(`Healing critter with ${selectedMedicine.name}`, this.passedCritter);
-
     try {
-      //First heal the critter (request to backend)
+      console.log(`Healing with ${selectedMedicine.name}`);
 
       const medicineType = selectedMedicine.name.toUpperCase().replace('-', '_');
-
-      const success = await this.eventBus.healCritter(
-        this.passedCritter!.critterId,
+      await this.eventBus.healCritter(
+        this.passedCritter.critterId,
         medicineType
       );
 
-      console.log("MedicineType: ", medicineType);
-
-      if (!success) {
-        console.error('Healing failed');
-        return;
-      }
-
-      //Then get updated critter data
       const updatedCritter = await this.getUpdatedCritter();
+      console.log('Healing successful:', updatedCritter);
 
-      //Return to GameScene with updated data
+      this.scene.stop('MedicineCabinet');
       this.scene.start('Game', {
         selectedCritter: updatedCritter || this.passedCritter
       });
     } catch (error) {
-      console.error('Healing error:', error);
-      // Fallback - return with original critter data
+      console.error('Healing failed:', error);
       this.scene.start('Game', {selectedCritter: this.passedCritter});
+    } finally {
+      this.isHealingInProgress = false;
     }
   }
 

@@ -4,6 +4,7 @@ export class Game extends BaseGame {
 
   private returningFromFeeding = false;
   private selectedFood: string | null = null;
+  private wasFoodSelected = false;
 
   constructor() {
     super({ key: 'Game' });
@@ -13,20 +14,39 @@ export class Game extends BaseGame {
     super.init(data);
     this.selectedCritter = data.selectedCritter;
 
-    // Only set feeding flags if coming from FoodPantry
+    // Only set feeding flags if coming from FoodPantry WITH food selected
     if (data.food) {
       this.selectedFood = data.food;
       this.returningFromFeeding = true;
+      this.wasFoodSelected = true; // Mark that food was actually selected
+    } else {
+      this.wasFoodSelected = false; // No food was selected
     }
   }
 
   override async create(): Promise<void> {
     await super.create();
-    this.add.image(562, 405, 'home');
+    this.add.image(346, 405, 'home');
 
     if (!this.critter) {
       console.error('No critter available for animation');
       return;
+    }
+
+    console.log('Animation manager exists:', !!this.animationManager);
+
+    // Only play feed animation if:
+    // 1. returningFromFeeding flag is true
+    // 2. selectedFood is not null/undefined
+    if (this.returningFromFeeding && this.selectedFood) {
+      console.log(`Playing feed animation for ${this.selectedFood}`);
+      await this.playFeedAnimation();
+      this.returningFromFeeding = false;
+      this.selectedFood = null;
+    } else {
+      // Default to idle animation in all other cases
+      console.log('Playing idle animation (no food selected)');
+      this.playIdleAnimation();
     }
 
     console.log('Animation manager exists:', !!this.animationManager);
@@ -84,7 +104,11 @@ export class Game extends BaseGame {
   };
 
   protected handleFeed = () => {
-    this.returningFromFeeding = true;
+    // Reset feeding flags when entering food pantry
+    this.returningFromFeeding = false;
+    this.wasFoodSelected = false;
+    this.selectedFood = null;
+
     this.scene.stop('Game')
     this.scene.start('FoodPantry', {
       selectedCritter: this.critter,
