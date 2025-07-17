@@ -26,6 +26,7 @@ export class FoodPantry extends BaseGame {
     space: Phaser.Input.Keyboard.Key;
   };
   private passedCritter?: Critter;
+  private wasSickBeforeTransition = !this.critter?.isHealthy;
 
   constructor() {
     super({ key: 'FoodPantry' });
@@ -166,36 +167,42 @@ export class FoodPantry extends BaseGame {
     }
   };
 
+  // In FoodPantry.ts - modify the handleFeed method
   protected handleFeed = async () => {
-    if (this.isFeedingInProgress || !this.foodItems[this.selectedFoodIndex] || !this.passedCritter) {
-      console.warn('No valid food selected - returning without food parameter');
+    const selectedFood = this.foodItems[this.selectedFoodIndex];
+
+    if (this.isFeedingInProgress || !selectedFood || !this.passedCritter) {
+      console.warn('No valid food selected');
       this.scene.stop('FoodPantry');
       this.scene.start('Game', {
-        selectedCritter: this.passedCritter
-        // Don't include food parameter
+        selectedCritter: this.passedCritter,
+        wasSick: !this.passedCritter!.isHealthy
       });
       return;
     }
 
     this.isFeedingInProgress = true;
     try {
-      const selectedFood = this.foodItems[this.selectedFoodIndex];
-      console.log(`Attempting to feed ${selectedFood.name}`);
-
+      console.log(`Feeding ${selectedFood.name}`);
       await this.eventBus.feedCritter(this.passedCritter.critterId, selectedFood.name);
 
+      // Get updated critter data
       const updatedCritter = await this.getUpdatedCritter();
-      if (updatedCritter) {
-        console.log('Critter updated:', updatedCritter.hunger);
-      }
 
+      // Pass both food and forceAnimation to trigger eating
       this.scene.stop('FoodPantry');
       this.scene.start('Game', {
         selectedCritter: updatedCritter || this.passedCritter,
-        food: selectedFood.name // Pass the food name to potentially trigger animation
+        food: selectedFood.name,
+        forceAnimation: 'eat', // Explicitly tell Game scene to play eat animation
+        wasSick: !(updatedCritter?.isHealthy ?? this.passedCritter.isHealthy)
       });
     } catch (error) {
       console.error('Feeding failed:', error);
+      this.scene.start('Game', {
+        selectedCritter: this.passedCritter,
+        wasSick: !this.passedCritter.isHealthy
+      });
     } finally {
       this.isFeedingInProgress = false;
     }

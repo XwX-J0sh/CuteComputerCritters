@@ -4,16 +4,19 @@ export class Game extends BaseGame {
   private returningFromFeeding = false;
   private selectedFood: string | null = null;
   private wasFoodSelected = false;
+  private wasSickBeforeTransition = false; // NEW: Track sick state
 
   constructor() {
     super({ key: 'Game' });
   }
 
-  override init(data: { selectedCritter: any; food?: string }) {
+  override init(data: { selectedCritter: any; food?: string; wasSick?: boolean }) {
     super.init(data);
     this.selectedCritter = data.selectedCritter;
 
-    // Set feeding flags only if food is provided
+    //Prioritize current health state, fallback to passed wasSick
+    this.wasSickBeforeTransition = data.wasSick ?? !this.selectedCritter?.isHealthy;
+
     if (data.food) {
       this.selectedFood = data.food;
       this.returningFromFeeding = true;
@@ -27,30 +30,42 @@ export class Game extends BaseGame {
     await super.create();
     this.add.image(346, 405, 'home');
 
-    if (!this.critter) {
-      console.error('No critter available for animation');
+    if (!this.critter || !this.animationManager) {
+      console.error('Critter or animation manager not ready');
       return;
     }
 
-    // Initialize animation manager if not already done
-    if (!this.animationManager) {
-      console.error('Animation manager not initialized');
-      return;
-    }
+    //Force sync with current health state
+    const shouldBeSick = !this.critter.isHealthy;
+    this.wasSickBeforeTransition = shouldBeSick; // Keep this updated
 
-    // Single source of truth for animation logic
-    if (this.returningFromFeeding && this.selectedFood && this.wasFoodSelected) {
-      console.log(`Playing feed animation for ${this.selectedFood}`);
-      try {
-        await this.playFeedAnimation();
-      } catch (error) {
-        console.error('Feed animation failed, falling back to idle', error);
-        this.playIdleAnimation();
-      }
+    console.group('Animation State Debug');
+    console.log('Current health:', this.critter.isHealthy);
+    console.log('Should show sick:', shouldBeSick);
+    console.groupEnd();
+
+    // Immediate animation lock
+    if (shouldBeSick) {
+      console.log('Forcing sick idle animation');
+      this.animationManager.playSickIdleAnimation();
     } else {
-      console.log('Playing idle animation');
-      this.playIdleAnimation();
+      this.animationManager.playIdleAnimation();
     }
+
+    if (this.returningFromFeeding && this.selectedFood && this.animationManager) {
+      console.log('Playing feed animation for', this.selectedFood);
+      await this.playFeedAnimation();
+      this.resetFeedingState(); // Clear the feeding flags
+      return; // Skip the rest of create if we just played feed animation
+    }
+
+    // Delayed state verification
+    this.time.delayedCall(500, () => {
+      if (!this.critter.isHealthy && this.animationManager?.getCurrentAnimation() !== 'sick_idle') {
+        console.warn('State mismatch detected - forcing sick animation');
+        this.animationManager?.playSickIdleAnimation();
+      }
+    });
   }
 
   private async playFeedAnimation(): Promise<void> {
@@ -67,14 +82,6 @@ export class Game extends BaseGame {
       this.selectedFood = null;
       this.wasFoodSelected = false;
     }
-  }
-
-  private playIdleAnimation(): void {
-    if (!this.animationManager) {
-      console.error('Animation manager not ready');
-      return;
-    }
-    this.animationManager.playIdleAnimation();
   }
 
   protected handleQuit = async (): Promise<void> => {

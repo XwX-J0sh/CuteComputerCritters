@@ -22,10 +22,10 @@ const ANIMATION_CONFIG = {
     turn_sick: { frames: 5, frameRate: 8 }
   },
   shisa: {
-    idle: { frames: 3, frameRate: 4 },
-    eat: { frames: 5, frameRate: 12 },
-    sick_idle: { frames: 4, frameRate: 5 },
-    turn_sick: { frames: 6, frameRate: 7 }
+    idle: { frames: 2, frameRate: 4 },
+    eat: { frames: 11, frameRate: 12 },
+    sick_idle: { frames: 2, frameRate: 5 },
+    turn_sick: { frames: 3, frameRate: 7 }
   },
   hachiware: {
     idle: { frames: 2, frameRate: 3 },
@@ -55,6 +55,8 @@ const DOUBLE_SCALE_TEXTURES = [
   'momonga_eat',
   'chiikawa_eat',
   'usagi_eat',
+  'shisa_idle',
+  'shisa_eat',
 ];
 
 const NORMAL_SCALE_TEXTURES = [
@@ -66,7 +68,6 @@ const NORMAL_SCALE_TEXTURES = [
   'shisa_sick_idle',
   'usagi_sick_idle',
 
-  // All turn sick animations
   'baby_turn_sick',
   'chiikawa_turn_sick',
   'hachiware_turn_sick',
@@ -84,6 +85,8 @@ export class AnimationLoader {
   private critter: Critter;
   private animationsCreated = false;
   private static instanceCount = 0;
+  private animationLock = false;
+
 
   constructor(scene: Phaser.Scene, critter: Critter) {
     if (!scene.anims) {
@@ -227,9 +230,10 @@ export class AnimationLoader {
   public updateCritterData(critter: Critter): void {
     const previousVariant = this.currentVariant;
     this.currentVariant = this.getVariant(critter);
+    this.critter = critter;
     this.critterSprite.setData('critter', critter);
 
-    // Update texture if variant changed or evolution stage changed
+    // Only update texture if variant changed or evolution stage changed
     const previousStage = this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     const currentStage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
 
@@ -237,22 +241,21 @@ export class AnimationLoader {
       const textureKey = this.getSpriteKey(currentStage, 'idle');
       if (this.scene.textures.exists(textureKey)) {
         this.critterSprite.setTexture(textureKey);
-        // Verify the texture is in our scaling lists
-        if (!NORMAL_SCALE_TEXTURES.includes(textureKey) &&
-          !DOUBLE_SCALE_TEXTURES.includes(textureKey)) {
-          console.warn(`Texture ${textureKey} missing from scaling lists`);
-        }
-        const baseScale = 1.5;
-        this.critterSprite.setScale(this.getSpriteScale(textureKey, baseScale));
+        this.critterSprite.setScale(this.getSpriteScale(textureKey, 1.5));
       }
     }
-    // Handle automatic animation transitions based on critter state
-    if (!critter.isHealthy && this.currentAnimation !== 'sick_idle') {
-      if (this.currentAnimation !== 'turn_sick') {
+
+    // Don't interrupt special animations
+    if (this.isPlayingSpecialAnimation) {
+      return;
+    }
+
+    // Handle sick state transitions
+    if (!critter.isHealthy) {
+      if (this.currentAnimation !== 'sick_idle' && this.currentAnimation !== 'turn_sick') {
         this.playSickTransition();
       }
-    } else if (critter.isHealthy &&
-      (this.currentAnimation === 'sick_idle' || this.currentAnimation === 'turn_sick')) {
+    } else if (this.currentAnimation === 'sick_idle' || this.currentAnimation === 'turn_sick') {
       this.playIdleAnimation();
     }
   }
@@ -288,6 +291,11 @@ export class AnimationLoader {
   }
 
   public playIdleAnimation(): void {
+    if (this.animationLock) {
+      console.log('Animation locked - preventing idle switch');
+      return;
+    }
+
     const critter = this.critterSprite.getData('critter') as Critter;
     const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     const animKey = this.getAnimationKey(stage, 'idle');
@@ -297,24 +305,75 @@ export class AnimationLoader {
       return;
     }
 
+    this.currentAnimation = 'idle';
     this.critterSprite.play(animKey);
   }
 
-  private playSickIdleAnimation(): void {
-    if (this.currentAnimation === 'sick_idle') return;
+  public playSickIdleAnimation(): void {
+    if (!this.scene?.anims) return;
 
     const critter = this.critterSprite.getData('critter') as Critter;
-    const animKey = this.getAnimationKey(
-      critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
-      'sick_idle'
-    );
+    const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+    const animKey = this.getAnimationKey(stage, 'sick_idle');
 
+    if (!this.scene.anims.exists(animKey)) {
+      console.error(`Animation ${animKey} does not exist!`);
+      return;
+    }
+
+    // Force restart even if already playing
     this.currentAnimation = 'sick_idle';
     this.critterSprite.play(animKey);
+    this.setAnimationLock(true); // Lock to sick state
+
+    // Periodic state verification
+    this.critterSprite.on('animationupdate', () => {
+      if (this.currentAnimation === 'sick_idle' && this.critterSprite.anims.currentAnim?.key !== animKey) {
+        console.warn('Animation mismatch detected - correcting');
+        this.critterSprite.play(animKey);
+      }
+    });
   }
 
   public async playEatAnimation(): Promise<void> {
-    await this.playSpecialAnimation('eat');
+    // First check if we should even attempt to play eat animation
+    if (this.isPlayingSpecialAnimation || this.animationLock) {
+      console.warn('Cannot play eat animation - special animation in progress or locked');
+      return;
+    }
+
+    // Temporarily unlock if we're in sick state
+    const wasLocked = this.animationLock;
+    if (wasLocked) {
+      this.setAnimationLock(false);
+    }
+
+    try {
+      await this.playSpecialAnimation('eat');
+    } catch (error) {
+      console.error('Failed to play eat animation:', error);
+    } finally {
+      // Restore lock state if we were in sick state
+      if (wasLocked) {
+        this.setAnimationLock(true);
+        this.playSickIdleAnimation();
+      } else {
+        this.playIdleAnimation();
+      }
+    }
+  }
+
+  public setAnimationLock(locked: boolean): void {
+    this.animationLock = locked;
+    console.log(`Animation lock ${locked ? 'enabled' : 'disabled'}`);
+  }
+
+  public getCurrentAnimation(): string {
+    return this.currentAnimation;
+  }
+
+  public isAnimationLocked(): boolean {
+    return this.animationLock;
   }
 
   private async playSickTransition(): Promise<void> {
