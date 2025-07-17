@@ -33,8 +33,6 @@ export class Game extends BaseGame {
       return;
     }
 
-    console.log('Animation manager exists:', !!this.animationManager);
-
     // Only play feed animation if:
     // 1. returningFromFeeding flag is true
     // 2. selectedFood is not null/undefined
@@ -48,8 +46,6 @@ export class Game extends BaseGame {
       console.log('Playing idle animation (no food selected)');
       this.playIdleAnimation();
     }
-
-    console.log('Animation manager exists:', !!this.animationManager);
 
     // Play idle animation by default
     this.animationManager?.playIdleAnimation();
