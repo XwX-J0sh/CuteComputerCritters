@@ -1,25 +1,22 @@
-<div class="w-full h-32 banner-color"></div>
-<ng-container *ngIf="authService.currentUser$ | async as currentUser; else loadingOrGuest">
-  <div class="container">
-    <header>
-      <h1 class="-mt-24 page-header">Profile</h1>
-      <p class="text-4xl text-purple-900 dark:text-purple-100">
-        Hello, {{ currentUser.username || 'User' }}! <br>
-      </p>
-    </header>
-    <section class="max-w-4xl mx-auto mt-12 bg-white dark:bg-purple-800 rounded-2xl p-6 shadow-lg space-y-4 text-xl text-purple-950 dark:text-purple-100">
-      <h2 class="text-2xl font-semibold mb-2">Account Details</h2>
-      <p><span class="font-medium">Username:</span> {{ currentUser.username }}</p>
-      <p><span class="font-medium">Email:</span> {{ currentUser.email }}</p>
-    </section>
-    <ul>
-        @for (role of currentUser.roles; track role) {
-          <li>{{ role }}</li>
-        }
-    </ul>
-  </div>
-</ng-container>
+<div *ngIf="authService.loading$ | async; else showProfile">
+  Loading...
+</div>
 
-<ng-template #loadingOrGuest>
-  Not logged in
+<ng-template #showProfile>
+  <div *ngIf="authService.currentUser$ | async as currentUser">
+    <div class="w-full h-32 banner-color"></div>
+    <div class="container">
+      <header>
+        <h1 class="-mt-24 page-header">Profile</h1>
+        <p class="text-4xl text-purple-900 dark:text-purple-100">
+          Hello, {{ currentUser.username || 'User' }}! <br>
+        </p>
+      </header>
+      <section class="max-w-4xl mx-auto mt-12 bg-white dark:bg-purple-800 rounded-2xl p-6 shadow-lg space-y-4 text-xl text-purple-950 dark:text-purple-100">
+        <h2 class="text-2xl font-semibold mb-2">Account Details</h2>
+        <p><span class="font-medium">Username:</span> {{ currentUser.username }}</p>
+        <p><span class="font-medium">Email:</span> {{ currentUser.email }}</p>
+      </section>
+    </div>
+  </div>
 </ng-template>

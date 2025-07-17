@@ -1,3 +1,4 @@
+@use './fonts' as *;
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -67,3 +68,7 @@
   }
 }
 
+select {
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
