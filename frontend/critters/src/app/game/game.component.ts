@@ -67,20 +67,6 @@ export class GameComponent implements OnInit, OnDestroy{
       this.game.scene.start('Boot');
     });
 
-    /*
-    // Handle critter creation
-    this.eventBus.createCritter.subscribe(name => {
-      this.critterService.makeNewCritter(name).subscribe({
-        next: (response) => {
-          console.log('Critter created:', response);
-          // Reload critters to get the new one
-          this.loadCritters();
-        },
-        error: (err) => {
-          console.error('Error creating critter:', err);
-        }
-      });
-    });*/
   }
 
   ngOnDestroy() {
