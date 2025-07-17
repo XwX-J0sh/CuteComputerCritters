@@ -23,9 +23,9 @@ const ANIMATION_CONFIG = {
   },
   shisa: {
     idle: { frames: 2, frameRate: 4 },
-    eat: { frames: 11, frameRate: 12 },
+    eat: { frames: 11, frameRate: 9 },
     sick_idle: { frames: 2, frameRate: 5 },
-    turn_sick: { frames: 3, frameRate: 7 }
+    turn_sick: { frames: 3, frameRate: 5 }
   },
   hachiware: {
     idle: { frames: 2, frameRate: 3 },
@@ -35,7 +35,7 @@ const ANIMATION_CONFIG = {
   },
   momonga: {
     idle: { frames: 2, frameRate: 3 },
-    eat: { frames: 5, frameRate: 10 },
+    eat: { frames: 5, frameRate: 8 },
     sick_idle: { frames: 3, frameRate: 5 },
     turn_sick: { frames: 5, frameRate: 7 }
   },
@@ -229,28 +229,19 @@ export class AnimationLoader {
 
   public updateCritterData(critter: Critter): void {
     const previousVariant = this.currentVariant;
+    const previousStage = this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     this.currentVariant = this.getVariant(critter);
     this.critter = critter;
     this.critterSprite.setData('critter', critter);
 
-    // Only update texture if variant changed or evolution stage changed
-    const previousStage = this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     const currentStage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
 
-    if (previousVariant !== this.currentVariant || previousStage !== currentStage) {
-      const textureKey = this.getSpriteKey(currentStage, 'idle');
-      if (this.scene.textures.exists(textureKey)) {
-        this.critterSprite.setTexture(textureKey);
-        this.critterSprite.setScale(this.getSpriteScale(textureKey, 1.5));
-      }
+    // Handle evolution stage changes
+    if (previousStage !== currentStage || previousVariant !== this.currentVariant) {
+      this.handleEvolutionTransition(previousStage, currentStage);
     }
 
-    // Don't interrupt special animations
-    if (this.isPlayingSpecialAnimation) {
-      return;
-    }
-
-    // Handle sick state transitions
+    // Handle health state changes
     if (!critter.isHealthy) {
       if (this.currentAnimation !== 'sick_idle' && this.currentAnimation !== 'turn_sick') {
         this.playSickTransition();
@@ -258,6 +249,40 @@ export class AnimationLoader {
     } else if (this.currentAnimation === 'sick_idle' || this.currentAnimation === 'turn_sick') {
       this.playIdleAnimation();
     }
+  }
+
+  private handleEvolutionTransition(oldStage: EvolutionStage, newStage: EvolutionStage): void {
+    // Create a smooth transition effect
+    this.scene.tweens.add({
+      targets: this.critterSprite,
+      alpha: 0,
+      duration: 200,
+      onComplete: () => {
+        // Load new texture
+        const textureKey = this.getSpriteKey(newStage, 'idle');
+        if (this.scene.textures.exists(textureKey)) {
+          this.critterSprite.setTexture(textureKey);
+          this.critterSprite.setScale(this.getSpriteScale(textureKey, 1.5));
+
+          // Recreate animations for the new form
+          this.setupAnimations();
+
+          // Fade back in
+          this.scene.tweens.add({
+            targets: this.critterSprite,
+            alpha: 1,
+            duration: 200
+          });
+
+          // Play appropriate animation
+          if (this.critter.isHealthy) {
+            this.playIdleAnimation();
+          } else {
+            this.playSickIdleAnimation();
+          }
+        }
+      }
+    });
   }
 
   public async playFeedingSequence(food: string): Promise<void> {
