@@ -40,34 +40,40 @@ private router = inject(Router);
     });
   }
 
-  //for the navbar menu option on mobile
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
     console.log('Toggled menuOpen:', this.menuOpen);
   }
 
-  //Profile dropdown menu logic
-  toggleDropdown() {
-    this.dropdownOpen = !this.dropdownOpen;
-  }
+  //section for profile drop down menu
 
-  //closes dropdown menu when clicking outside of it
+
+  //closes dropdown for profile when clicking outside the menu
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event): void {
     const target = event.target as HTMLElement;
     const clickedInsideDropdown = target.closest('.custom-dropdown-container');
     const clickedAvatar = target.closest('.custom-dropdown-toggle');
+    if (target.closest('#game-container')) {
+      return;
+    }
+    console.log("Ya-ha! Ya-Hoo!")
     if (!clickedInsideDropdown && !clickedAvatar) {
       this.dropdownOpen = false;
     }
   }
 
   logout(): void {
-    this.dropdownOpen = false;
     this.authService.logout().subscribe({
       next: () => {
-        this.router.navigate(['/login']);
+        //clear client-side stored stuff
+        //localStorage.removeItem('authToken');
+        //sessionStorage.clear();
+
+        // You can redirect or refresh after logout
+        //this.router.navigate(['/login']);
+        window.location.reload();
       },
       error: (err) => console.log(err),
     });

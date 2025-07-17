@@ -234,7 +234,7 @@ export abstract class BaseGame extends Scene {
             previous?.happiness === current?.happiness;
         })
       )
-      .subscribe(updatedCritter => {
+      .subscribe(() => {
         this.playAlertSound();
       });
   }
