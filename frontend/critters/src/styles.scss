@@ -47,10 +47,9 @@
     @apply text-purple-950 dark:text-pink-50 hover:text-pink-700 dark:hover:text-pink-700 transition self-center whitespace-nowrap text-2xl font-semibold
   }
 
-//form input styling
-.frm-primary {
-  @apply rounded-lg border border-gray-300 bg-blue-200 text-sm text-blue-950 focus:border-blue-500 focus:ring-blue-500;
-}
+  .banner-color {
+    @apply bg-opacity-25 bg-purple-500
+  }
 
   .page-header {
     @apply p-8 text-center text-8xl text-purple-950 dark:text-purple-50
@@ -68,13 +67,13 @@
     @apply text-2xl text-purple-900 dark:text-pink-200
   }
 
-#phaser-container,
-#phaser-container canvas {
-  pointer-events: auto;
-}
+  #phaser-container,
+  #phaser-container canvas {
+    pointer-events: auto;
+  }
 
-select {
-  box-shadow: none !important;
-  background-color: transparent !important;
+  select {
+    box-shadow: none !important;
+    background-color: transparent !important;
   }
 }

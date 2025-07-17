@@ -1,7 +1,7 @@
 <!---navbar pulled from flowbite sticky navbar-->
 <!--defines what the general navbar looks like-->
 <nav
-  class="fixed left-0 top-0 z-20 w-full border-b border-gray-200 bg-sky-50 p-2"
+  class="navbar-custom"
 >
   <!--container defining the entire content inside of the nav bar-->
   <div
@@ -12,7 +12,7 @@
       href="#"
       class="link-no-underline"
     >
-      CuteComputerCritter
+      CuteComputerCritters
     </a>
     <!--section for either button pill (login/signup) or user menu dropdown-->
     <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
@@ -70,7 +70,7 @@
       class="items-center w-full justify-between flex-col md:order-1 md:flex md:w-auto md:flex-row"
       id="navbar-sticky"
     >
-    <ul
+      <ul
         class="flex flex-col justify-center font-medium md:flex-row md:space-x-8 rtl:space-x-reverse"
         routerLinkActive="active"
       >
@@ -97,7 +97,7 @@
     <ul class="">
       <li class="relative">
         <!-- Dropdown Toggle Button -->
-        <button (click)="toggleMenu()" class="custom-dropdown-toggle relative z-40 flex items-center space-x-2">
+        <button (click)="toggleDropdown()" class="custom-dropdown-toggle relative z-40 flex items-center space-x-2">
           <span class="text-sm font-medium text-purple-900">
             {{ (authService.currentUser$ | async)?.username || 'User' }}</span>
           <svg class="w-4 h-4 text-purple-900 dark:text-purple-50" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -106,8 +106,8 @@
         </button>
         <!--Dropdown profile menu--->
         <div *ngIf="dropdownOpen"
-          class="custom-dropdown-container absolute right-0 mt-2 z-30 w-44 font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-violet-900 dark:divide-gray-600"
-             >
+             class="custom-dropdown-container absolute right-0 mt-2 z-30 w-44 font-normal bg-violet-50 divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-violet-900 dark:divide-gray-600"
+        >
           <ul class="py-2 text-sm text-gray-600 dark:text-gray-400">
             <li>
               <a routerLink="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Profile</a>
