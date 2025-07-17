@@ -1,12 +1,10 @@
-// animation-loader.ts
 import Phaser from 'phaser';
 import {
   AnimationType,
   Critter,
-  EVOLUTION_SPRITES,
   EVOLUTION_VARIANTS,
   EvolutionStage,
-  FinalEvolutionVariant, PhaserTextureFrame
+  FinalEvolutionVariant,
 } from './constants';
 
 // Frame configuration for each animation type and variant
@@ -49,6 +47,18 @@ const ANIMATION_CONFIG = {
   }
 };
 
+const DOUBLE_SCALE_TEXTURES = [
+  'baby_eat',
+  'chiikawa_idle',
+  'usagi_idle',
+  'chiikawa_eat'
+];
+
+const BIGGER_SCALE_TEXTURES = [
+  'hachiware_eat',
+  'usagi_eat',
+];
+
 export class AnimationLoader {
   private scene: Phaser.Scene;
   private critterSprite: Phaser.GameObjects.Sprite;
@@ -77,23 +87,32 @@ export class AnimationLoader {
   private createSprite(critter: Critter): Phaser.GameObjects.Sprite {
     const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     const spriteKey = this.getSpriteKey(stage, 'idle');
+    const baseScale = stage === EvolutionStage.BABY ? 1.5 : 1.5;
 
-    const sprite = this.scene.add.sprite(600, 400, spriteKey)
-      .setScale(stage === EvolutionStage.BABY ? 1.5 : 2)
+    // Fallback to debug texture if main texture is missing
+    if (!this.scene.textures.exists(spriteKey)) {
+      console.error(`Main texture ${spriteKey} not found, using debug texture`);
+      const debugSprite = this.scene.add.sprite(360, 400, '__MISSING')
+        .setScale(1)
+        .setTint(0xff0000);
+
+      // Create debug graphics
+      const g = this.scene.add.graphics();
+      g.fillStyle(0xff0000, 0.5);
+      g.fillRect(-50, -50, 100, 100);
+      debugSprite.setInteractive(new Phaser.Geom.Rectangle(-50, -50, 100, 100),
+        Phaser.Geom.Rectangle.Contains);
+
+      return debugSprite;
+    }
+
+    const sprite = this.scene.add.sprite(360, 400, spriteKey)
+      .setScale(this.getSpriteScale(spriteKey, baseScale))
       .setData('critter', critter)
       .setVisible(true)
       .setDepth(1000);
 
-    // Proper debug output for sprite
-    console.log('Sprite debug:', {
-      x: sprite.x,
-      y: sprite.y,
-      visible: sprite.visible,
-      frame: sprite.frame?.name || 'none',
-      texture: sprite.texture?.key || 'none',
-      inCameraView: this.scene.cameras.main.worldView.contains(sprite.x, sprite.y)
-    });
-
+    console.log(`Sprite created with texture ${sprite.texture.key}`);
     return sprite;
   }
 
@@ -107,58 +126,67 @@ export class AnimationLoader {
   private getAnimationFileName(animationType: AnimationType): string {
     switch(animationType) {
       case 'idle': return 'idle';
-      case 'eat': return 'eating';
+      case 'eat': return 'eat';
       case 'sick_idle': return 'sick_idle';
       case 'turn_sick': return 'turn_sick';
-      default: return 'idle1';
+      default: return 'idle';
     }
   }
 
   private setupAnimations(): void {
-    this.createAnimation('idle');
-    this.createAnimation('eat');
-    this.createAnimation('sick_idle');
-    this.createAnimation('turn_sick');
+    const stage = this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+
+    if (stage === EvolutionStage.BABY) {
+      this.createAnimation('idle');
+      this.createAnimation('eat');
+      this.createAnimation('sick_idle');
+      this.createAnimation('turn_sick');
+    } else {
+      // Create animations for the current variant
+      this.createAnimation('idle', this.currentVariant);
+      this.createAnimation('eat', this.currentVariant);
+      this.createAnimation('sick_idle', this.currentVariant);
+      this.createAnimation('turn_sick', this.currentVariant);
+    }
 
     this.animationsCreated = true;
   }
 
-  private createAnimation(animationType: AnimationType): void {
-    const spriteKey = `baby_${this.getAnimationFileName(animationType)}`;
-    const animKey = this.getAnimationKey(EvolutionStage.BABY, animationType);
+  private createAnimation(animationType: AnimationType, variant?: FinalEvolutionVariant): void {
+    const isBaby = !variant;
+    const spriteKey = isBaby
+      ? `baby_${this.getAnimationFileName(animationType)}`
+      : `${variant}_${this.getAnimationFileName(animationType)}`;
 
-    console.log(`Creating animation ${animKey} from texture ${spriteKey}`);
+    console.log(`Creating animation from texture: ${spriteKey}`);
 
     if (!this.scene.textures.exists(spriteKey)) {
-      console.error(`Texture not found: ${spriteKey}`);
+      console.error(`Texture ${spriteKey} not found! Available textures:`,
+        this.scene.textures.getTextureKeys());
       return;
     }
 
     const texture = this.scene.textures.get(spriteKey);
-    const frameConfig = ANIMATION_CONFIG.baby[animationType];
+    const frameConfig = isBaby
+      ? ANIMATION_CONFIG.baby[animationType]
+      : ANIMATION_CONFIG[variant][animationType];
 
-    // Debug texture info
-    console.log(`Creating ${animKey} from ${spriteKey}`, {
-      textureSize: { width: texture.source[0].width, height: texture.source[0].height },
-      frameTotal: texture.frameTotal,
-      configFrames: frameConfig.frames
-    });
+    // Calculate safe frame count
+    const availableFrames = texture.frameTotal;
+    const requestedFrames = frameConfig.frames;
+    const framesToUse = Math.min(availableFrames, requestedFrames);
 
-    // Skip if animation exists
-    if (this.scene.anims.exists(animKey)) {
-      console.log(`Animation already exists: ${animKey}`);
-      return;
-    }
+    console.log(`Frame info - Available: ${availableFrames}, Requested: ${requestedFrames}, Using: ${framesToUse}`);
 
-    // Safety check - don't exceed available frames
-    const endFrame = Math.min(frameConfig.frames - 1, texture.frameTotal - 1);
-
-    // Debug frame generation
     const frames = this.scene.anims.generateFrameNumbers(spriteKey, {
       start: 0,
-      end: endFrame
+      end: framesToUse - 1
     });
-    console.log(`Generated frames for ${animKey}:`, frames);
+
+    const animKey = this.getAnimationKey(
+      isBaby ? EvolutionStage.BABY : EvolutionStage.FINAL,
+      animationType
+    );
 
     this.scene.anims.create({
       key: animKey,
@@ -167,21 +195,14 @@ export class AnimationLoader {
       repeat: animationType === 'idle' || animationType === 'sick_idle' ? -1 : 0
     });
 
-    console.log(`Created ${animKey} with frames 0-${endFrame}`);
+    console.log(`Created animation ${animKey} with ${frames.length} frames`);
   }
 
   private getAnimationKey(stage: EvolutionStage, animationType: AnimationType): string {
     const baseKey = stage === EvolutionStage.BABY ? 'baby' : this.currentVariant;
 
-    // Map animation types to consistent keys
-    const typeMap = {
-      idle: 'idle',
-      eat: 'eating',  // Changed from 'eat' to match texture naming
-      sick_idle: 'sick_idle',
-      turn_sick: 'turn_sick'
-    };
-
-    return `${baseKey}_${typeMap[animationType]}_anim`;
+    // Simple consistent mapping
+    return `${baseKey}_${animationType}_anim`;
   }
 
   public updateCritterData(critter: Critter): void {
@@ -189,11 +210,20 @@ export class AnimationLoader {
     this.currentVariant = this.getVariant(critter);
     this.critterSprite.setData('critter', critter);
 
-    if (previousVariant !== this.currentVariant && !this.isPlayingSpecialAnimation) {
+    // Update texture if variant changed or evolution stage changed
+    const previousStage = this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+    const currentStage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+
+    if (previousVariant !== this.currentVariant || previousStage !== currentStage) {
+      const textureKey = this.getSpriteKey(currentStage, 'idle');
+      if (this.scene.textures.exists(textureKey)) {
+        this.critterSprite.setTexture(textureKey);
+        const baseScale = currentStage === EvolutionStage.BABY ? 1.5 : 2;
+        this.critterSprite.setScale(this.getSpriteScale(textureKey, baseScale));
+      }
       this.setupAnimations();
       this.playAppropriateIdleAnimation();
     }
-
     // Handle automatic animation transitions based on critter state
     if (!critter.isHealthy && this.currentAnimation !== 'sick_idle') {
       if (this.currentAnimation !== 'turn_sick') {
@@ -203,6 +233,41 @@ export class AnimationLoader {
       (this.currentAnimation === 'sick_idle' || this.currentAnimation === 'turn_sick')) {
       this.playIdleAnimation();
     }
+  }
+
+  private getSpriteScale(textureKey: string, baseScale: number): number {
+    console.log(`Checking scale for texture: ${textureKey}`); // Debug logging
+
+    // First check our whitelist
+    if (DOUBLE_SCALE_TEXTURES.some(pattern => textureKey.includes(pattern))) {
+      console.log(`Doubling scale for whitelisted texture: ${textureKey}`);
+      return baseScale * 2;
+    }
+
+    if (BIGGER_SCALE_TEXTURES.some(pattern => textureKey.includes(pattern))) {
+      console.log(`Changing scale for whitelisted texture by 1.5: ${textureKey}`);
+      return baseScale * 1.5;
+    }
+
+    // Fallback to checking texture dimensions
+    const texture = this.scene.textures.get(textureKey);
+    if (!texture || !texture.source[0]) {
+      console.warn(`Texture ${textureKey} not found for scale check`);
+      return baseScale;
+    }
+
+    // Debug log texture dimensions
+    console.log(`Texture dimensions for ${textureKey}:`, {
+      width: texture.source[0].width,
+      height: texture.source[0].height
+    });
+
+    // Check if texture is 128px in either dimension
+    const isLargeSize = texture.source[0].width === 128 || texture.source[0].height === 128;
+
+    const finalScale = isLargeSize ? baseScale * 2 : baseScale;
+    console.log(`Final scale for ${textureKey}: ${finalScale}`);
+    return finalScale;
   }
 
   private playAppropriateIdleAnimation() {
@@ -215,30 +280,16 @@ export class AnimationLoader {
   }
 
   public playIdleAnimation(): void {
-    const animKey = 'baby_idle_anim';
+    const critter = this.critterSprite.getData('critter') as Critter;
+    const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+    const animKey = this.getAnimationKey(stage, 'idle');
 
-    // Debug animation existence
     if (!this.scene.anims.exists(animKey)) {
       console.error(`Animation ${animKey} does not exist!`);
       return;
     }
 
-    // Debug before playing
-    console.log('Playing animation with config:', {
-      animKey,
-      sprite: this.critterSprite.texture.key,
-      currentFrame: this.critterSprite.frame
-    });
-
     this.critterSprite.play(animKey);
-
-    // Debug after playing
-    this.critterSprite.once('animationstart', () => {
-      console.log('Animation started:', {
-        currentAnim: this.critterSprite.anims.currentAnim,
-        currentFrame: this.critterSprite.frame
-      });
-    });
   }
 
   private playSickIdleAnimation(): void {
@@ -268,16 +319,31 @@ export class AnimationLoader {
     this.isPlayingSpecialAnimation = true;
 
     const critter = this.critterSprite.getData('critter') as Critter;
-    const animKey = this.getAnimationKey(
-      critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
-      type
-    );
+    const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
+    const animKey = this.getAnimationKey(stage, type); // <-- This was missing
+
+    // Store the ORIGINAL scale before any animation changes
+    const originalScale = this.critterSprite.scale;
+    const wasIdle = this.currentAnimation.includes('idle');
 
     return new Promise(resolve => {
       this.currentAnimation = type;
-      this.critterSprite.play(animKey);
+
+      // Get animation-specific scale
+      const animTextureKey = this.getSpriteKey(stage, type);
+      const animScale = this.getSpriteScale(animTextureKey, stage === EvolutionStage.BABY ? 1.5 : 2);
+      this.critterSprite.setScale(animScale).play(animKey);
 
       this.critterSprite.once('animationcomplete', () => {
+        // Return to the ORIGINAL scale, not calculate a new one
+        this.critterSprite.setScale(originalScale);
+
+        // Play appropriate idle animation
+        const targetAnim = critter.isHealthy ? 'idle' : 'sick_idle';
+        const targetAnimKey = this.getAnimationKey(stage, targetAnim);
+        this.critterSprite.play(targetAnimKey);
+
+        this.currentAnimation = targetAnim;
         this.isPlayingSpecialAnimation = false;
         resolve();
       });
@@ -301,5 +367,18 @@ export class AnimationLoader {
     // Remove all references
     this.scene = null as any;
     this.critter = null as any;
+  }
+
+  public debugTextureScales() {
+    console.group('Texture Scale Debug');
+    DOUBLE_SCALE_TEXTURES.forEach(textureKey => {
+      const exists = this.scene.textures.exists(textureKey);
+      console.log(`Texture ${textureKey}:`, {
+        exists,
+        inWhitelist: DOUBLE_SCALE_TEXTURES.includes(textureKey),
+        wouldScale: this.getSpriteScale(textureKey, 1) > 1
+      });
+    });
+    console.groupEnd();
   }
 }

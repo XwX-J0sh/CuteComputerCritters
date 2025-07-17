@@ -32,8 +32,10 @@ export class FoodPantry extends BaseGame {
   }
 
   override init(data: FoodPantryData) {
+    super.init(data); // This is CRUCIAL - calls BaseGame's init
     this.passedCritter = data.selectedCritter;
-    console.log('Received critter:', this.passedCritter);
+    this.critter = data.selectedCritter; // Sync with BaseGame's critter
+    console.log('FoodPantry received critter:', this.passedCritter);
   }
 
   override preload() {
@@ -56,7 +58,7 @@ export class FoodPantry extends BaseGame {
   }
 
   override async create() {
-    super.create();
+    await super.create();
     console.log('FoodPantry scene created');
 
     if (!this.passedCritter) {
@@ -64,6 +66,11 @@ export class FoodPantry extends BaseGame {
       this.scene.stop('FoodPantry');
       this.scene.start('Game'); // Fallback
       return;
+    }
+
+    // Force update stats panel with current critter
+    if (this.statsPanel) {
+      this.statsPanel.updateStats(this.passedCritter);
     }
 
     // Initialize food items data
@@ -94,9 +101,12 @@ export class FoodPantry extends BaseGame {
       .on('pointerover', () => this.feedButton.setAlpha(0.8))
       .on('pointerout', () => this.feedButton.setAlpha(1))
       .on('pointerdown', () => {
-        console.log('Feed button pressed');
+        console.log('Feed button pressed - exiting without feeding');
         this.scene.stop('FoodPantry');
-        this.scene.start('Game');
+        this.scene.start('Game', {
+          selectedCritter: this.passedCritter
+          // Don't include food parameter
+        });
       });
 
     // Respond button
@@ -125,7 +135,7 @@ export class FoodPantry extends BaseGame {
   }
 
   private selectFood(food: FoodItem) {
-    if (this.isFeedingInProgress) return;
+    if (this.isFeedingInProgress || !food) return;
     this.isFeedingInProgress = true;
 
     console.log(`Feeding ${food.name} to critter`);
@@ -135,10 +145,11 @@ export class FoodPantry extends BaseGame {
         this.scene.stop('FoodPantry');
         this.scene.start('Game', {
           selectedCritter: this.passedCritter,
-          food: food.name
+          food: food.name // ONLY include food if actually selected
         });
       });
   }
+
 
   protected handleQuit = async () => {
     this.scene.stop('FoodPantry')
@@ -156,35 +167,37 @@ export class FoodPantry extends BaseGame {
   };
 
   protected handleFeed = async () => {
-    // Prevent double-feeding
-    if (this.isFeedingInProgress) {
-      console.warn('Feeding already in progress - ignoring duplicate request');
+    if (this.isFeedingInProgress || !this.foodItems[this.selectedFoodIndex] || !this.passedCritter) {
+      console.warn('No valid food selected - returning without food parameter');
+      this.scene.stop('FoodPantry');
+      this.scene.start('Game', {
+        selectedCritter: this.passedCritter
+        // Don't include food parameter
+      });
       return;
     }
 
-    const selectedFood = this.foodItems[this.selectedFoodIndex];
-    if (!selectedFood || !this.passedCritter) return;
-
-    this.isFeedingInProgress = true; // Lock feeding
+    this.isFeedingInProgress = true;
     try {
-      console.log(`Attempting to feed ${selectedFood.name} to critter ${this.passedCritter.critterId}`);
+      const selectedFood = this.foodItems[this.selectedFoodIndex];
+      console.log(`Attempting to feed ${selectedFood.name}`);
 
-      // (1) Feed the critter
       await this.eventBus.feedCritter(this.passedCritter.critterId, selectedFood.name);
 
-      // (2) Optional: Verify the update
       const updatedCritter = await this.getUpdatedCritter();
       if (updatedCritter) {
-        console.log('Critter updated successfully:', updatedCritter.hunger);
+        console.log('Critter updated:', updatedCritter.hunger);
       }
 
-      // (3) Transition back
-      this.scene.stop('FoodPantry')
-      this.scene.start('Game', { selectedCritter: this.passedCritter });
+      this.scene.stop('FoodPantry');
+      this.scene.start('Game', {
+        selectedCritter: updatedCritter || this.passedCritter,
+        food: selectedFood.name // Pass the food name to potentially trigger animation
+      });
     } catch (error) {
       console.error('Feeding failed:', error);
     } finally {
-      this.isFeedingInProgress = false; // Always release lock
+      this.isFeedingInProgress = false;
     }
   };
 
@@ -289,7 +302,8 @@ export class FoodPantry extends BaseGame {
   }
 
   private createFoodSelectionUI() {
-    const centerX = this.cameras.main.width / 2;
+    const leftOffset = 220;
+    const centerX = this.cameras.main.width / 2 - leftOffset;
     const centerY = this.cameras.main.height / 2;
     const itemSpacingX = 200; // Horizontal spacing between items
     const itemSpacingY = 150; // Vertical spacing between rows
