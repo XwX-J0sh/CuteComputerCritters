@@ -34,7 +34,7 @@ export const routes: Routes = [
       { path: 'overview-critters', component: OverviewCrittersComponent },
       { path: 'privacy-policy', component: PrivacyPolicyComponent },
       { path: 'register', component: RegisterComponent },
-      { path: 'profile', component: ProfileComponent , canActivate: [AuthGuard] },
+      { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
       { path: 'support', component: SupportComponent },
       { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
       { path: 'terms-and-conditions', component: TermsAndConditionsComponent },

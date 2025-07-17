@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment} from '../../environment/environment';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, map, Observable, of, tap } from 'rxjs';
+import {BehaviorSubject, catchError, finalize, map, Observable, of, tap} from 'rxjs';
 import { User } from '../shared/model/user';
 
 @Injectable({
@@ -14,7 +14,10 @@ export class AuthService {
   private FAKE_MODE = environment.production;
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
+  public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
+
+  private loadingSubject = new BehaviorSubject<boolean>(true);
+  public loading$ = this.loadingSubject.asObservable();
 
   public readonly isLoggedIn$ = this.currentUser$.pipe(
     map(user => !!user)
@@ -22,7 +25,7 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  checkAuth(): Observable<User> {
+  checkAuth(): Observable<User | null> {
     if (this.FAKE_MODE) {
       const fakeUser: User = {
         id: 1,
@@ -34,8 +37,15 @@ export class AuthService {
       return of(fakeUser);
     }
 
-    return this.http.get<User>(`${this.API_URL}/user`, { withCredentials: true }).pipe(
-      tap(user => this.currentUserSubject.next(user))
+    return this.http.get<User | null>(`${this.API_URL}/user`, { withCredentials: true }).pipe(
+      tap(user => this.currentUserSubject.next(user)),
+      catchError(() => {
+        this.currentUserSubject.next(null);
+        return of(null);
+      }),
+          finalize(() => {
+            this.loadingSubject.next(false);
+          })
     );
   }
 
