@@ -18,7 +18,7 @@ const ANIMATION_CONFIG = {
   chiikawa: {
     idle: { frames: 2, frameRate: 3 },
     eat: { frames: 6, frameRate: 10 },
-    sick_idle: { frames: 4, frameRate: 6 },
+    sick_idle: { frames: 2, frameRate: 6 },
     turn_sick: { frames: 5, frameRate: 8 }
   },
   shisa: {
@@ -42,7 +42,7 @@ const ANIMATION_CONFIG = {
   usagi: {
     idle: { frames: 2, frameRate: 3 },
     eat: { frames: 4, frameRate: 8 },
-    sick_idle: { frames: 3, frameRate: 5 },
+    sick_idle: { frames: 2, frameRate: 5 },
     turn_sick: { frames: 4, frameRate: 6 }
   }
 };
@@ -51,12 +51,19 @@ const DOUBLE_SCALE_TEXTURES = [
   'baby_eat',
   'chiikawa_idle',
   'usagi_idle',
-  'chiikawa_eat'
+  'hachiware_eat',
+  'momonga_eat',
+  'chiikawa_eat',
+  'usagi_eat',
 ];
 
-const BIGGER_SCALE_TEXTURES = [
-  'hachiware_eat',
-  'usagi_eat',
+const NORMAL_SCALE_TEXTURES = [
+  'baby_sick_idle',
+  'chiikawa_sick_idle',
+  'hachiware_sick_idle',
+  'momonga_sick_idle',
+  'shisa_sick_idle',
+  'usagi_sick_idle'
 ];
 
 export class AnimationLoader {
@@ -70,6 +77,9 @@ export class AnimationLoader {
   private static instanceCount = 0;
 
   constructor(scene: Phaser.Scene, critter: Critter) {
+    if (!scene.anims) {
+      throw new Error('Animation system not available in this scene');
+    }
     AnimationLoader.instanceCount++;
     console.log(`AnimationLoader instance created (Total: ${AnimationLoader.instanceCount})`);
     this.scene = scene;
@@ -87,7 +97,7 @@ export class AnimationLoader {
   private createSprite(critter: Critter): Phaser.GameObjects.Sprite {
     const stage = critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL;
     const spriteKey = this.getSpriteKey(stage, 'idle');
-    const baseScale = stage === EvolutionStage.BABY ? 1.5 : 1.5;
+    const baseScale = 1.5;
 
     // Fallback to debug texture if main texture is missing
     if (!this.scene.textures.exists(spriteKey)) {
@@ -218,11 +228,14 @@ export class AnimationLoader {
       const textureKey = this.getSpriteKey(currentStage, 'idle');
       if (this.scene.textures.exists(textureKey)) {
         this.critterSprite.setTexture(textureKey);
-        const baseScale = currentStage === EvolutionStage.BABY ? 1.5 : 2;
+        // Verify the texture is in our scaling lists
+        if (!NORMAL_SCALE_TEXTURES.includes(textureKey) &&
+          !DOUBLE_SCALE_TEXTURES.includes(textureKey)) {
+          console.warn(`Texture ${textureKey} missing from scaling lists`);
+        }
+        const baseScale = 1.5;
         this.critterSprite.setScale(this.getSpriteScale(textureKey, baseScale));
       }
-      this.setupAnimations();
-      this.playAppropriateIdleAnimation();
     }
     // Handle automatic animation transitions based on critter state
     if (!critter.isHealthy && this.currentAnimation !== 'sick_idle') {
@@ -236,38 +249,36 @@ export class AnimationLoader {
   }
 
   private getSpriteScale(textureKey: string, baseScale: number): number {
-    console.log(`Checking scale for texture: ${textureKey}`); // Debug logging
+    // Exact match check for normal scale textures
+    const normalScaleKeys = [
+      'baby_sick_idle',
+      'chiikawa_sick_idle',
+      'hachiware_sick_idle',
+      'momonga_sick_idle',
+      'shisa_sick_idle',
+      'usagi_sick_idle'
+    ];
 
-    // First check our whitelist
-    if (DOUBLE_SCALE_TEXTURES.some(pattern => textureKey.includes(pattern))) {
-      console.log(`Doubling scale for whitelisted texture: ${textureKey}`);
-      return baseScale * 2;
-    }
-
-    if (BIGGER_SCALE_TEXTURES.some(pattern => textureKey.includes(pattern))) {
-      console.log(`Changing scale for whitelisted texture by 1.5: ${textureKey}`);
-      return baseScale * 1.5;
-    }
-
-    // Fallback to checking texture dimensions
-    const texture = this.scene.textures.get(textureKey);
-    if (!texture || !texture.source[0]) {
-      console.warn(`Texture ${textureKey} not found for scale check`);
+    if (normalScaleKeys.includes(textureKey)) {
       return baseScale;
     }
 
-    // Debug log texture dimensions
-    console.log(`Texture dimensions for ${textureKey}:`, {
-      width: texture.source[0].width,
-      height: texture.source[0].height
-    });
+    // Exact match check for double scale textures
+    const doubleScaleKeys = [
+      'baby_eat',
+      'chiikawa_idle',
+      'usagi_idle',
+      'hachiware_eat',
+      'momonga_eat',
+      'chiikawa_eat',
+      'usagi_eat'
+    ];
 
-    // Check if texture is 128px in either dimension
-    const isLargeSize = texture.source[0].width === 128 || texture.source[0].height === 128;
+    if (doubleScaleKeys.includes(textureKey)) {
+      return baseScale * 2;
+    }
 
-    const finalScale = isLargeSize ? baseScale * 2 : baseScale;
-    console.log(`Final scale for ${textureKey}: ${finalScale}`);
-    return finalScale;
+    return baseScale;
   }
 
   private playAppropriateIdleAnimation() {
@@ -331,7 +342,7 @@ export class AnimationLoader {
 
       // Get animation-specific scale
       const animTextureKey = this.getSpriteKey(stage, type);
-      const animScale = this.getSpriteScale(animTextureKey, stage === EvolutionStage.BABY ? 1.5 : 2);
+      const animScale = this.getSpriteScale(animTextureKey, 1.5);
       this.critterSprite.setScale(animScale).play(animKey);
 
       this.critterSprite.once('animationcomplete', () => {
