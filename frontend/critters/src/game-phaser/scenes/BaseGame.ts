@@ -295,6 +295,10 @@ export abstract class BaseGame extends Scene {
   }
 
   protected createButtons() {
+    // First destroy existing buttons
+    [this.quitButton, this.respondButton, this.feedButton,
+      this.healButton, this.playButton].forEach(btn => btn?.destroy());
+
     this.quitButton = new GameButton({
       scene: this,
       x: 233,
@@ -406,46 +410,40 @@ export abstract class BaseGame extends Scene {
   protected abstract handlePlay(): void;
 
   shutdown() {
-    //Destroy game objects
-    if (this.bg) {
-      this.bg.destroy();
-    }
-    if (this.statsPanel) {
-      this.statsPanel.destroy();
-    }
-    if (this.quitButton) {
-      this.quitButton.destroy();
-    }
-    if (this.feedButton) {
-      this.feedButton.destroy();
-    }
-    if (this.healButton) {
-      this.healButton.destroy();
-    }
-    if (this.callSound) {
-      this.callSound.stop();
-      this.callSound.destroy();
-    }
+    // Destroy all game objects
+    [this.bg, this.statsPanel, this.pet].forEach(obj => obj?.destroy());
 
-    // Remove keyboard listener
-    const keyboard = this.input.keyboard;
-    if (keyboard) {
-    if (keyboard) {
-      keyboard.off('keydown-ESC');
-    }
+    //Clean up buttons properly
+    [this.quitButton, this.feedButton, this.respondButton,
+      this.healButton, this.playButton].forEach(btn => {
+      btn?.destroy();
+      btn?.removeAllListeners();  // Critical addition
+    });
 
-    // Clear references
+    //Clear input handlers
+    this.input.keyboard?.removeAllListeners();
+    this.input.off('pointerdown');
+
+    // 4. Stop and destroy sounds
+    [this.callSound, this.alertSound].forEach(sound => {
+      sound?.stop();
+      sound?.destroy();
+    });
+
+    //Clean animation system
+    this.animationManager?.destroy();
+    this.animationManager = null;
+
+    //Unsubscribe all RxJS subscriptions
+    [this.critterSubscription, this.critterUpdateSubscription,
+      this.hasCalledSubscription, this.statIsLowSubscription,
+      this.isDeadSubscription].forEach(sub => sub?.unsubscribe());
+
+    //Clear references
     this.selectedCritter = null;
+    this.critter = null;
 
-    if (this.critterUpdateSubscription) {
-      this.critterUpdateSubscription.unsubscribe();
-    }
-
-    this.critterUpdateSubscription?.unsubscribe();
-    this.hasCalledSubscription?.unsubscribe();
-    this.statIsLowSubscription?.unsubscribe();
-    this.isDeadSubscription?.unsubscribe();
-  }
+    console.log('Game scene shutdown complete');
   }
 
 }

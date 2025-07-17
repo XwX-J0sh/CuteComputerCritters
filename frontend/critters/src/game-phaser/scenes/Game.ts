@@ -119,11 +119,24 @@ export class Game extends BaseGame {
     this.selectedFood = null;
   }
 
-  override shutdown(): void {
+  override shutdown() {
+    // Clean up input first
+    this.input.keyboard?.removeAllListeners();
+    this.input.off('pointerdown');
+
+    // Destroy buttons and their listeners
+    [this.quitButton, this.feedButton, this.respondButton,
+      this.healButton, this.playButton].forEach(btn => {
+      btn?.removeAllListeners();  // Clear event listeners first
+      btn?.destroy();             // Then destroy the object
+    });
+
+    // Other cleanup remains the same
     if (this.animationManager) {
       this.animationManager.destroy();
       this.animationManager = null;
     }
+
     super.shutdown();
     console.log('Game scene shutdown complete');
   }
