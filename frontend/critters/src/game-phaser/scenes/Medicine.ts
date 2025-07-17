@@ -154,20 +154,6 @@ export class MedicineCabinet extends BaseGame {
     this.scene.start('FoodPantry');
   };
 
-  private async getUpdatedCritter(): Promise<CritterGetResponse | undefined | null> {
-    try {
-      // Assuming your eventBus or critterService has a way to fetch current data
-      const updatedCritter = await this.eventBus.critterService.getCritterById(
-        this.passedCritter!.critterId
-      ).toPromise();
-
-      return updatedCritter;
-    } catch (error) {
-      console.warn('Failed to fetch updated critter:', error);
-      return null;
-    }
-  }
-
   override shutdown() {
     super.shutdown();
 

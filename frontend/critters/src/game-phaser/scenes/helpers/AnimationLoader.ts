@@ -333,15 +333,6 @@ export class AnimationLoader {
     return baseScale;
   }
 
-  private playAppropriateIdleAnimation() {
-    const critter = this.critterSprite.getData('critter') as Critter;
-    if (!critter.isHealthy) {
-      this.playSickIdleAnimation();
-    } else {
-      this.playIdleAnimation();
-    }
-  }
-
   public playIdleAnimation(): void {
     if (this.animationLock) {
       console.log('Animation locked - preventing idle switch');
@@ -429,7 +420,6 @@ export class AnimationLoader {
   }
 
   private async playSickTransition(): Promise<void> {
-    const originalScale = this.critterSprite.scale;
     const textureKey = this.getSpriteKey(
       this.critter.evolution < 2 ? EvolutionStage.BABY : EvolutionStage.FINAL,
       'turn_sick'
@@ -459,7 +449,6 @@ export class AnimationLoader {
 
     // Store the ORIGINAL scale before any animation changes
     const originalScale = this.critterSprite.scale;
-    const wasIdle = this.currentAnimation.includes('idle');
 
     return new Promise(resolve => {
       this.currentAnimation = type;
