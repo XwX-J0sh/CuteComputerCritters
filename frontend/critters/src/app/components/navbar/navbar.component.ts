@@ -14,7 +14,7 @@ import {Router, RouterLink, RouterLinkActive} from '@angular/router';
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent implements OnInit {
-private router = inject(Router);
+  private router = inject(Router);
   menuOpen = false;
   dropdownOpen = false;
   username?: string;
@@ -40,40 +40,34 @@ private router = inject(Router);
     });
   }
 
+  //for the navbar menu option on mobile
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
     console.log('Toggled menuOpen:', this.menuOpen);
   }
 
-  //section for profile drop down menu
+  //Profile dropdown menu logic
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
 
-
-  //closes dropdown for profile when clicking outside the menu
+  //closes dropdown menu when clicking outside of it
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event): void {
     const target = event.target as HTMLElement;
     const clickedInsideDropdown = target.closest('.custom-dropdown-container');
     const clickedAvatar = target.closest('.custom-dropdown-toggle');
-    if (target.closest('#game-container')) {
-      return;
-    }
-    console.log("Ya-ha! Ya-Hoo!")
     if (!clickedInsideDropdown && !clickedAvatar) {
       this.dropdownOpen = false;
     }
   }
 
   logout(): void {
+    this.dropdownOpen = false;
     this.authService.logout().subscribe({
       next: () => {
-        //clear client-side stored stuff
-        //localStorage.removeItem('authToken');
-        //sessionStorage.clear();
-
-        // You can redirect or refresh after logout
-        //this.router.navigate(['/login']);
-        window.location.reload();
+        this.router.navigate(['/login']);
       },
       error: (err) => console.log(err),
     });
