@@ -29,6 +29,8 @@ export abstract class BaseGame extends Scene {
   private callSound!: Phaser.Sound.BaseSound;
   private alertSound!: Phaser.Sound.BaseSound;
   private isDeadSubscription!: Subscription;
+  private sceneActive = true;
+  private cleanupComplete = false;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -252,7 +254,6 @@ export abstract class BaseGame extends Scene {
       )
       .subscribe(updatedCritter => {
         //if the critter has died send to game over screen
-        this.scene.stop('BaseGame');
         this.scene.start('GameOver');
       });
   }
@@ -410,40 +411,76 @@ export abstract class BaseGame extends Scene {
   protected abstract handlePlay(): void;
 
   shutdown() {
-    // Destroy all game objects
-    [this.bg, this.statsPanel, this.pet].forEach(obj => obj?.destroy());
+    if (this.cleanupComplete) {
+      console.warn('Shutdown already completed');
+      return;
+    }
 
-    //Clean up buttons properly
-    [this.quitButton, this.feedButton, this.respondButton,
-      this.healButton, this.playButton].forEach(btn => {
-      btn?.destroy();
-      btn?.removeAllListeners();  // Critical addition
+    console.log('Starting BaseGame shutdown');
+    this.sceneActive = false;
+    this.cleanupComplete = true;
+
+    // 1. Destroy all game objects
+    [this.bg, this.statsPanel, this.pet].forEach(obj => {
+      if (obj) {
+        obj.destroy();
+        console.log(`Destroyed ${obj.constructor.name}`);
+      }
     });
 
-    //Clear input handlers
+    // 2. Clean up buttons with proper removal
+    [this.quitButton, this.feedButton, this.respondButton,
+      this.healButton, this.playButton].forEach((btn, index) => {
+      if (btn) {
+        console.log(`Destroying button ${index}`);
+        btn.removeAllListeners();
+        btn.destroy();
+      }
+    });
+
+    // 3. Clear input handlers
+    console.log('Clearing input handlers');
     this.input.keyboard?.removeAllListeners();
     this.input.off('pointerdown');
+    this.input.keyboard?.resetKeys();
 
     // 4. Stop and destroy sounds
     [this.callSound, this.alertSound].forEach(sound => {
-      sound?.stop();
-      sound?.destroy();
+      if (sound) {
+        console.log(`Stopping sound ${sound.key}`);
+        sound.stop();
+        sound.destroy();
+      }
     });
 
-    //Clean animation system
-    this.animationManager?.destroy();
-    this.animationManager = null;
+    // 5. Clean animation system
+    if (this.animationManager) {
+      console.log('Destroying animation manager');
+      this.animationManager.destroy();
+      this.animationManager = null;
+    }
 
-    //Unsubscribe all RxJS subscriptions
+    // 6. Unsubscribe all RxJS subscriptions
     [this.critterSubscription, this.critterUpdateSubscription,
       this.hasCalledSubscription, this.statIsLowSubscription,
-      this.isDeadSubscription].forEach(sub => sub?.unsubscribe());
+      this.isDeadSubscription].forEach(sub => {
+      if (sub) {
+        console.log('Unsubscribing from observable');
+        sub.unsubscribe();
+      }
+    });
 
-    //Clear references
+    // 7. Clear references
     this.selectedCritter = null;
     this.critter = null;
 
-    console.log('Game scene shutdown complete');
-  }
+    // 8. Remove all scene events
+    this.events.off('shutdown');
+    this.events.removeAllListeners();
 
+    // 9. Clear any remaining time events
+    this.time.removeAllEvents();
+
+    console.log('BaseGame shutdown complete');
+  }
 }

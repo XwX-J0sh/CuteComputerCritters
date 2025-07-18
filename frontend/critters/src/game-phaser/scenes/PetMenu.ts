@@ -30,6 +30,10 @@ export class PetMenu extends Scene {
       return;
     }
 
+    this.events.once('shutdown', () => {
+      this.cleanup();
+    });
+
     this.logo = this.add.image(575, 130, 'logo').setScale(1);
     this.titleText = this.add.text(250, 300, 'Choose CRITTER', {
       font: '40px Press Start 2P',
@@ -188,8 +192,39 @@ export class PetMenu extends Scene {
   }
 
   private selectCritter(displayIndex: number) {
+    if (this.scene.isActive('Game')) {
+      this.scene.stop('Game');
+      // Wait for one frame to ensure cleanup
+      this.time.delayedCall(16, () => {
+        this.startNewGame(displayIndex);
+      });
+    } else {
+      this.startNewGame(displayIndex);
+    }
+  }
+
+  private startNewGame(displayIndex: number) {
     const selectedCritter = this.aliveCritters[displayIndex].critter;
     this.game.registry.set('selectedCritter', selectedCritter);
     this.scene.start('Game', { selectedCritter });
+  }
+
+
+
+  private cleanup() {
+    this.critterTexts.forEach(text => {
+      text.removeAllListeners();
+      text.destroy();
+    });
+    this.critterTexts = [];
+
+    if (this.createButton) {
+      this.createButton.removeAllListeners();
+      this.createButton.destroy();
+    }
+
+    if (this.navigator) {
+      this.navigator.destroy();
+    }
   }
 }

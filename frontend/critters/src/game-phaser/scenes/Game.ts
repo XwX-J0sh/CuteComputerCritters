@@ -76,7 +76,6 @@ export class Game extends BaseGame {
     } catch (error) {
       console.warn('Deactivation failed:', error);
     } finally {
-      this.scene.stop('Game');
       this.scene.start('PetMenu');
     }
   };
@@ -91,7 +90,6 @@ export class Game extends BaseGame {
 
   protected handleFeed = (): void => {
     this.resetFeedingState();
-    this.scene.stop('Game');
     this.scene.start('FoodPantry', {
       selectedCritter: this.critter,
       returnScene: 'Game'
@@ -99,7 +97,6 @@ export class Game extends BaseGame {
   };
 
   protected handleHeal(): void {
-    this.scene.stop('Game');
     this.scene.start('MedicineCabinet', {
       selectedCritter: this.critter
     });
@@ -120,6 +117,9 @@ export class Game extends BaseGame {
   }
 
   override shutdown() {
+
+      console.log('Game scene shutdown started');
+
     // Clean up input first
     this.input.keyboard?.removeAllListeners();
     this.input.off('pointerdown');

@@ -2,14 +2,14 @@ package com.CuteComputerCritters.backend.api.service;
 
 import com.CuteComputerCritters.backend.api.helpers.CritterMapper;
 import com.CuteComputerCritters.backend.api.model.Critter.Critter;
-import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolutions;
+import com.CuteComputerCritters.backend.api.model.Critter.CritterEvolution;
 import com.CuteComputerCritters.backend.api.model.Food.Food;
 import com.CuteComputerCritters.backend.api.model.User.User;
 import com.CuteComputerCritters.backend.api.model.medicine.EnumMedicineType;
 import com.CuteComputerCritters.backend.api.payload.request.critter.CritterUpdateRequest;
 import com.CuteComputerCritters.backend.api.payload.request.critter.NewCritterRequest;
 import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetResponse;
-import com.CuteComputerCritters.backend.api.repository.CritterEvolutionsRepository;
+import com.CuteComputerCritters.backend.api.repository.CritterEvolutionRepository;
 import com.CuteComputerCritters.backend.api.repository.CritterRepository;
 import com.CuteComputerCritters.backend.api.repository.FoodRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class CritterService {
     private static final int MAX_STAT = 10;
     private static final int MAX_WEIGHT = 30;
     private static final int MIN_WEIGHT = 1;
-    private final CritterEvolutionsRepository critterEvolutionsRepository;
+    private final CritterEvolutionRepository critterEvolutionsRepository;
     private static final Logger logger = LoggerFactory.getLogger(CritterService.class);
 
 
@@ -44,7 +44,7 @@ public class CritterService {
         Critter critter = new Critter();
 
         // Load default evolution stage
-        CritterEvolutions baseStage = critterEvolutionsRepository
+        CritterEvolution baseStage = critterEvolutionsRepository
                 .findByStage(1.0)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -116,7 +116,7 @@ public class CritterService {
         if (critterUpdateRequest.getHasCalled() != null) critter.setHasCalled(critterUpdateRequest.getHasCalled());
         if (critterUpdateRequest.getIsInjured() != null) critter.setInjured(critterUpdateRequest.getIsInjured());
         if (critterUpdateRequest.getEvolution() != null) {
-            CritterEvolutions newStage = critterEvolutionsRepository
+            CritterEvolution newStage = critterEvolutionsRepository
                     .findByStage(critterUpdateRequest.getEvolution())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid evolution stage"));
             critter.setEvolutionStage(newStage);
