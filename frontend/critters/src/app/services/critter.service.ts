@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable, Subject} from 'rxjs';
+import {map, Observable, Subject} from 'rxjs';
 import {CritterGetResponse} from '../shared/model/CritterGetResponse';
 import {AuthService} from './auth.service';
 import {WebSocketService} from './web-socket.service';
@@ -118,5 +118,27 @@ export class CritterService {
       withCredentials: true,
       responseType: 'text' as 'json'
     });
+  }
+
+
+  //FOR DISPLAY ON PROFILE DASHBOARD
+  //gets all deceased pets
+  getDeceasedCritters(): Observable<{ name: string; lifespan: number }[]> {
+    return this.getAllCritters().pipe(
+      map(critters =>
+        critters
+          .filter(c => c.isDead)
+          .map(c => ({
+            name: c.critterName,
+            lifespan: c.totalActiveTime,
+          }))
+      )
+    );
+  }
+
+  private calculateLifespan(birth: string, death: string): number {
+    const start = new Date(birth);
+    const end = new Date(death);
+    return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)); // in days
   }
 }
