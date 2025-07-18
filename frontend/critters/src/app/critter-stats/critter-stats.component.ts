@@ -2,7 +2,7 @@ import {ChangeDetectorRef, Component, OnDestroy, OnInit} from '@angular/core';
 import {CritterGetResponse} from "../shared/model/CritterGetResponse";
 import {CommonModule} from "@angular/common";
 import {CritterService} from "../services/critter.service";
-import {Subscription} from "rxjs";
+import {map, Observable, Subscription} from "rxjs";
 import {FormsModule} from '@angular/forms';
 import {AuthService} from '../services/auth.service';
 import {EventBusService} from '../services/event-bus.service';
@@ -182,4 +182,5 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
       // (only if you’re tracking per-critter subscriptions individually)
     });
   }
+
 }

@@ -72,16 +72,13 @@
                 <select
                   [(ngModel)]="selectedTheme"
                   (ngModelChange)="onThemeChange($event)"
-                  class="form-select w-full bg-white dark:bg-purple-900 text-purple-900 dark:text-white border border-gray-300 dark:border-white rounded px-4 py-2 pr-10 text-sm font-medium shadow-none focus:outline-none focus:ring-0 focus:border-gray-400">
+                  class="form-select w-full bg-white dark:bg-purple-900 text-purple-900 border border-gray-300 dark:border-white rounded px-4 py-2 pr-10 text-sm font-medium shadow-none focus:outline-none focus:ring-0 focus:border-gray-400">
                   <option value="dark">🌙 Dark</option>
                   <option value="light">☀️ Light</option>
                   <option value="system">🖥️ System</option>
                 </select>
                 <!-- Custom dropdown arrow -->
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-900 dark:text-white z-10">
-                  <svg class="w-4 h-4 text-purple-900 dark:text-white" viewBox="0 0 20 20">
-                    <path d="M5.25 7.5L10 12.25L14.75 7.5H5.25Z" />
-                  </svg>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-900 z-10">
                 </div>
               </div>
             </li>
