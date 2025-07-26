@@ -116,6 +116,19 @@ export class GameButton extends Phaser.GameObjects.Container {
     return this;
   }
 
+  public override shutdown(): void {
+    // Remove all event listeners
+    this.off('pointerdown');
+    this.off('pointerup');
+    this.off('pointerout');
+
+    // Clear references
+    this.onClickCallback = () => {};
+
+    // Call parent shutdown
+    super.shutdown();
+  }
+
   // Makes the button reusable
   public reset(x: number, y: number, label?: string, onClick?: () => void): void {
     this.setPosition(x, y);

@@ -97,7 +97,6 @@ export class CritterStatsComponent implements OnInit, OnDestroy {
           next: (updatedData) => {
             // Merge updated data into local critter object
             this.critter = { ...this.critter, ...updatedData };
-            console.log('Realtime update for critter:', updatedData);
 
             // Trigger Angular change detection
             this.cdr.detectChanges();

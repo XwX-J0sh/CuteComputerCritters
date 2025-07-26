@@ -39,7 +39,6 @@ export abstract class BaseGame extends Scene {
   init(data: { selectedCritter: any }) {
     this.selectedCritter = data.selectedCritter;
     this.critter = data.selectedCritter;
-    console.log('Scene started with critter:', this.selectedCritter);
   }
 
   preload() {
@@ -55,7 +54,6 @@ export abstract class BaseGame extends Scene {
     // Load baby sprites with debug logging
     Object.entries(ASSET_CONFIG.baby).forEach(([animation, config]) => {
       const key = `baby_${animation}`;
-      console.log(`Loading baby texture: ${key} from ${config.path}`);
       this.load.spritesheet(
         key,
         config.path,
@@ -70,7 +68,6 @@ export abstract class BaseGame extends Scene {
     Object.entries(ASSET_CONFIG.variants).forEach(([variant, animations]) => {
       Object.entries(animations).forEach(([animation, config]) => {
         const key = `${variant}_${animation}`;
-        console.log(`Loading variant texture: ${key} from ${config.path}`);
         this.load.spritesheet(
           key,
           config.path,
@@ -85,33 +82,18 @@ export abstract class BaseGame extends Scene {
 
   async create() {
 
+    console.log('[BaseGame] create called');
+
     this.createCommonElements();
     await this.initializeCritter();
 
     this.createStatsPanel();
-
-    console.log('Loaded Textures:', this.textures.getTextureKeys());
 
     // Create animation manager and stats panel together
     this.createCritter();
     this.updateCritterDisplay();
     this.setupSubscriptions();
 
-    // Debug play
-    this.time.delayedCall(1000, () => {
-      console.log('Attempting to play idle animation...');
-      this.animationManager?.playIdleAnimation();
-
-      // Debug stats panel
-      if (this.statsPanel) {
-        console.log('Stats panel exists:', this.statsPanel);
-        this.children.each(child => {
-          console.log('Scene child:', child);
-        });
-      } else {
-        console.error('Stats panel not created!');
-      }
-    });
   }
 
   private createStatsPanel() {
@@ -362,9 +344,6 @@ export abstract class BaseGame extends Scene {
   protected createCritter() {
     if (!this.critter || !this.shouldCreateCritter()) return;
 
-    // Debug: Check critter data
-    console.log('Creating critter with:', this.critter);
-
     // Clear previous animation if exists
     if (this.animationManager) {
       this.animationManager.destroy();
@@ -373,8 +352,6 @@ export abstract class BaseGame extends Scene {
     // Create new animation manager
     this.animationManager = new AnimationLoader(this, this.critter);
 
-    this.animationManager.debugTextureScales();
-
     //update stats panel with current critter
     if (this.statsPanel) {
       this.statsPanel.updateStats(this.critter);
@@ -382,9 +359,6 @@ export abstract class BaseGame extends Scene {
 
     // Debug: Verify sprite creation
     const sprite = this.animationManager.getSprite();
-    console.log('Critter sprite created at:', sprite.x, sprite.y);
-    console.log('Sprite visible:', sprite.visible);
-    console.log('Texture key:', sprite.texture.key);
   }
 
   private updateCritterDisplay() {
@@ -410,77 +384,59 @@ export abstract class BaseGame extends Scene {
   protected abstract handleHeal(): void;
   protected abstract handlePlay(): void;
 
-  shutdown() {
-    if (this.cleanupComplete) {
-      console.warn('Shutdown already completed');
-      return;
-    }
-
-    console.log('Starting BaseGame shutdown');
-    this.sceneActive = false;
-    this.cleanupComplete = true;
-
-    // 1. Destroy all game objects
-    [this.bg, this.statsPanel, this.pet].forEach(obj => {
-      if (obj) {
-        obj.destroy();
-        console.log(`Destroyed ${obj.constructor.name}`);
-      }
-    });
-
-    // 2. Clean up buttons with proper removal
-    [this.quitButton, this.feedButton, this.respondButton,
-      this.healButton, this.playButton].forEach((btn, index) => {
-      if (btn) {
-        console.log(`Destroying button ${index}`);
-        btn.removeAllListeners();
-        btn.destroy();
-      }
-    });
-
-    // 3. Clear input handlers
-    console.log('Clearing input handlers');
+  protected cleanupInput() {
+    // 1. Keyboard listeners
     this.input.keyboard?.removeAllListeners();
-    this.input.off('pointerdown');
-    this.input.keyboard?.resetKeys();
+    this.input.keyboard?.clearCaptures();
 
-    // 4. Stop and destroy sounds
-    [this.callSound, this.alertSound].forEach(sound => {
-      if (sound) {
-        console.log(`Stopping sound ${sound.key}`);
-        sound.stop();
-        sound.destroy();
-      }
+    // 2. Mouse/touch listeners
+    this.input.off('pointerdown');
+    this.input.off('pointerup');
+    this.input.off('pointermove');
+    this.input.off('pointerover');
+    this.input.off('pointerout');
+
+    // 4. Remove all active pointers
+    this.input.pointer1?.reset();
+    this.input.pointer2?.reset();
+    this.input.pointer3?.reset();
+  }
+
+  shutdown() {
+    if (this.cleanupComplete) return;
+
+    console.log('[BaseGame] shutdown started');
+
+    // 1. Clean input first
+    this.cleanupInput();
+
+    // 2. Stop all sounds and animations
+    this.sound.stopAll();
+    this.animationManager?.stopAllAnimations();
+
+    // 3. Destroy objects
+    [this.statsPanel, this.pet, this.bg].forEach(obj => {
+      obj?.destroy();
     });
 
-    // 5. Clean animation system
-    if (this.animationManager) {
-      console.log('Destroying animation manager');
-      this.animationManager.destroy();
-      this.animationManager = null;
-    }
+    // 4. Clean buttons
+    [this.quitButton, this.feedButton, this.respondButton,
+      this.healButton, this.playButton].forEach(btn => {
+      btn?.removeAllListeners();
+      btn?.destroy();
+    });
 
-    // 6. Unsubscribe all RxJS subscriptions
+    // 5. Unsubscribe RxJS
     [this.critterSubscription, this.critterUpdateSubscription,
       this.hasCalledSubscription, this.statIsLowSubscription,
-      this.isDeadSubscription].forEach(sub => {
-      if (sub) {
-        console.log('Unsubscribing from observable');
-        sub.unsubscribe();
-      }
-    });
+      this.isDeadSubscription].forEach(sub => sub?.unsubscribe());
 
-    // 7. Clear references
+    // 6. Clear references
     this.selectedCritter = null;
     this.critter = null;
+    this.animationManager = null;
 
-    // 8. Remove all scene events
-    this.events.off('shutdown');
-    this.events.removeAllListeners();
-
-    // 9. Clear any remaining time events
-    this.time.removeAllEvents();
-
-    console.log('BaseGame shutdown complete');
+    console.log('[BaseGame] shutdown complete');
+    this.cleanupComplete = true;
   }
 }

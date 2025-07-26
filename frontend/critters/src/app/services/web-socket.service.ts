@@ -8,6 +8,7 @@ import {Client, IMessage} from '@stomp/stompjs';
 export class WebSocketService {
   private stompClient!: Client;
   private connected: boolean = false;
+  private subscriptions: { [topic: string]: any } = {};
 
   private subjects: { [key: string]: Subject<any> } = {};
 
@@ -63,11 +64,12 @@ export class WebSocketService {
   }
 
   private subscribeToTopic(topic: string): void {
-    this.stompClient.subscribe(topic, (message: IMessage) => {
+    if (this.subscriptions[topic]) return; // Already subscribed
+
+    this.subscriptions[topic] = this.stompClient.subscribe(topic, (message: IMessage) => {
       const data = JSON.parse(message.body);
       this.subjects[topic].next(data);
-      console.log('[WS] subscribing to topic:', topic);
-
+      console.log('[WS] Received message on topic:', topic);
     });
   }
 }
