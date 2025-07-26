@@ -60,7 +60,6 @@ export class PetMenu extends Scene {
     this.critterSubscription = this.eventBus.critters$.pipe(
       distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
     ).subscribe(critters => {
-      console.log('Received critters:', critters);
       this.critters = critters || [];
       this.displayCritters();
     });
@@ -192,15 +191,22 @@ export class PetMenu extends Scene {
   }
 
   private selectCritter(displayIndex: number) {
+    // Ensure current game scene is properly stopped
     if (this.scene.isActive('Game')) {
-      this.scene.stop('Game');
-      // Wait for one frame to ensure cleanup
-      this.time.delayedCall(16, () => {
-        this.startNewGame(displayIndex);
-      });
-    } else {
-      this.startNewGame(displayIndex);
+      const gameScene = this.scene.get('Game');
+      if (gameScene) {
+        // Force immediate shutdown
+        (gameScene as any).shutdown();
+        this.scene.stop('Game');
+      }
     }
+
+    // Add small delay to ensure cleanup
+    this.time.delayedCall(50, () => {
+      const selectedCritter = this.aliveCritters[displayIndex].critter;
+      this.game.registry.set('selectedCritter', selectedCritter);
+      this.scene.start('Game', { selectedCritter });
+    });
   }
 
   private startNewGame(displayIndex: number) {

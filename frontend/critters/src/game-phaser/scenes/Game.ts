@@ -27,41 +27,65 @@ export class Game extends BaseGame {
   }
 
   override async create(): Promise<void> {
+    console.log('[Game] create called');
+
     await super.create();
-    this.add.image(346, 405, 'home');
 
-    if (!this.critter || !this.animationManager) {
-      console.error('Critter or animation manager not ready');
-      return;
+    try {
+      this.add.image(346, 405, 'home');
+
+      if (!this.critter || !this.animationManager) {
+        throw new Error('Critter or animation manager not ready');
+      }
+
+      // Health state synchronization
+      this.syncCritterHealthState();
+
+      // Handle feeding animation if returning from FoodPantry
+      if (this.handleFeedingReturn()) {
+        return;
+      }
+
+      // Initial animation setup
+      this.setupInitialAnimation();
+
+      // Delayed state verification
+      this.setupStateVerification();
+    } catch (error) {
+      console.error('Game create failed:', error);
+      this.scene.start('PetMenu');
     }
+  }
 
-    //Force sync with current health state
+  private syncCritterHealthState(): void {
     const shouldBeSick = !this.critter.isHealthy;
-    this.wasSickBeforeTransition = shouldBeSick; // Keep this updated
+    this.wasSickBeforeTransition = shouldBeSick;
+  }
 
-    console.group('Animation State Debug');
-    console.log('Current health:', this.critter.isHealthy);
-    console.log('Should show sick:', shouldBeSick);
-    console.groupEnd();
-
-    // Immediate animation lock
-    if (shouldBeSick) {
-      console.log('Forcing sick idle animation');
-      this.animationManager.playSickIdleAnimation();
-    } else {
-      this.animationManager.playIdleAnimation();
-    }
-
+  private handleFeedingReturn(): boolean {
     if (this.returningFromFeeding && this.selectedFood && this.animationManager) {
       console.log('Playing feed animation for', this.selectedFood);
-      this.animationManager.playFeedingSequence(this.selectedFood);
-      this.resetFeedingState(); // Clear the feeding flags
-      return; // Skip the rest of create if we just played feed animation
+      this.animationManager.playFeedingSequence(this.selectedFood)
+        .catch(error => console.error('Feeding sequence failed:', error))
+        .finally(() => this.resetFeedingState());
+      return true;
     }
+    return false;
+  }
 
-    // Delayed state verification
+  private setupInitialAnimation(): void {
+    if (this.wasSickBeforeTransition) {
+      console.log('Forcing sick idle animation');
+      this.animationManager!.playSickIdleAnimation();
+    } else {
+      this.animationManager!.playIdleAnimation();
+    }
+  }
+
+  private setupStateVerification(): void {
     this.time.delayedCall(500, () => {
-      if (!this.critter.isHealthy && this.animationManager?.getCurrentAnimation() !== 'sick_idle') {
+      if (!this.critter.isHealthy &&
+        this.animationManager?.getCurrentAnimation() !== 'sick_idle') {
         console.warn('State mismatch detected - forcing sick animation');
         this.animationManager?.playSickIdleAnimation();
       }
@@ -70,12 +94,23 @@ export class Game extends BaseGame {
 
   protected handleQuit = async (): Promise<void> => {
     try {
+      // Add pre-quit cleanup
+      console.log('[Game] Starting quit process...');
+
       if (this.critter?.critterId) {
         await this.eventBus.deactivateCritter(Number(this.critter.critterId));
       }
     } catch (error) {
       console.warn('Deactivation failed:', error);
     } finally {
+      // Force synchronous shutdown before scene transition
+      this.shutdown();
+
+      // Add small delay to ensure shutdown completes
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      console.log('[Game] Transitioning to PetMenu');
+      this.scene.stop('Game');
       this.scene.start('PetMenu');
     }
   };
@@ -117,27 +152,81 @@ export class Game extends BaseGame {
   }
 
   override shutdown() {
+    console.log('[Game] shutdown called');
 
-      console.log('Game scene shutdown started');
+    // 1. Immediately stop all animations and timers
+    this.animationManager?.stopAllAnimations();
+    this.time.removeAllEvents();
 
-    // Clean up input first
-    this.input.keyboard?.removeAllListeners();
-    this.input.off('pointerdown');
+    // 2. Clean up input first to prevent interactions during shutdown
+    this.cleanupInput();
 
-    // Destroy buttons and their listeners
-    [this.quitButton, this.feedButton, this.respondButton,
-      this.healButton, this.playButton].forEach(btn => {
-      btn?.removeAllListeners();  // Clear event listeners first
-      btn?.destroy();             // Then destroy the object
-    });
-
-    // Other cleanup remains the same
+    // 3. Synchronously clean up animations (remove the delayed call)
     if (this.animationManager) {
       this.animationManager.destroy();
       this.animationManager = null;
     }
 
+    // 4. Clean up UI elements
+    this.cleanupUI();
+
+    // 5. Reset state
+    this.resetState();
+
+    // 6. Call parent shutdown
     super.shutdown();
+
     console.log('Game scene shutdown complete');
+  }
+
+  protected override cleanupInput(): void {
+    this.input.keyboard?.removeAllListeners();
+    this.input.off('pointerdown');
+    this.input.off('pointerup');
+    this.input.off('pointermove');
+  }
+
+  private cleanupUI(): void {
+    const uiElements = [
+      this.quitButton,
+      this.feedButton,
+      this.respondButton,
+      this.healButton,
+      this.playButton
+    ];
+
+    uiElements.forEach(element => {
+      if (!element) return;
+
+      // Remove from display list first
+      if (element instanceof Phaser.GameObjects.GameObject) {
+        element.removeFromDisplayList();
+        element.removeInteractive();
+      }
+
+      // Then destroy
+      element.removeAllListeners();
+      element.destroy();
+    });
+  }
+
+  private cleanupAnimations(): void {
+    if (this.animationManager) {
+      // Stop any running animations first
+      this.animationManager.stopAllAnimations();
+
+      // Add a small delay to ensure animations complete cleanup
+      this.time.delayedCall(10, () => {
+        this.animationManager!.destroy();
+        this.animationManager = null;
+      });
+    }
+  }
+
+  private resetState(): void {
+    this.selectedFood = null;
+    this.returningFromFeeding = false;
+    this.wasFoodSelected = false;
+    this.wasSickBeforeTransition = false;
   }
 }

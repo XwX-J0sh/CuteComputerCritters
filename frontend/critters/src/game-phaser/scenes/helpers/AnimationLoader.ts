@@ -134,7 +134,6 @@ export class AnimationLoader {
       .setVisible(true)
       .setDepth(1000);
 
-    console.log(`Sprite created with texture ${sprite.texture.key}`);
     return sprite;
   }
 
@@ -180,8 +179,6 @@ export class AnimationLoader {
       ? `baby_${this.getAnimationFileName(animationType)}`
       : `${variant}_${this.getAnimationFileName(animationType)}`;
 
-    console.log(`Creating animation from texture: ${spriteKey}`);
-
     if (!this.scene.textures.exists(spriteKey)) {
       console.error(`Texture ${spriteKey} not found! Available textures:`,
         this.scene.textures.getTextureKeys());
@@ -197,8 +194,6 @@ export class AnimationLoader {
     const availableFrames = texture.frameTotal;
     const requestedFrames = frameConfig.frames;
     const framesToUse = Math.min(availableFrames, requestedFrames);
-
-    console.log(`Frame info - Available: ${availableFrames}, Requested: ${requestedFrames}, Using: ${framesToUse}`);
 
     const frames = this.scene.anims.generateFrameNumbers(spriteKey, {
       start: 0,
@@ -216,8 +211,6 @@ export class AnimationLoader {
       frameRate: frameConfig.frameRate,
       repeat: animationType === 'idle' || animationType === 'sick_idle' ? -1 : 0
     });
-
-    console.log(`Created animation ${animKey} with ${frames.length} frames`);
   }
 
   private getAnimationKey(stage: EvolutionStage, animationType: AnimationType): string {
@@ -478,31 +471,41 @@ export class AnimationLoader {
     return this.critterSprite;
   }
 
-  public destroy(): void {
-    AnimationLoader.instanceCount--;
-    console.log(`AnimationLoader instance destroyed (Remaining: ${AnimationLoader.instanceCount})`);
-    this.critterSprite.destroy();
+  public stopAllAnimations(): void {
+    if (!this.critterSprite || !this.critterSprite.anims) return;
 
-    // Clean up all resources
-    this.critterSprite?.destroy();
-    this.critterSprite?.off('animationcomplete');
-    this.critterSprite?.off('animationstart');
-
-    // Remove all references
-    this.scene = null as any;
-    this.critter = null as any;
+    this.critterSprite.anims.stop();
+    this.critterSprite.off('animationcomplete');
+    this.critterSprite.off('animationupdate');
+    this.critterSprite.off('animationstart');
   }
 
-  public debugTextureScales() {
-    console.group('Texture Scale Debug');
-    DOUBLE_SCALE_TEXTURES.forEach(textureKey => {
-      const exists = this.scene.textures.exists(textureKey);
-      console.log(`Texture ${textureKey}:`, {
-        exists,
-        inWhitelist: DOUBLE_SCALE_TEXTURES.includes(textureKey),
-        wouldScale: this.getSpriteScale(textureKey, 1) > 1
-      });
-    });
-    console.groupEnd();
+  private cleanUpListeners(): void {
+    if (!this.critterSprite) return;
+
+    // Remove all animation listeners
+    this.critterSprite.off('animationcomplete');
+    this.critterSprite.off('animationupdate');
+    this.critterSprite.off('animationstart');
+
+    // Remove any custom listeners
+    this.critterSprite.removeAllListeners();
+  }
+
+  public destroy(): void {
+    this.cleanUpListeners();
+    this.stopAllAnimations();
+
+    // Destroy sprite if it exists
+    if (this.critterSprite) {
+      this.critterSprite.destroy();
+      this.critterSprite = null as any;
+    }
+
+    // Nullify references
+    this.scene = null as any;
+    this.critter = null as any;
+
+    AnimationLoader.instanceCount--;
   }
 }
