@@ -284,8 +284,8 @@ export abstract class BaseGame extends Scene {
 
     this.quitButton = new GameButton({
       scene: this,
-      x: 233,
-      y: 100,
+      x: 1090,
+      y: 776,
       label: 'QUIT',
       onClick: async () => this.handleQuit()
     });
