@@ -9,6 +9,7 @@ import com.CuteComputerCritters.backend.api.payload.response.critter.CritterGetR
 import com.CuteComputerCritters.backend.api.repository.UserRepository;
 import com.CuteComputerCritters.backend.api.security.services.UserDetailsImpl;
 import com.CuteComputerCritters.backend.api.service.CritterService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class CritterController {
 
     //create critter
     @PostMapping("/new")
-    public ResponseEntity<?> createNewCritter(Authentication authentication, @RequestBody NewCritterRequest newCritterRequest) {
+    public ResponseEntity<?> createNewCritter(Authentication authentication, @Valid @RequestBody NewCritterRequest newCritterRequest) {
         User owner = authenticateAndGetUser(authentication);
         CritterGetResponse response = critterService.createNewCritter(newCritterRequest, owner);
         critterBroadcaster.broadcast(response);
@@ -171,7 +172,7 @@ public class CritterController {
 
     //HELPERS:
     // authenticate and get User entity (owner)
-    private User authenticateAndGetUser(Authentication authentication) {
+    User authenticateAndGetUser(Authentication authentication) {
 
         if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl userDetails)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
