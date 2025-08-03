@@ -39,6 +39,9 @@ export abstract class BaseGame extends Scene {
   init(data: { selectedCritter: any }) {
     this.selectedCritter = data.selectedCritter;
     this.critter = data.selectedCritter;
+
+    // For testing:
+    (window as any).__game = this;
   }
 
   preload() {

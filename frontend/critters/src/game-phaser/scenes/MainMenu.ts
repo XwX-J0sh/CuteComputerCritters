@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
+import {exposeToCypress} from '@shared/test-helpers';
 
 export class MainMenu extends Scene {
   logo!: GameObjects.Image;
@@ -33,6 +34,12 @@ export class MainMenu extends Scene {
     this.input.keyboard?.on('keydown-ENTER', () => {
       // when creating Phaser game or starting scene, pass eventBusService
       this.scene.start('PetMenu');
+    });
+
+    // For testing with cypress
+    exposeToCypress({
+      currentSceneName: this.scene.key,
+      startMessageText: startMessage.text
     });
   }
 }
