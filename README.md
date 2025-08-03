@@ -12,14 +12,14 @@ This game was designed with the goal, that it is free to play and portable.
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.13.
 
 Frontend:
-* Angular v19
+* Angular v19.2.13
 * TailwindCSS v3
 
 Game Logic:
 * PhaserJS
 
 Backend:
-* Springboot v
+* Springboot v3.4.4
 * Node.js
 * MariaDB as the database
 
