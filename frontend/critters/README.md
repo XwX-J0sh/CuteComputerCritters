@@ -8,17 +8,6 @@ create pets and take care of them similar to the tamagotchi games of the 90s.
 Additionally, you can see your pet history on your profile page if you create an account.
 This game was designed with the goal, that it is free to play and portable.
 
-### Learnings
-The main takeaways from this project are:
-* To communicate earlier and more frequently with our lecturer (or potential client in a professional setting)
-on the scope, details and problems concerning our project
-* Reduce size of initial project to something more realistic
-* Focus on core features and making things work 
-rather than adding unnecessary add-ons or getting lost in details e.g. adding more sprites
-### Tests and Test Coverage
-
-### Accessibility
-
 ## Used Technologies
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.13.
 
@@ -33,8 +22,11 @@ Backend:
 * Springboot v
 * Node.js
 * MariaDB as the database
+
+Misc:
 * Dockers for Containerizing
 * Maven as the build-tool
+* Cypress for e2e tests
 
 
 ## Getting Started
@@ -43,77 +35,51 @@ Backend:
 This project is a locally hosted project, so you need to install and run it locally.
 
 ### Prerequisites
-For this project you'll need npm.
+For this project you'll need to install npm and node.js.
 ### Installation
 
 1. Clone the repo
 ```
 https://github.com/XwX-J0sh/CuteComputerCritters.git
 ```
-2. Install NPM packages
+2. Navigate to where the frontend is nested and install NPM packages
 ```
+cd .\frontend\critters\
+
 npm i
 ```
+3. Create env file in docker folder
 
+
+4. Navigate to the docker file in the directory named 'docker' and start docker
+```
+docker compose up
+```
+5. Start server and open in browser
+```
+open http://localhost:4200/ in browser
+```
 ## Usage
+Login to see your profile and your information.
+To play simply click the "meet your pet" button on the homepage.
+Then on the page you choose "Chiikawa" as your critter and congratulations
+you've loaded the game!
+Hit enter (as described) and either create a new critter or open a previous one
+(given that this is a local project, on first time use you'll definitely need to create a new critter).
+Then simply select a critter of choice and you can start playing.
 
-
-### Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+## Running tests
+In order to run the included e2e tests, you'll need to install cypress.
+Start the server and then simply run
 ```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+npx cypress open
 ```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
 ## License
-
+MIT
 
 ## Additional Resources
 ### Demo Account
 User1 and Password1
+
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
