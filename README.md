@@ -1,7 +1,5 @@
 # CuteComputerCritters
 
----
-
 ## About the project
 This project is a webbased virtual pet game, where you can
 create pets and take care of them similar to the tamagotchi games of the 90s.
