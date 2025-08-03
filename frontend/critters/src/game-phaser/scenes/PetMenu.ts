@@ -2,7 +2,8 @@ import { Scene, GameObjects } from 'phaser';
 import {EventBusService} from '../../app/services/event-bus.service';
 import {distinctUntilChanged, Subscription} from 'rxjs';
 import {KeyboardNavigator} from './helpers/KeyboardNavigator';
-import {CritterGetResponse} from '../../app/shared/model/CritterGetResponse';
+import {CritterGetResponse} from '@shared/model/CritterGetResponse';
+import {exposeToCypress} from '@shared/test-helpers';
 
 export class PetMenu extends Scene {
   logo!: GameObjects.Image;
@@ -54,6 +55,12 @@ export class PetMenu extends Scene {
     // Subscribe to updates
     this.setupSubscriptions();
 
+    // For testing with cypress
+    exposeToCypress({
+      currentSceneName: this.scene.key,
+      createButton: this.createButton,
+    });
+    (window as any).testHelpersReady = true;
   }
 
   private setupSubscriptions() {
@@ -107,6 +114,14 @@ export class PetMenu extends Scene {
         }
       );
 
+      // For testing: expose the first critter to Cypress
+      if (displayIndex === 0 && typeof window !== 'undefined') {
+        (window as any).testHelpers = {
+          ...(window as any).testHelpers,
+          firstCritterText: critterText
+        };
+      }
+
       critterText.setInteractive({ useHandCursor: true })
         .on('pointerover', () => this.updateSelection(displayIndex))
         .on('pointerdown', () => this.selectCritter(displayIndex));
@@ -148,6 +163,7 @@ export class PetMenu extends Scene {
     });
 
     this.createButton.on('pointerdown', () => {
+      console.log('[PetMenu] createButton clicked');
       this.scene.start('CreateCritterForm');
     });
   }

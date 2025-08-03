@@ -13,10 +13,12 @@
     <li class="">
       <a routerLink="/game" class="link">
         <div class="group relative w-[256px] h-[128px]">
-          <img ngSrc="/assets/chiikawa/chiikawa_select.PNG"
+          <img data-cy="chiikawa_default"
+               ngSrc="/assets/chiikawa/chiikawa_select.PNG"
                class="w-full h-full object-contain image-render-pixel group-hover:opacity-0 transition-opacity duration-200"
                alt="Chiikawa's face. Select for chiikawa pets." height="128" width="256">
-          <img ngSrc="/assets/chiikawa/chiikawa_selected.PNG"
+          <img data-cy="chiikawa_hover"
+            ngSrc="/assets/chiikawa/chiikawa_selected.PNG"
                class="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-200 image-render-pixel"
                alt="Chiikawa's face but now shows them laughing. Selecting for chiikawa pets." height="128" width="256">
         </div>
