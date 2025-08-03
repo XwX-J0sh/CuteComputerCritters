@@ -12,7 +12,7 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 Frontend:
 * Angular v19.2.13
-* TailwindCSS v3
+* TailwindCSS v3.4.17
 
 Game Logic:
 * PhaserJS
@@ -21,11 +21,12 @@ Backend:
 * Springboot v3.4.4
 * Node.js
 * MariaDB as the database
+* Websocket v2.1
 
 Misc:
 * Dockers for Containerizing
 * Maven as the build-tool
-* Cypress for e2e tests
+* Cypress for e2e tests (bundled node version is 20.18.1)
 
 
 ## Getting Started
