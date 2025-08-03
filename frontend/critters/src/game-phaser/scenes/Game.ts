@@ -68,6 +68,7 @@ export class Game extends BaseGame {
       this.animationManager.playFeedingSequence(this.selectedFood)
         .catch(error => console.error('Feeding sequence failed:', error))
         .finally(() => this.resetFeedingState());
+      this.eventBus.feedCritter(this.critter.critterId, this.selectedFood);
       return true;
     }
     return false;

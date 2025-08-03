@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["cypress"],
+    "moduleResolution": "node"
+  },
+  "include": [
+    "cypress/**/*.ts",
+    "cypress/support/index.d.ts"
+  ],
+  "exclude": [
+    "src/**/*",
+    "src/**/*.spec.ts"
+  ],
+  "files": ["cypress/support/index.d.ts"]
+}

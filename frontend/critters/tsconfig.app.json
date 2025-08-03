@@ -7,5 +7,14 @@
     "types": ["node"]
   },
   "files": ["src/main.ts", "src/main.server.ts", "src/server.ts"],
-  "include": ["src/**/*.d.ts"]
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/test.ts",
+    "src/**/*.spec.ts",
+    "cypress",
+    "cypress/**/*"
+  ]
 }

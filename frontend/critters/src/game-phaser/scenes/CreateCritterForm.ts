@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from 'phaser';
 import { EventBusService } from '../../app/services/event-bus.service';
+import {exposeToCypress} from '@shared/test-helpers';
 
 export class CreateCritterForm extends Scene {
   private eventBus!: EventBusService;
@@ -162,6 +163,28 @@ export class CreateCritterForm extends Scene {
     });
 
     this.updateCursor();
+
+    // Testing with cypress
+    const letterButtons: Record<string, Phaser.GameObjects.Text> = {};
+    let saveButton: Phaser.GameObjects.Text | null = null;
+
+    this.alphabet.forEach((row, y) => {
+      row.forEach((char, x) => {
+        const text = this.charTexts[y][x];
+        if (!['SAVE', 'BACK', 'DEL'].includes(char)) {
+          letterButtons[char] = text;
+        } else if (char === 'SAVE') {
+          saveButton = text;
+          (saveButton as any).__char = char;
+        }
+      });
+    });
+
+    exposeToCypress({
+      currentSceneName: this.scene.key,
+      letterButtons,
+      saveButton
+    });
   }
 
   private updateCursor() {
@@ -207,7 +230,12 @@ export class CreateCritterForm extends Scene {
   }
 
 
+  private submitting = false;
+
   private async submit() {
+    if(this.submitting) return;
+    this.submitting = true;
+
     if (this.inputText.trim()) {
       try {
         const loadingText = this.add.text(250, 250, 'Creating...', {
@@ -229,6 +257,7 @@ export class CreateCritterForm extends Scene {
         this.showError('Error creating critter');
       }
     }
+    this.submitting = false;
   }
 
   private showError(message: string) {

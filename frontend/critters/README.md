@@ -1,8 +1,64 @@
-# Critters
+# CuteComputerCritters
 
+---
+
+## About the project
+This project is a webbased virtual pet game, where you can
+create pets and take care of them similar to the tamagotchi games of the 90s.
+Additionally, you can see your pet history on your profile page if you create an account.
+This game was designed with the goal, that it is free to play and portable.
+
+### Learnings
+The main takeaways from this project are:
+* To communicate earlier and more frequently with our lecturer (or potential client in a professional setting)
+on the scope, details and problems concerning our project
+* Reduce size of initial project to something more realistic
+* Focus on core features and making things work 
+rather than adding unnecessary add-ons or getting lost in details e.g. adding more sprites
+### Tests and Test Coverage
+
+### Accessibility
+
+## Used Technologies
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.13.
 
-## Development server
+Frontend:
+* Angular v19
+* TailwindCSS v3
+
+Game Logic:
+* PhaserJS
+
+Backend:
+* Springboot v
+* Node.js
+* MariaDB as the database
+* Dockers for Containerizing
+* Maven as the build-tool
+
+
+## Getting Started
+
+---
+This project is a locally hosted project, so you need to install and run it locally.
+
+### Prerequisites
+For this project you'll need npm.
+### Installation
+
+1. Clone the repo
+```
+https://github.com/XwX-J0sh/CuteComputerCritters.git
+```
+2. Install NPM packages
+```
+npm i
+```
+
+## Usage
+
+
+### Development server
 
 To start a local development server, run:
 
@@ -54,6 +110,10 @@ ng e2e
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
-## Additional Resources
+## License
 
+
+## Additional Resources
+### Demo Account
+User1 and Password1
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
