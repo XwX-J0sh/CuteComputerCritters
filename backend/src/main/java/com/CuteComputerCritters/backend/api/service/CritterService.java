@@ -194,11 +194,8 @@ public class CritterService {
         int newHappiness;
         int newTrainingValue;
 
-        /* Critters before stage 2 receive a different amount of training and happiness from play
-         * than older evolutions*/
-
-        //get critter by id
         Critter critter = getOwnedCritter(critterId, ownerId);
+        int newTrainingSessions = critter.getTrainingSessions() + 1;
 
         if(critter.getEvolutionStage().getStage() < 2) {
             //children learn faster and are happier with learning/play
@@ -207,17 +204,19 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
-            if (critter.getTrainingSessions() % 2 == 0) {
+
+            if (newTrainingSessions % 2 == 0) {
                 critter.setWeight(Math.max(critter.getWeight() - 2, MIN_WEIGHT));
             }
         } else if (critter.getEvolutionStage().getStage() == 2.0) {
-            //adults learn slower and are less enthusiastic (standard stats for adults/Chiikawa)
+            //adults learn slower and are less enthusiastic
             newHappiness = Math.min(critter.getHappiness() + (int)(trainingValue/2), MAX_STAT);
             newTrainingValue = Math.min(critter.getTraining() + (int)(trainingValue/2), MAX_STAT);
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
-            if (critter.getTrainingSessions() % 2 == 0) {
+
+            if (newTrainingSessions % 2 == 0) {
                 critter.setWeight(Math.max(critter.getWeight() - 2, MIN_WEIGHT));
             }
         } else if (critter.getEvolutionStage().getStage() == 2.1) {
@@ -229,7 +228,8 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
-            if (critter.getTrainingSessions() % 2 == 0) {
+
+            if (newTrainingSessions % 2 == 0) {
                 critter.setWeight(Math.max(critter.getWeight() - 2, MIN_WEIGHT));
             }
         } else if (critter.getEvolutionStage().getStage() == 2.2) {
@@ -242,7 +242,8 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
-            if (critter.getTrainingSessions() % 2 == 0) {
+
+            if (newTrainingSessions % 2 == 0) {
                 critter.setWeight(Math.max(critter.getWeight() - 3, MIN_WEIGHT));
             }
         }
@@ -253,13 +254,13 @@ public class CritterService {
 
             critter.setHappiness(newHappiness);
             critter.setTraining(newTrainingValue);
-            if (critter.getTrainingSessions() % 2 == 0) {
+
+            if (newTrainingSessions % 2 == 0) {
                 critter.setWeight(Math.max(critter.getWeight() - 1, MIN_WEIGHT));
             }
         }
 
-        critter.setTrainingSessions(critter.getTrainingSessions() + 1);
-
+        critter.setTrainingSessions(newTrainingSessions);
         critterRepository.save(critter);
     }
 
@@ -290,14 +291,14 @@ public class CritterService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter is neither sick nor injured");
         }
 
+        boolean shouldSave = false;
+
         if(medicineType.equals(EnumMedicineType.BAND_AID.toString())){
             if(critter.isInjured()){
                 critter.setInjured(false);
                 critter.setInjuredSince(null);
-                critterRepository.save(critter);
             }
             else {
-                critter.setHappiness(Math.max(critter.getHappiness() - 1, 0));
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not injured");
             }
         }
@@ -305,13 +306,12 @@ public class CritterService {
             if(!(critter.isHealthy())){
                 critter.setHealthy(true);
                 critter.setSickSince(null);
-                critterRepository.save(critter);
             }
             else {
-                critter.setHappiness(Math.min(critter.getHappiness() - 2, 0));
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Critter not sick");
             }
         }
+        critterRepository.save(critter);
     }
 
     //Helpers:
