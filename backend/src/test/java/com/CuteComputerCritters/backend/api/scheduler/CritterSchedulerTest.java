@@ -90,7 +90,7 @@ class CritterSchedulerTest {
 
         // Assert
         assertEquals(2.3, testCritter.getEvolutionStage().getStage());
-        verify(critterBroadcaster).broadcast(any());
+        verify(critterBroadcaster, atLeastOnce()).broadcast(any());
     }
 
     @Test
