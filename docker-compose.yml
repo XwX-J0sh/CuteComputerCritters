@@ -1,0 +1,54 @@
+services:
+  database:
+    image: mariadb:latest
+    container_name: critter-db
+    env_file:
+      - .env
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_DATABASE=critterDB
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=password
+      - MARIADB_LOCAL_PORT=3306
+      - MARIADB_DOCKER_PORT=3306 
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - critter-network
+
+  backend:
+    build:
+      context: backend
+    container_name: critter-backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/critterDB
+      - SPRINGBOOT_LOCAL_PORT=8080
+      - SPRINGBOOT_DOCKER_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    networks:
+      - critter-network
+
+  frontend:
+    build:
+      context: frontend
+    container_name: critter-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    networks:
+      - critter-network
+    volumes:
+      - ./frontend:/app
+
+volumes:
+  db_data:
+
+networks:
+  critter-network:
+    driver: bridge
